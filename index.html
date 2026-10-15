@@ -138,6 +138,21 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .tblwrap{overflow-x:auto}
 .totals{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-top:10px;font-size:14px}
 .totals b{font:600 20px var(--f-display)}
+.prog{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}.prog span{display:block;height:100%;background:var(--ok)}
+.pill.iniciar{background:var(--sunk);color:var(--muted)}.pill.andamento{background:var(--info-soft);color:var(--info)}.pill.revisao{background:var(--warn-soft);color:var(--warn)}.pill.entregue{background:var(--ok-soft);color:var(--ok)}
+.rows{display:flex;flex-direction:column;gap:8px}
+.erow{display:grid;grid-template-columns:auto 1fr 150px auto;gap:8px;align-items:center}
+.erow input[type=checkbox]{width:18px;height:18px}
+.erow.feito input[type=text]{text-decoration:line-through;color:var(--muted)}
+.arow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--sunk);border-radius:8px;padding:10px}
+.arow .full{grid-column:1/-1}
+.arow .ctl{display:flex;gap:8px;align-items:center;justify-content:space-between;grid-column:1/-1;font-size:13px;color:var(--muted)}
+.lrow{display:grid;grid-template-columns:1fr 1.4fr auto auto;gap:8px;align-items:center}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);white-space:nowrap}
+.chk input{width:auto}
+.pw{display:flex;gap:4px}.pw input{flex:1;min-width:0}
+@media (max-width:640px){.erow{grid-template-columns:auto 1fr auto}.erow input[type=date]{grid-column:2}.arow{grid-template-columns:1fr}.lrow{grid-template-columns:1fr auto}.lrow input{grid-column:1/-1}}
+.secret{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:30;font-size:14px}
 /* documento formal (preview) */
 .docpaper{background:#fff;color:#1d2330;border:1px solid var(--line);border-radius:6px;padding:36px 40px;font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;overflow-x:auto}
@@ -154,6 +169,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
     <button data-tab="painel" aria-current="true">Painel</button>
     <button data-tab="plataformas">Plataformas</button>
     <button data-tab="propostas">Propostas</button>
+    <button data-tab="projetos">Projetos</button>
     <button data-tab="clientes">Clientes</button>
     <button data-tab="orcamentos">Orçamentos</button>
     <button data-tab="perfil">Meus dados</button>
@@ -166,7 +182,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 (function(){
 const ST={status:[["rascunho","Rascunho"],["enviada","Enviada"],["negociacao","Em negociação"],["aprovada","Aprovada"],["recusada","Recusada"]]};
 const STL=Object.fromEntries(ST.status);
-const S={tab:"painel",clientes:[],propostas:[],orcamentos:[],plataformas:[],perfil:{},db:null,assets:null,downloads:null,canWrite:true,filtro:{q:"",status:"",plat:""}};
+const S={tab:"painel",projetos:[],clientes:[],propostas:[],orcamentos:[],plataformas:[],perfil:{},db:null,assets:null,downloads:null,canWrite:true,filtro:{q:"",status:"",plat:""}};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const brl=n=>(Number(n)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
@@ -180,9 +196,9 @@ const orcTotal=o=>{const sub=(o.itens||[]).reduce((s,i)=>s+(Number(i.qtd)||0)*(N
 
 /* ---------- boot ---------- */
 /* armazenamento local (IndexedDB): dados + arquivos ficam neste navegador */
-const COLS=["clientes","propostas","orcamentos","plataformas","config"];
+const COLS=["clientes","propostas","orcamentos","plataformas","projetos","config"];
 let IDB=null;
-function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("atelie-propostas",1);
+function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("atelie-propostas",2);
   r.onupgradeneeded=()=>{const d=r.result;COLS.forEach(c=>{if(!d.objectStoreNames.contains(c))d.createObjectStore(c,{keyPath:"id"})});if(!d.objectStoreNames.contains("arquivos"))d.createObjectStore("arquivos",{keyPath:"id"})};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 function tx(store,mode,fn){return new Promise((res,rej)=>{const t=IDB.transaction(store,mode);const st=t.objectStore(store);let out;const r=fn(st);if(r)r.onsuccess=()=>{out=r.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})}
@@ -191,7 +207,7 @@ const idbPut=(c,v)=>tx(c,"readwrite",st=>st.put(v));
 const idbDel=(c,id)=>tx(c,"readwrite",st=>st.delete(id));
 const idbGet=(c,id)=>tx(c,"readonly",st=>st.get(id));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-async function loadAll(){for(const c of ["clientes","propostas","orcamentos","plataformas"])S[c]=await idbAll(c);const p=await idbGet("config","perfil");S.perfil=p?strip(p):{}}
+async function loadAll(){for(const c of ["clientes","propostas","orcamentos","plataformas","projetos"])S[c]=await idbAll(c);const p=await idbGet("config","perfil");S.perfil=p?strip(p):{}}
 async function boot(){
   render();
   try{IDB=await idbOpen();S.db=true;S.assets=true;S.downloads=true;
@@ -211,7 +227,7 @@ async function del(col,id){try{await idbDel(col,id);await loadAll();render()}cat
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"true":"false"));
   const banner=S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"";
-  const views={painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
+  const views={projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
   const active=document.activeElement;const keep=active&&active.id&&active.closest("#app")?active.id:null;const pos=keep&&active.selectionStart;
   $("#app").innerHTML=banner+views[S.tab]();
   if(keep){const el=document.getElementById(keep);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
@@ -237,6 +253,7 @@ function vPainel(){
     <div class="kpi"><small>Propostas enviadas</small><b>${env.length}</b><span>${envMes} neste mês</span></div>
     <div class="kpi"><small>Em aberto</small><b class="money">${brl(aberto.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${aberto.length} aguardando resposta</span></div>
     <div class="kpi"><small>Fechado</small><b class="money">${brl(apr.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${apr.length} aprovadas</span></div>
+    <div class="kpi"><small>Projetos ativos</small><b>${S.projetos.filter(j=>j.status!=="entregue").length}</b><span>${S.projetos.filter(j=>j.status==="entregue").length} entregues</span></div>
     <div class="kpi"><small>Taxa de aprovação</small><b>${conv}%</b><span>das enviadas</span></div>
   </div>
   <div class="cols">
@@ -320,13 +337,13 @@ function vPerfil(){
     <p style="color:var(--muted);margin:0 0 12px">Seus clientes, propostas e anexos ficam salvos <b>neste navegador</b>. Exporte um backup de vez em quando e guarde no Drive. Para usar em outro computador, importe o arquivo lá.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="exportar">Exportar backup</button>
     <label class="btn" for="impIn">Importar backup</label><input type="file" id="impIn" accept=".json" hidden></div>
-    <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Importar substitui tudo o que está aqui pelos dados do arquivo.</p>
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Importar substitui tudo o que está aqui pelos dados do arquivo. O backup inclui as senhas dos projetos: guarde-o em local seguro.</p>
   </section>`;
 }
 
 /* ---------- modais ---------- */
 function openModal(html,wide){$("#modalRoot").innerHTML=`<div class="ov" data-close="1"><div class="modal ${wide?"wide":""}" role="dialog" aria-modal="true">${html}</div></div>`;const f=$("#modalRoot input,#modalRoot select,#modalRoot textarea");if(f)f.focus()}
-function closeModal(){$("#modalRoot").innerHTML=""}
+function closeModal(){$("#modalRoot").innerHTML="";if(pd){clearTimeout(pdTimer);const {id,...r}=pd;idbPut("projetos",{...r,id,atualizadoEm:new Date().toISOString()}).then(loadAll).then(render);pd=null}}
 const mhead=t=>`<div class="mhead"><h2>${t}</h2><button class="btn ghost" data-act="close" aria-label="Fechar">✕</button></div>`;
 const opts=(arr,sel,lab,blank)=>`${blank!==undefined?`<option value="">${blank}</option>`:""}${arr.map(x=>`<option value="${x.id}" ${x.id===sel?"selected":""}>${esc(lab(x))}</option>`).join("")}`;
 
@@ -393,6 +410,7 @@ function mProposta(id){
       <div class="addline" style="margin-bottom:10px"><input id="histIn" placeholder="Ex.: cliente pediu desconto de 10%"><button class="btn" data-act="addHist" data-id="${id}">Anotar</button></div>
       <div class="hist">${hist.length?hist.map(h=>`<div><small>${esc(h.data)}</small>${esc(h.texto)}</div>`).join(""):`<div style="border:0;padding:0;color:var(--muted)">Sem registros.</div>`}</div>
     </div>
+    ${p.status==="aprovada"?`<div class="sect"><h3>Desenvolvimento</h3>${(()=>{const j=S.projetos.find(x=>x.propostaId===id);return j?`<div class="file" style="cursor:pointer" data-act="abrirDev" data-id="${id}"><span class="ext">DEV</span><span style="flex:1">${esc(j.titulo||"Projeto")}</span><span class="pill ${j.status}">${PSTL[j.status]}</span><span style="font-size:12px;color:var(--muted)">${progresso(j)}%</span></div>`:`<p style="margin:0 0 8px;color:var(--muted);font-size:14px">Cliente fechou. Abra o projeto para registrar briefing, etapas, acessos e preparar a entrega.</p><button class="btn primary" data-act="abrirDev" data-id="${id}">Abrir desenvolvimento</button>`})()}</div>`:""}
     <div class="sect"><h3>Orçamentos ligados <button class="btn sm primary" data-act="novoOrc" data-prop="${id}">Gerar orçamento</button></h3>
       ${orcs.length?orcs.map(o=>`<div class="file" style="cursor:pointer" data-open="orcView" data-id="${o.id}"><span class="ext">ORC</span><span style="flex:1">${esc(o.numero)} · ${dtBR(o.data)}</span><span class="money">${brl(orcTotal(o).total)}</span></div>`).join(""):`<div style="color:var(--muted);font-size:14px">Nenhum ainda.</div>`}
     </div></div>
@@ -418,6 +436,132 @@ async function upload(pid,files){
   if(novos.length){const atual=byId(S.propostas,pid);await save("propostas",pid,{...strip(atual),anexos:[...(atual.anexos||[]),...novos],atualizadoEm:new Date().toISOString()});toast(`${novos.length} anexo(s) salvo(s)`);mProposta(pid)}
 }
 const strip=o=>{const {id,...r}=o;return r};
+
+/* ---------- projetos (desenvolvimento) ---------- */
+const PST=[["iniciar","A iniciar"],["andamento","Em andamento"],["revisao","Em revisão"],["entregue","Entregue"]];
+const PSTL=Object.fromEntries(PST);
+const progresso=p=>{const e=p.etapas||[];return e.length?Math.round(e.filter(x=>x.feito).length/e.length*100):0};
+function vProjetos(){
+  const list=S.projetos.slice().sort((a,b)=>(a.status==="entregue")-(b.status==="entregue")||(a.prazoEntrega||"9").localeCompare(b.prazoEntrega||"9"));
+  const ap=S.propostas.filter(p=>p.status==="aprovada"&&!S.projetos.some(j=>j.propostaId===p.id));
+  return `<div class="head"><div><h1>Projetos</h1><p>Desenvolvimento dos trabalhos fechados e o pacote de entrega para o cliente.</p></div><button class="btn primary" data-act="novoProjeto">+ Projeto</button></div>
+  ${ap.length?`<div class="banner" style="background:var(--ok-soft);color:var(--ok)">${ap.length} proposta(s) aprovada(s) sem projeto: ${ap.map(p=>`<button class="btn sm" data-act="abrirDev" data-id="${p.id}" style="margin:4px 4px 0 0">${esc(p.titulo||"Sem título")}</button>`).join("")}</div>`:""}
+  <div class="panel">${list.length?`<div class="list">${list.map(p=>{const pr=progresso(p);return `<div class="row" data-open="projeto" data-id="${p.id}"><div class="t">${esc(p.titulo||"Projeto")}</div>
+    <div class="s">${esc(cliNome(p.clienteId))}${p.prazoEntrega?` · entrega ${dtBR(p.prazoEntrega)}`:""} · ${(p.etapas||[]).filter(x=>x.feito).length}/${(p.etapas||[]).length} etapas<div class="prog" style="margin-top:6px;max-width:320px"><span style="width:${pr}%"></span></div></div>
+    <div class="r"><span class="pill ${p.status}">${PSTL[p.status]||"A iniciar"}</span><span style="font-size:12px;color:var(--muted)">${pr}%</span></div></div>`}).join("")}</div>`
+  :emptyBox("Nenhum projeto em desenvolvimento","Quando um cliente fechar, abra a proposta aprovada e clique em Abrir desenvolvimento.","novoProjeto","+ Projeto")}</div>`;
+}
+let pd=null,pdTimer=null;
+async function abrirDev(propId){
+  const ex=S.projetos.find(j=>j.propostaId===propId);if(ex)return mProjeto(ex.id);
+  const pr=byId(S.propostas,propId)||{};
+  const orc=S.orcamentos.filter(o=>o.propostaId===propId).sort((a,b)=>(b.numero||"").localeCompare(a.numero||""))[0];
+  const etapas=(orc?.itens||[]).filter(i=>i.descricao).map(i=>({texto:i.descricao,feito:false,prazo:""}));
+  const d={propostaId:propId,clienteId:pr.clienteId||"",titulo:pr.titulo||"",status:"iniciar",dataInicio:hoje(),prazoEntrega:"",descricao:pr.descricao||"",tecnologias:"",briefing:"",
+    etapas:etapas.length?etapas:[{texto:"Levantamento de requisitos com o cliente",feito:false,prazo:""},{texto:"Desenvolvimento",feito:false,prazo:""},{texto:"Testes e ajustes",feito:false,prazo:""},{texto:"Publicação e entrega",feito:false,prazo:""}],
+    acessos:[],links:[],instrucoes:"",garantia:"",criadoEm:new Date().toISOString()};
+  const id=await save("projetos",null,d);mProjeto(id);
+}
+async function novoProjeto(){const id=await save("projetos",null,{titulo:"",clienteId:"",status:"iniciar",dataInicio:hoje(),etapas:[],acessos:[],links:[],criadoEm:new Date().toISOString()});mProjeto(id)}
+function salvarPD(){clearTimeout(pdTimer);pdTimer=setTimeout(async()=>{if(!pd)return;const {id,...r}=pd;try{await idbPut("projetos",{...r,id,atualizadoEm:new Date().toISOString()});const i=S.projetos.findIndex(x=>x.id===id);if(i>=0)S.projetos[i]={...pd};const el=$("#pdSaved");if(el)el.textContent="Salvo "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){toast("Não foi possível salvar.")}},600)}
+function mProjeto(id){
+  const p=byId(S.projetos,id);if(!p)return closeModal();pd=JSON.parse(JSON.stringify(p));renderProjeto();
+}
+function renderProjeto(){
+  const p=pd;const pr=progresso(p);
+  const v=k=>esc(p[k]);
+  openModal(`${mhead(`Desenvolvimento <span id="pdSaved" style="font:400 12px var(--f-body);color:var(--muted);margin-left:8px"></span>`)}
+  <div class="form">
+    <label class="f full">Nome do projeto<input id="pj_tit" data-pk="titulo" value="${v("titulo")}"></label>
+    <label class="f">Cliente<select id="pj_cli" data-pk="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
+    <label class="f">Situação<select id="pj_st" data-pk="status">${PST.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
+    <label class="f">Entrega prevista<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"></label>
+  </div>
+  <div class="sect form"><h3 class="full">Dados do projeto</h3>
+    <label class="f full">O que está sendo desenvolvido<textarea id="pj_desc" data-pk="descricao" placeholder="Objetivo, funcionalidades, público">${v("descricao")}</textarea></label>
+    <label class="f full">Tecnologias / onde está hospedado<input id="pj_tec" data-pk="tecnologias" value="${v("tecnologias")}" placeholder="HTML/JS, GitHub Pages, Firebase…"></label>
+  </div>
+  <div class="sect"><h3>Informações que o cliente passou</h3>
+    <textarea id="pj_brief" data-pk="briefing" style="min-height:120px" placeholder="Textos, cores, logo, referências, regras do negócio, contatos…">${v("briefing")}</textarea>
+  </div>
+  <div class="sect"><h3>Etapas <span style="font:400 13px var(--f-body);color:var(--muted)">${pr}% concluído</span></h3>
+    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div>
+    <div class="rows">${(p.etapas||[]).map((e,i)=>`<div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
+      <input type="text" id="et_t${i}" data-list="etapas" data-i="${i}" data-f="texto" value="${esc(e.texto)}" placeholder="Descreva a etapa">
+      <input type="date" id="et_p${i}" data-list="etapas" data-i="${i}" data-f="prazo" value="${esc(e.prazo)}" aria-label="Prazo">
+      <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover">✕</button></div>`).join("")}</div>
+    <button class="btn sm" data-act="addRow" data-list="etapas" style="margin-top:8px">+ Etapa</button>
+  </div>
+  <div class="sect"><h3>Logins e senhas</h3>
+    <div class="secret">Ficam guardados só neste navegador. Marque "entregar" nos acessos que devem ir para o cliente.</div>
+    <div class="rows">${(p.acessos||[]).map((a,i)=>`<div class="arow">
+      <label class="f">Serviço<input id="ac_s${i}" data-list="acessos" data-i="${i}" data-f="servico" value="${esc(a.servico)}" placeholder="Painel admin, Hostinger, e-mail…"></label>
+      <label class="f">Login / usuário<input id="ac_l${i}" data-list="acessos" data-i="${i}" data-f="login" value="${esc(a.login)}"></label>
+      <label class="f">Senha<span class="pw"><input id="ac_p${i}" type="password" data-list="acessos" data-i="${i}" data-f="senha" value="${esc(a.senha)}" autocomplete="off"><button class="btn sm" data-act="verSenha" data-i="${i}" type="button">Ver</button></span></label>
+      <label class="f full">Endereço de acesso<input id="ac_u${i}" data-list="acessos" data-i="${i}" data-f="url" value="${esc(a.url)}" placeholder="https://"></label>
+      <label class="f full">Observação<input id="ac_o${i}" data-list="acessos" data-i="${i}" data-f="obs" value="${esc(a.obs)}" placeholder="Ex.: trocar a senha no primeiro acesso"></label>
+      <div class="ctl"><label class="chk"><input type="checkbox" id="ac_e${i}" data-list="acessos" data-i="${i}" data-f="entregar" ${a.entregar!==false?"checked":""}>Entregar ao cliente</label><button class="btn sm ghost danger" data-act="rmRow" data-list="acessos" data-i="${i}">Remover</button></div>
+    </div>`).join("")}</div>
+    <button class="btn sm" data-act="addRow" data-list="acessos" style="margin-top:8px">+ Acesso</button>
+  </div>
+  <div class="sect"><h3>Links</h3>
+    <div class="rows">${(p.links||[]).map((l,i)=>`<div class="lrow"><input id="lk_t${i}" data-list="links" data-i="${i}" data-f="titulo" value="${esc(l.titulo)}" placeholder="Site no ar, repositório, Figma…"><input id="lk_u${i}" data-list="links" data-i="${i}" data-f="url" value="${esc(l.url)}" placeholder="https://">
+      <label class="chk"><input type="checkbox" id="lk_e${i}" data-list="links" data-i="${i}" data-f="entregar" ${l.entregar!==false?"checked":""}>Entregar</label><button class="btn sm ghost" data-act="rmRow" data-list="links" data-i="${i}" aria-label="Remover">✕</button></div>`).join("")}</div>
+    <button class="btn sm" data-act="addRow" data-list="links" style="margin-top:8px">+ Link</button>
+  </div>
+  <div class="sect form"><h3 class="full">Para a entrega</h3>
+    <label class="f full">Como usar / instruções ao cliente<textarea id="pj_inst" data-pk="instrucoes" placeholder="Como acessar o painel, como trocar textos, cuidados…">${v("instrucoes")}</textarea></label>
+    <label class="f full">Suporte e garantia<input id="pj_gar" data-pk="garantia" value="${v("garantia")}" placeholder="30 dias de suporte para correção de erros"></label>
+  </div>
+  <div class="mfoot"><div class="g"><button class="btn danger" data-act="del" data-col="projetos" data-id="${p.id}">Excluir projeto</button></div>
+  <div class="g"><button class="btn" data-act="close">Fechar</button><button class="btn primary" data-act="verEntrega">Gerar documento de entrega</button></div></div>`,true);
+}
+function entregaHTML(p){
+  const P=S.perfil,c=byId(S.clientes,p.clienteId)||{};
+  const ac=(p.acessos||[]).filter(a=>a.entregar!==false&&(a.servico||a.login||a.senha));
+  const lk=(p.links||[]).filter(l=>l.entregar!==false&&l.url);
+  const et=(p.etapas||[]).filter(e=>e.feito&&e.texto);
+  const H=t=>`<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676;margin:22px 0 8px;font-weight:600">${t}</div>`;
+  const link=u=>`<a href="${esc(u)}" style="color:#2f4bd1;word-break:break-all">${esc(u)}</a>`;
+  return `<div style="font-family:'IBM Plex Sans',Arial,sans-serif;color:#1d2330;font-size:13.5px;line-height:1.55">
+  <table style="width:100%;border-collapse:collapse;margin-bottom:18px"><tr>
+    <td style="vertical-align:top"><div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:20px;font-weight:700">${esc(P.nome||"")}</div><div style="color:#5d6676;font-size:12.5px">${esc([P.email,P.telefone,P.site].filter(Boolean).join(" · "))}</div></td>
+    <td style="vertical-align:top;text-align:right"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Documento de entrega</div><div style="font-size:12.5px;color:#5d6676">${new Date().toLocaleDateString("pt-BR")}</div></td></tr></table>
+  <div style="border-top:2px solid #1d2330;border-bottom:1px solid #d7dbe3;padding:12px 0">
+    <div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:22px;font-weight:700">${esc(p.titulo||"Projeto")}</div>
+    <div style="font-size:13px">Cliente: <b>${esc(c.nome||"—")}</b>${c.empresa?` · ${esc(c.empresa)}`:""}${p.dataInicio?` · Início ${dtBR(p.dataInicio)}`:""}</div></div>
+  ${ac.length?`<div style="background:#fff6e5;border:1px solid #f0d9a8;color:#7a5200;border-radius:6px;padding:8px 12px;margin-top:14px;font-size:12.5px">Documento confidencial: contém senhas de acesso. Guarde em local seguro e troque as senhas após o recebimento.</div>`:""}
+  ${p.descricao?H("Sobre o projeto")+`<div style="white-space:pre-wrap">${esc(p.descricao)}</div>`:""}
+  ${p.tecnologias?`<div style="margin-top:6px;font-size:13px;color:#5d6676">Tecnologias / hospedagem: ${esc(p.tecnologias)}</div>`:""}
+  ${lk.length?H("Links")+`<table style="width:100%;border-collapse:collapse;font-size:13px">${lk.map(l=>`<tr style="border-bottom:1px solid #e3e6ec"><td style="padding:7px 8px 7px 0;width:35%;font-weight:600">${esc(l.titulo||"Link")}</td><td style="padding:7px 0">${link(l.url)}</td></tr>`).join("")}</table>`:""}
+  ${ac.length?H("Acessos")+`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#f0f2f6"><th style="text-align:left;padding:7px">Serviço</th><th style="text-align:left;padding:7px">Login</th><th style="text-align:left;padding:7px">Senha</th></tr></thead><tbody>
+    ${ac.map(a=>`<tr style="border-bottom:1px solid #e3e6ec;vertical-align:top"><td style="padding:7px"><b>${esc(a.servico||"—")}</b>${a.url?`<br>${link(a.url)}`:""}${a.obs?`<br><span style="color:#5d6676;font-size:12px">${esc(a.obs)}</span>`:""}</td><td style="padding:7px;font-family:'IBM Plex Mono',monospace;word-break:break-all">${esc(a.login||"—")}</td><td style="padding:7px;font-family:'IBM Plex Mono',monospace;word-break:break-all">${esc(a.senha||"—")}</td></tr>`).join("")}</tbody></table>`:""}
+  ${p.instrucoes?H("Como usar")+`<div style="white-space:pre-wrap">${esc(p.instrucoes)}</div>`:""}
+  ${et.length?H("O que foi entregue")+`<ul style="margin:0;padding-left:20px">${et.map(e=>`<li>${esc(e.texto)}</li>`).join("")}</ul>`:""}
+  ${p.garantia?H("Suporte e garantia")+`<div>${esc(p.garantia)}</div>`:""}
+  <table style="width:100%;font-size:12.5px;margin-top:56px"><tr>
+    <td style="width:45%;border-top:1px solid #1d2330;padding-top:6px;text-align:center">${esc(P.nome||"Prestador")}<br><span style="color:#6b7383">Entregue por</span></td><td></td>
+    <td style="width:45%;border-top:1px solid #1d2330;padding-top:6px;text-align:center">${esc(c.nome||"Cliente")}<br><span style="color:#6b7383">Recebido por</span></td></tr></table></div>`;
+}
+function entregaFile(p){return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Entrega — ${esc(p.titulo||"Projeto")}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>@page{size:A4;margin:16mm}body{margin:0;background:#e9ecf1}.p{background:#fff;max-width:794px;margin:24px auto;padding:48px 56px;box-shadow:0 4px 20px rgba(0,0,0,.08)}@media print{body{background:#fff}.p{box-shadow:none;margin:0;padding:0;max-width:none}}</style></head><body><div class="p">${entregaHTML(p)}</div></body></html>`}
+function entregaTexto(p){
+  const c=byId(S.clientes,p.clienteId)||{};const L=[];
+  L.push(`*${p.titulo||"Projeto"}* — entrega`,`Cliente: ${c.nome||""}`,"");
+  const lk=(p.links||[]).filter(l=>l.entregar!==false&&l.url);if(lk.length){L.push("*Links*");lk.forEach(l=>L.push(`• ${l.titulo||"Link"}: ${l.url}`));L.push("")}
+  const ac=(p.acessos||[]).filter(a=>a.entregar!==false&&(a.servico||a.login));if(ac.length){L.push("*Acessos*");ac.forEach(a=>{L.push(`• ${a.servico||""}${a.url?` (${a.url})`:""}`);if(a.login)L.push(`  Login: ${a.login}`);if(a.senha)L.push(`  Senha: ${a.senha}`);if(a.obs)L.push(`  Obs.: ${a.obs}`)});L.push("")}
+  if(p.instrucoes)L.push("*Como usar*",p.instrucoes,"");if(p.garantia)L.push("*Suporte*",p.garantia,"");
+  L.push(S.perfil.nome||"");return L.join("\n");
+}
+function mEntrega(){
+  const p=pd;
+  openModal(`${mhead("Documento de entrega")}<div class="docpaper">${entregaHTML(p)}</div>
+  <p style="color:var(--muted);font-size:13px;margin:12px 0 0">Gerado a partir do que você preencheu. Só entram os acessos e links marcados como "entregar" e as etapas concluídas.</p>
+  <div class="mfoot"><div class="g"><button class="btn" data-act="voltarProj">Voltar e editar</button><button class="btn" data-act="copyEntrega">Copiar texto</button></div>
+  <div class="g"><button class="btn" data-act="dlEntrega">Baixar HTML</button><button class="btn primary" data-act="printEntrega">Imprimir / PDF</button></div></div>`,true);
+}
 
 /* orçamento */
 function nextNumero(){const y=new Date().getFullYear();const n=S.orcamentos.filter(o=>(o.numero||"").startsWith(`ORC-${y}-`)).map(o=>parseInt(o.numero.split("-")[2])||0);return `ORC-${y}-${String(Math.max(0,...n)+1).padStart(3,"0")}`}
@@ -543,7 +687,7 @@ document.addEventListener("click",async e=>{
   const tab=e.target.closest("#tabs button");if(tab){S.tab=tab.dataset.tab;render();return}
   if(e.target.matches(".ov")){closeModal();return}
   const op=e.target.closest("[data-open]");const a=e.target.closest("[data-act]");
-  if(op&&!a){const id=op.dataset.id;({proposta:mProposta,cliente:mCliente,plataforma:mPlataforma,orcView:mOrcView})[op.dataset.open](id);return}
+  if(op&&!a){const id=op.dataset.id;({proposta:mProposta,cliente:mCliente,plataforma:mPlataforma,orcView:mOrcView,projeto:mProjeto})[op.dataset.open](id);return}
   if(!a)return;const act=a.dataset.act,id=a.dataset.id;
   if(act==="close")closeModal();
   else if(act==="novaPlat")mPlataforma();
@@ -560,6 +704,7 @@ document.addEventListener("click",async e=>{
     else{const old=fid?byId(S[col],fid):{};d.criadoEm=old.criadoEm||new Date().toISOString()}
     a.disabled=true;try{const nid=await save(col,fid,d);toast("Salvo");if(col==="propostas")mProposta(nid);else closeModal()}catch(err){a.disabled=false}}
   else if(act==="del"){if(!a.classList.contains("armed")){a.classList.add("armed");a.textContent="Confirmar exclusão";setTimeout(()=>{a.classList.remove("armed");a.textContent="Excluir"},4000);return}
+    if(a.dataset.col==="projetos"){clearTimeout(pdTimer);pd=null}
     await del(a.dataset.col,id);closeModal();toast("Excluído")}
   else if(act==="setStatus"){const p=byId(S.propostas,id);if(p.status===a.dataset.st)return;
     await save("propostas",id,{...strip(p),status:a.dataset.st,historico:[...(p.historico||[]),{data:new Date().toLocaleString("pt-BR"),texto:`Status: ${STL[p.status]} → ${STL[a.dataset.st]}`}],atualizadoEm:new Date().toISOString()});mProposta(id)}
@@ -575,6 +720,18 @@ document.addEventListener("click",async e=>{
     a.disabled=true;try{const nid=await save("orcamentos",draft.id||null,d);draft=null;S.orcamentos=S.orcamentos.filter(o=>o.id!==nid).concat({id:nid,...d});mOrcView(nid)}catch(err){a.disabled=false}}
   else if(act==="dlOrc")dlOrc(id);
   else if(act==="printOrc")imprimirOrc(id);
+  else if(act==="abrirDev"){if(pd)closeModal();abrirDev(id)}
+  else if(act==="novoProjeto")novoProjeto();
+  else if(act==="addRow"){const l=a.dataset.list;pd[l]=pd[l]||[];pd[l].push(l==="etapas"?{texto:"",feito:false,prazo:""}:l==="acessos"?{servico:"",login:"",senha:"",url:"",obs:"",entregar:true}:{titulo:"",url:"",entregar:true});salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;
+    const pre={etapas:"et_t",acessos:"ac_s",links:"lk_t"}[l];const el=document.getElementById(pre+(pd[l].length-1));el&&el.focus()}
+  else if(act==="rmRow"){if(!a.classList.contains("armed")&&a.dataset.list!=="etapas"){a.classList.add("armed");a.textContent="Confirmar";setTimeout(()=>{a.classList.remove("armed");a.textContent="Remover"},4000);return}
+    pd[a.dataset.list].splice(+a.dataset.i,1);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}
+  else if(act==="verSenha"){const el=document.getElementById("ac_p"+a.dataset.i);const show=el.type==="password";el.type=show?"text":"password";a.textContent=show?"Ocultar":"Ver"}
+  else if(act==="verEntrega"){clearTimeout(pdTimer);const {id:pid,...r}=pd;await idbPut("projetos",{...r,id:pid});mEntrega()}
+  else if(act==="voltarProj")renderProjeto();
+  else if(act==="dlEntrega"){baixar(`entrega-${(pd.titulo||"projeto").toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}.html`,new Blob([entregaFile(pd)],{type:"text/html"}));toast("Arquivo baixado")}
+  else if(act==="printEntrega"){const w=window.open("","_blank");if(!w){toast("Libere pop-ups para imprimir.");return}w.document.open();w.document.write(entregaFile(pd).replace("</body>","<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body>"));w.document.close()}
+  else if(act==="copyEntrega")navigator.clipboard.writeText(entregaTexto(pd)).then(()=>toast("Texto copiado"),()=>toast("Não deu para copiar."));
   else if(act==="openFile"){e.preventDefault();const f=await idbGet("arquivos",a.dataset.file);if(!f){toast("Arquivo não encontrado neste navegador.");return}
     const u=URL.createObjectURL(f.blob);const w=window.open(u,"_blank");if(!w)baixar(f.nome,f.blob);setTimeout(()=>URL.revokeObjectURL(u),60000)}
   else if(act==="exportar")exportar();
@@ -584,6 +741,11 @@ document.addEventListener("input",e=>{
   const t=e.target;
   if(t.id==="fq"){S.filtro.q=t.value;render()}
   else if(t.id==="fqc"){S.filtro.qc=t.value;render()}
+  else if(pd&&t.closest("#modalRoot")&&(t.dataset.pk||t.dataset.list)){
+    if(t.dataset.pk)pd[t.dataset.pk]=t.value;
+    else{const row=pd[t.dataset.list][+t.dataset.i];row[t.dataset.f]=t.type==="checkbox"?t.checked:t.value}
+    salvarPD();
+  }
   else if(draft&&t.closest("#modalRoot")){
     if(t.dataset.k){draft[t.dataset.k]=t.type==="number"?(+t.value||0):t.value}
     else if(t.dataset.f){const it=draft.itens[+t.dataset.i];it[t.dataset.f]=t.dataset.f==="descricao"?t.value:(+t.value||0);const c=document.getElementById(`it_t${t.dataset.i}`);if(c)c.textContent=brl(it.qtd*it.unit)}
@@ -593,6 +755,8 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id==="impIn"&&t.files[0]){importar(t.files[0]);return}
+  if(pd&&t.type==="checkbox"&&t.dataset.list){const row=pd[t.dataset.list][+t.dataset.i];row[t.dataset.f]=t.checked;salvarPD();if(t.dataset.list==="etapas"){const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}return}
+  if(pd&&t.tagName==="SELECT"&&t.dataset.pk){pd[t.dataset.pk]=t.value;salvarPD();return}
   if(t.id==="fs"){S.filtro.status=t.value;render()}
   else if(t.id==="fp"){S.filtro.plat=t.value;render()}
   else if(draft&&t.tagName==="SELECT"&&t.dataset.k){draft[t.dataset.k]=t.value;
