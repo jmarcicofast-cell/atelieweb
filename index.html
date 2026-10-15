@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ateliê de Propostas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: barra de abas fixa no topo; cada aba é uma mesa de trabalho com lista à esquerda e ações à direita; modais para editar. */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --sunk:#eceef3; --ink:#1a2130; --muted:#5d6676; --line:#dde1e9;
+  --accent:#2f4bd1; --accent-ink:#ffffff; --accent-soft:#e6eafb;
+  --ok:#1f7a4d; --ok-soft:#e1f2e8; --warn:#9a6200; --warn-soft:#fbefd8; --bad:#b4312b; --bad-soft:#f9e3e1; --info:#30608f; --info-soft:#e2ecf6;
+  --f-display:"Familjen Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151c; --surface:#1a1f29; --sunk:#151921; --ink:#e6e9f0; --muted:#9aa3b3; --line:#2b3240;
+  --accent:#8199ff; --accent-ink:#0f1422; --accent-soft:#232c4d;
+  --ok:#6fcf9a; --ok-soft:#183325; --warn:#e8b45a; --warn-soft:#382a12; --bad:#f08a83; --bad-soft:#3a1d1b; --info:#8fb8e3; --info-soft:#1b2a3b;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151c; --surface:#1a1f29; --sunk:#151921; --ink:#e6e9f0; --muted:#9aa3b3; --line:#2b3240;
+  --accent:#8199ff; --accent-ink:#0f1422; --accent-soft:#232c4d;
+  --ok:#6fcf9a; --ok-soft:#183325; --warn:#e8b45a; --warn-soft:#382a12; --bad:#f08a83; --bad-soft:#3a1d1b; --info:#8fb8e3; --info-soft:#1b2a3b;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px}
+.brand{font:700 20px/1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand i{width:22px;height:22px;border-radius:6px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink);font:600 12px var(--f-mono);font-style:normal}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;overflow-x:auto}
+nav.tabs button{border:0;background:none;color:var(--muted);font:500 14px var(--f-body);padding:8px 12px;border-radius:8px;cursor:pointer}
+nav.tabs button[aria-current="true"]{background:var(--accent-soft);color:var(--ink)}
+nav.tabs button:hover{color:var(--ink)}
+main.wrap{padding-block:24px 64px}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:26px;font-weight:700}
+h2{font-size:19px;font-weight:600}
+h3{font-size:16px;font-weight:600}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.head p{margin:4px 0 0;color:var(--muted)}
+.btn{font:500 14px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:none}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:var(--r);padding:10px 14px;margin-bottom:18px;font-size:14px}
+.grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.kpi b{display:block;font:600 24px/1.2 var(--f-display);margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:13px}
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.panel h2{margin-bottom:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:84px;resize:vertical}
+.toolbar input{flex:1 1 220px;width:auto}
+.toolbar select{flex:0 1 200px;width:auto}
+.list{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 4px;border-top:1px solid var(--line);cursor:pointer;align-items:center}
+.row:first-child{border-top:0}
+.row:hover{background:var(--sunk)}
+.row .t{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.row .s{color:var(--muted);font-size:13px;grid-column:1;min-width:0}
+.row .r{grid-row:1/3;grid-column:2;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.money{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.rascunho{background:var(--sunk);color:var(--muted)}
+.pill.enviada{background:var(--info-soft);color:var(--info)}
+.pill.negociacao{background:var(--warn-soft);color:var(--warn)}
+.pill.aprovada{background:var(--ok-soft);color:var(--ok)}
+.pill.recusada{background:var(--bad-soft);color:var(--bad)}
+.pill.ativo{background:var(--ok-soft);color:var(--ok)}
+.pill.pausado{background:var(--sunk);color:var(--muted)}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--f-display);font-size:16px;margin-bottom:4px}
+/* plataformas */
+.plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.plat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.plat .nm{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.plat a{color:var(--accent);font-size:13px;overflow-wrap:anywhere}
+.plat .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--sunk);border-radius:8px;padding:10px}
+.plat .stats div{text-align:center}
+.plat .stats b{display:block;font:600 20px var(--f-display);font-variant-numeric:tabular-nums}
+.plat .stats small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.bar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+.platbars .pb{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;padding:6px 0;font-size:14px}
+.platbars .pb .bar{height:10px;border-radius:5px}
+.platbars .pb em{font-style:normal;text-align:right;font-family:var(--f-mono)}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(10,14,24,.45);z-index:20;display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:calc(24px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 40px max(12px,env(safe-area-inset-left,0px))}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:760px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);min-width:0}
+.modal.wide{max-width:980px}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .full{grid-column:1/-1}
+@media (max-width:560px){.form{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+.mfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:18px}
+.mfoot .g{display:flex;gap:8px;flex-wrap:wrap}
+.detail dl{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;margin:0 0 16px}
+.detail dt{color:var(--muted);font-size:13px}
+.detail dd{margin:0;overflow-wrap:anywhere}
+.sect{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.sect h3{margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.files{display:flex;flex-direction:column;gap:6px}
+.file{display:flex;align-items:center;gap:10px;background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:14px}
+.file a{color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .ext{font:500 11px var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;text-transform:uppercase}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer}
+.drop.on{border-color:var(--accent);background:var(--accent-soft)}
+.hist{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.hist div{font-size:14px;border-left:2px solid var(--line);padding-left:10px}
+.hist small{color:var(--muted);font-family:var(--f-mono);font-size:12px;display:block}
+.addline{display:flex;gap:8px}
+/* itens orçamento */
+.items{width:100%;border-collapse:collapse;font-size:14px}
+.items th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:6px 4px}
+.items td{padding:4px}
+.items td.n{width:90px}.items td.v{width:140px}.items td.tot{width:120px;text-align:right}
+.items td.x{width:36px}
+.tblwrap{overflow-x:auto}
+.totals{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-top:10px;font-size:14px}
+.totals b{font:600 20px var(--f-display)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:30;font-size:14px}
+/* documento formal (preview) */
+.docpaper{background:#fff;color:#1d2330;border:1px solid var(--line);border-radius:6px;padding:36px 40px;font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;overflow-x:auto}
+@media (max-width:560px){.docpaper{padding:20px 16px}}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media print{body>*{display:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><i>{ }</i>Ateliê de Propostas</div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="painel" aria-current="true">Painel</button>
+    <button data-tab="plataformas">Plataformas</button>
+    <button data-tab="propostas">Propostas</button>
+    <button data-tab="clientes">Clientes</button>
+    <button data-tab="orcamentos">Orçamentos</button>
+    <button data-tab="perfil">Meus dados</button>
+  </nav>
+</div></header>
+<main class="wrap" id="app"><div class="empty"><b>Carregando…</b>Conectando ao seu arquivo de propostas.</div></main>
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+const ST={status:[["rascunho","Rascunho"],["enviada","Enviada"],["negociacao","Em negociação"],["aprovada","Aprovada"],["recusada","Recusada"]]};
+const STL=Object.fromEntries(ST.status);
+const S={tab:"painel",clientes:[],propostas:[],orcamentos:[],plataformas:[],perfil:{},db:null,assets:null,downloads:null,canWrite:true,filtro:{q:"",status:"",plat:""}};
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl=n=>(Number(n)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const hoje=()=>new Date().toISOString().slice(0,10);
+const dtBR=d=>d?d.split("-").reverse().join("/"):"—";
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+const cliNome=id=>{const c=byId(S.clientes,id);return c?(c.empresa?`${c.nome} · ${c.empresa}`:c.nome):"Sem cliente"};
+const platNome=id=>{const p=byId(S.plataformas,id);return p?p.nome:"Contato direto"};
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+const orcTotal=o=>{const sub=(o.itens||[]).reduce((s,i)=>s+(Number(i.qtd)||0)*(Number(i.unit)||0),0);return {sub,desc:Number(o.desconto)||0,total:Math.max(0,sub-(Number(o.desconto)||0))}};
+
+/* ---------- boot ---------- */
+/* armazenamento local (IndexedDB): dados + arquivos ficam neste navegador */
+const COLS=["clientes","propostas","orcamentos","plataformas","config"];
+let IDB=null;
+function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("atelie-propostas",1);
+  r.onupgradeneeded=()=>{const d=r.result;COLS.forEach(c=>{if(!d.objectStoreNames.contains(c))d.createObjectStore(c,{keyPath:"id"})});if(!d.objectStoreNames.contains("arquivos"))d.createObjectStore("arquivos",{keyPath:"id"})};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function tx(store,mode,fn){return new Promise((res,rej)=>{const t=IDB.transaction(store,mode);const st=t.objectStore(store);let out;const r=fn(st);if(r)r.onsuccess=()=>{out=r.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})}
+const idbAll=c=>tx(c,"readonly",st=>st.getAll());
+const idbPut=(c,v)=>tx(c,"readwrite",st=>st.put(v));
+const idbDel=(c,id)=>tx(c,"readwrite",st=>st.delete(id));
+const idbGet=(c,id)=>tx(c,"readonly",st=>st.get(id));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+async function loadAll(){for(const c of ["clientes","propostas","orcamentos","plataformas"])S[c]=await idbAll(c);const p=await idbGet("config","perfil");S.perfil=p?strip(p):{}}
+async function boot(){
+  render();
+  try{IDB=await idbOpen();S.db=true;S.assets=true;S.downloads=true;
+    try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+    await loadAll();
+    if(!S.plataformas.length&&!S.propostas.length){await idbPut("plataformas",{id:"workana",nome:"Workana",url:"workana.com",status:"ativo",criadoEm:new Date().toISOString()});await loadAll()}
+  }catch(e){S.offline=true}
+  render();
+}
+async function save(col,id,data){
+  try{const nid=id||uid();await idbPut(col,{...data,id:nid});await loadAll();render();return nid}
+  catch(e){toast("Não foi possível salvar. Tente de novo.");throw e}
+}
+async function del(col,id){try{await idbDel(col,id);await loadAll();render()}catch(e){toast("Não foi possível excluir.")}}
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"true":"false"));
+  const banner=S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"";
+  const views={painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
+  const active=document.activeElement;const keep=active&&active.id&&active.closest("#app")?active.id:null;const pos=keep&&active.selectionStart;
+  $("#app").innerHTML=banner+views[S.tab]();
+  if(keep){const el=document.getElementById(keep);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
+}
+function platStats(pid){
+  const ps=S.propostas.filter(p=>(p.plataformaId||"")===pid);
+  const env=ps.filter(p=>p.status!=="rascunho");
+  const apr=ps.filter(p=>p.status==="aprovada");
+  return {total:ps.length,env:env.length,apr:apr.length,rec:ps.filter(p=>p.status==="recusada").length,neg:ps.filter(p=>p.status==="negociacao"||p.status==="enviada").length,valor:apr.reduce((s,p)=>s+(Number(p.valor)||0),0)};
+}
+function vPainel(){
+  const P=S.propostas;const env=P.filter(p=>p.status!=="rascunho");
+  const aberto=P.filter(p=>p.status==="enviada"||p.status==="negociacao");
+  const apr=P.filter(p=>p.status==="aprovada");
+  const conv=env.length?Math.round(apr.length/env.length*100):0;
+  const mes=hoje().slice(0,7);const envMes=env.filter(p=>(p.dataEnvio||"").startsWith(mes)).length;
+  const plats=[...S.plataformas.map(p=>({id:p.id,nome:p.nome})),{id:"",nome:"Contato direto"}].map(p=>({...p,...platStats(p.id)})).filter(p=>p.total>0||p.id).sort((a,b)=>b.env-a.env);
+  const max=Math.max(1,...plats.map(p=>p.env));
+  const rec=[...P].sort((a,b)=>(b.atualizadoEm||"").localeCompare(a.atualizadoEm||"")).slice(0,6);
+  return `<div class="head"><div><h1>Painel</h1><p>Como andam suas propostas de programação.</p></div>
+    <div class="g" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="novaProposta">+ Proposta</button><button class="btn primary" data-act="novoOrc">+ Orçamento</button></div></div>
+  <div class="grid-kpi">
+    <div class="kpi"><small>Propostas enviadas</small><b>${env.length}</b><span>${envMes} neste mês</span></div>
+    <div class="kpi"><small>Em aberto</small><b class="money">${brl(aberto.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${aberto.length} aguardando resposta</span></div>
+    <div class="kpi"><small>Fechado</small><b class="money">${brl(apr.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${apr.length} aprovadas</span></div>
+    <div class="kpi"><small>Taxa de aprovação</small><b>${conv}%</b><span>das enviadas</span></div>
+  </div>
+  <div class="cols">
+    <section class="panel"><h2>Últimas propostas</h2>${rec.length?`<div class="list">${rec.map(rowProp).join("")}</div>`:emptyBox("Nenhuma proposta ainda","Cadastre a primeira proposta que você enviou a um cliente.","novaProposta","+ Nova proposta")}</section>
+    <section class="panel platbars"><h2>Enviadas por plataforma</h2>
+      ${plats.length?plats.map(p=>`<div class="pb"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nome)}</span>
+        <div class="bar"><span style="width:${p.apr/max*100}%;background:var(--ok)"></span><span style="width:${(p.env-p.apr)/max*100}%;background:var(--accent)"></span></div><em>${p.env}</em></div>`).join("")
+        +`<p style="color:var(--muted);font-size:12px;margin:10px 0 0">Verde: aprovadas · Azul: demais enviadas</p>`
+        :emptyBox("Nenhuma plataforma","Cadastre os sites onde você procura trabalho, como Workana ou 99Freelas.","novaPlat","+ Plataforma")}
+    </section>
+  </div>`;
+}
+function emptyBox(t,s,act,lbl){return `<div class="empty"><b>${t}</b>${s}${act?`<div style="margin-top:12px"><button class="btn primary" data-act="${act}">${lbl}</button></div>`:""}</div>`}
+function rowProp(p){return `<div class="row" data-open="proposta" data-id="${p.id}"><div class="t">${esc(p.titulo||"Sem título")}</div>
+  <div class="s">${esc(cliNome(p.clienteId))} · ${esc(platNome(p.plataformaId))}${p.dataEnvio?` · enviada ${dtBR(p.dataEnvio)}`:""}${(p.anexos||[]).length?` · ${p.anexos.length} anexo(s)`:""}</div>
+  <div class="r"><span class="money">${brl(p.valor)}</span><span class="pill ${p.status}">${STL[p.status]||p.status}</span></div></div>`}
+function vPlataformas(){
+  const cards=S.plataformas.slice().sort((a,b)=>(a.nome||"").localeCompare(b.nome||"")).map(p=>{const s=platStats(p.id);const taxa=s.env?Math.round(s.apr/s.env*100):0;
+    return `<article class="plat"><div class="nm"><div style="min-width:0"><h3>${esc(p.nome)}</h3>${p.url?`<a href="${esc(/^https?:/.test(p.url)?p.url:"https://"+p.url)}" target="_blank" rel="noopener">${esc(p.url.replace(/^https?:\/\//,""))}</a>`:""}</div><span class="pill ${p.status||"ativo"}">${p.status==="pausado"?"Pausado":"Ativo"}</span></div>
+      ${p.usuario?`<div style="font-size:13px;color:var(--muted)">Perfil: ${esc(p.usuario)}</div>`:""}
+      <div class="stats"><div><b>${s.env}</b><small>Enviadas</small></div><div><b>${s.neg}</b><small>Em aberto</small></div><div><b>${s.apr}</b><small>Aprovadas</small></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"><span>Aprovação ${taxa}%</span><span class="money">${brl(s.valor)} fechado</span></div>
+      ${p.notas?`<div style="font-size:13px">${esc(p.notas)}</div>`:""}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto"><button class="btn sm" data-act="verPlat" data-id="${p.id}">Ver propostas</button><button class="btn sm ghost" data-open="plataforma" data-id="${p.id}">Editar</button></div>
+    </article>`}).join("");
+  const dir=platStats("");
+  return `<div class="head"><div><h1>Plataformas</h1><p>Sites onde você procura projetos e quantas propostas mandou em cada um.</p></div><button class="btn primary" data-act="novaPlat">+ Plataforma</button></div>
+  ${S.plataformas.length?`<div class="plat-grid">${cards}
+    <article class="plat" style="background:var(--sunk)"><div class="nm"><h3>Contato direto</h3></div><div style="font-size:13px;color:var(--muted)">Indicações, WhatsApp e clientes que chegaram sem plataforma.</div>
+    <div class="stats" style="background:var(--surface)"><div><b>${dir.env}</b><small>Enviadas</small></div><div><b>${dir.neg}</b><small>Em aberto</small></div><div><b>${dir.apr}</b><small>Aprovadas</small></div></div></article></div>`
+  :`<div class="panel">${emptyBox("Nenhuma plataforma cadastrada","Adicione Workana, 99Freelas, Upwork, GetNinjas ou qualquer site onde você tem perfil.","novaPlat","+ Adicionar plataforma")}</div>`}`;
+}
+function vPropostas(){
+  const f=S.filtro;const q=f.q.toLowerCase();
+  const list=S.propostas.filter(p=>(!f.status||p.status===f.status)&&(f.plat===""||f.plat===undefined||(f.plat==="_direto"?!p.plataformaId:p.plataformaId===f.plat))&&(!q||[p.titulo,cliNome(p.clienteId),p.descricao].join(" ").toLowerCase().includes(q)))
+    .sort((a,b)=>(b.dataEnvio||b.criadoEm||"").localeCompare(a.dataEnvio||a.criadoEm||""));
+  return `<div class="head"><div><h1>Propostas</h1><p>${S.propostas.length} no total · clique para ver anexos e histórico.</p></div><button class="btn primary" data-act="novaProposta">+ Nova proposta</button></div>
+  <div class="panel"><div class="toolbar">
+    <input id="fq" placeholder="Buscar por título, cliente ou descrição" value="${esc(f.q)}">
+    <select id="fs"><option value="">Todos os status</option>${ST.status.map(([k,l])=>`<option value="${k}" ${f.status===k?"selected":""}>${l}</option>`).join("")}</select>
+    <select id="fp"><option value="">Todas as plataformas</option>${S.plataformas.map(p=>`<option value="${p.id}" ${f.plat===p.id?"selected":""}>${esc(p.nome)}</option>`).join("")}<option value="_direto" ${f.plat==="_direto"?"selected":""}>Contato direto</option></select>
+  </div>
+  ${list.length?`<div class="list">${list.map(rowProp).join("")}</div>`:(S.propostas.length?`<div class="empty">Nenhuma proposta com esses filtros.</div>`:emptyBox("Nenhuma proposta ainda","Registre o que você enviou: valor, escopo, plataforma e os arquivos.","novaProposta","+ Nova proposta"))}</div>`;
+}
+function vClientes(){
+  const q=(S.filtro.qc||"").toLowerCase();
+  const list=S.clientes.filter(c=>!q||[c.nome,c.empresa,c.email,c.telefone].join(" ").toLowerCase().includes(q)).sort((a,b)=>(a.nome||"").localeCompare(b.nome||""));
+  return `<div class="head"><div><h1>Clientes</h1><p>${S.clientes.length} cadastrados.</p></div><button class="btn primary" data-act="novoCliente">+ Novo cliente</button></div>
+  <div class="panel"><div class="toolbar"><input id="fqc" placeholder="Buscar cliente" value="${esc(S.filtro.qc||"")}"></div>
+  ${list.length?`<div class="list">${list.map(c=>{const ps=S.propostas.filter(p=>p.clienteId===c.id);const ap=ps.filter(p=>p.status==="aprovada").reduce((s,p)=>s+(+p.valor||0),0);
+    return `<div class="row" data-open="cliente" data-id="${c.id}"><div class="t">${esc(c.nome)}${c.empresa?` <span style="color:var(--muted);font-weight:400">· ${esc(c.empresa)}</span>`:""}</div>
+    <div class="s">${esc([c.email,c.telefone,c.cidade].filter(Boolean).join(" · ")||"Sem contato")}</div>
+    <div class="r"><span>${ps.length} proposta(s)</span><span class="money" style="font-size:13px;color:var(--muted)">${brl(ap)} fechado</span></div></div>`}).join("")}</div>`
+   :(S.clientes.length?`<div class="empty">Nenhum cliente encontrado.</div>`:emptyBox("Nenhum cliente ainda","Cadastre quem recebe suas propostas para vincular orçamentos e anexos.","novoCliente","+ Novo cliente"))}</div>`;
+}
+function vOrcamentos(){
+  const list=S.orcamentos.slice().sort((a,b)=>(b.numero||"").localeCompare(a.numero||""));
+  return `<div class="head"><div><h1>Orçamentos</h1><p>Documentos formais numerados, prontos para enviar ao cliente.</p></div><button class="btn primary" data-act="novoOrc">+ Novo orçamento</button></div>
+  ${!S.perfil.nome?`<div class="banner">Preencha <b>Meus dados</b> para que seu nome e contato apareçam no cabeçalho dos orçamentos.</div>`:""}
+  <div class="panel">${list.length?`<div class="list">${list.map(o=>`<div class="row" data-open="orcView" data-id="${o.id}"><div class="t"><span class="money" style="font-weight:500">${esc(o.numero)}</span> · ${esc(o.titulo||"Orçamento")}</div>
+    <div class="s">${esc(cliNome(o.clienteId))} · emitido ${dtBR(o.data)} · válido por ${o.validadeDias||15} dias</div>
+    <div class="r"><span class="money">${brl(orcTotal(o).total)}</span><span style="font-size:12px;color:var(--muted)">${(o.itens||[]).length} item(ns)</span></div></div>`).join("")}</div>`
+  :emptyBox("Nenhum orçamento emitido","Monte itens, valores e condições. O sistema numera e formata o documento.","novoOrc","+ Novo orçamento")}</div>`;
+}
+function vPerfil(){
+  const p=S.perfil;
+  return `<div class="head"><div><h1>Meus dados</h1><p>Aparecem no cabeçalho e nas condições padrão de cada orçamento.</p></div></div>
+  <form class="panel form" id="formPerfil">
+    <label class="f">Nome ou nome profissional<input id="pf_nome" name="nome" value="${esc(p.nome)}" required></label>
+    <label class="f">CPF ou CNPJ<input id="pf_doc" name="documento" value="${esc(p.documento)}"></label>
+    <label class="f">E-mail<input id="pf_email" name="email" value="${esc(p.email)}"></label>
+    <label class="f">WhatsApp / telefone<input id="pf_tel" name="telefone" value="${esc(p.telefone)}"></label>
+    <label class="f">Cidade<input id="pf_cid" name="cidade" value="${esc(p.cidade)}"></label>
+    <label class="f">Site ou portfólio<input id="pf_site" name="site" value="${esc(p.site)}"></label>
+    <label class="f">Validade padrão (dias)<input id="pf_val" name="validadeDias" type="number" min="1" value="${esc(p.validadeDias||15)}"></label>
+    <label class="f">Forma de pagamento padrão<input id="pf_pag" name="pagamento" value="${esc(p.pagamento||"50% na aprovação e 50% na entrega, via Pix")}"></label>
+    <label class="f full">Condições gerais padrão<textarea id="pf_cond" name="condicoes">${esc(p.condicoes||"Inclui até 2 rodadas de ajustes dentro do escopo descrito. Alterações fora do escopo serão orçadas à parte. Prazo de entrega contado a partir do pagamento da entrada e do envio dos materiais necessários.")}</textarea></label>
+    <div class="full" style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Salvar meus dados</button></div>
+  </form>
+  <section class="panel" style="margin-top:20px"><h2>Backup</h2>
+    <p style="color:var(--muted);margin:0 0 12px">Seus clientes, propostas e anexos ficam salvos <b>neste navegador</b>. Exporte um backup de vez em quando e guarde no Drive. Para usar em outro computador, importe o arquivo lá.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="exportar">Exportar backup</button>
+    <label class="btn" for="impIn">Importar backup</label><input type="file" id="impIn" accept=".json" hidden></div>
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Importar substitui tudo o que está aqui pelos dados do arquivo.</p>
+  </section>`;
+}
+
+/* ---------- modais ---------- */
+function openModal(html,wide){$("#modalRoot").innerHTML=`<div class="ov" data-close="1"><div class="modal ${wide?"wide":""}" role="dialog" aria-modal="true">${html}</div></div>`;const f=$("#modalRoot input,#modalRoot select,#modalRoot textarea");if(f)f.focus()}
+function closeModal(){$("#modalRoot").innerHTML=""}
+const mhead=t=>`<div class="mhead"><h2>${t}</h2><button class="btn ghost" data-act="close" aria-label="Fechar">✕</button></div>`;
+const opts=(arr,sel,lab,blank)=>`${blank!==undefined?`<option value="">${blank}</option>`:""}${arr.map(x=>`<option value="${x.id}" ${x.id===sel?"selected":""}>${esc(lab(x))}</option>`).join("")}`;
+
+function mPlataforma(id){
+  const p=id?byId(S.plataformas,id):{status:"ativo"};
+  openModal(`${mhead(id?"Editar plataforma":"Nova plataforma")}<form class="form" id="formPlat" data-id="${id||""}">
+    <label class="f">Nome do site<input id="pl_nome" name="nome" value="${esc(p.nome)}" placeholder="Workana" required></label>
+    <label class="f">Endereço<input id="pl_url" name="url" value="${esc(p.url)}" placeholder="workana.com"></label>
+    <label class="f">Seu usuário / perfil<input id="pl_user" name="usuario" value="${esc(p.usuario)}"></label>
+    <label class="f">Situação<select id="pl_st" name="status"><option value="ativo" ${p.status!=="pausado"?"selected":""}>Ativo</option><option value="pausado" ${p.status==="pausado"?"selected":""}>Pausado</option></select></label>
+    <label class="f full">Anotações<textarea id="pl_notas" name="notas" placeholder="Taxa da plataforma, plano, categorias em que atuo…">${esc(p.notas)}</textarea></label>
+  </form><div class="mfoot"><div class="g">${id?`<button class="btn danger" data-act="del" data-col="plataformas" data-id="${id}">Excluir</button>`:""}</div><div class="g"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="submit" data-form="formPlat">Salvar</button></div></div>`);
+}
+function mCliente(id){
+  const c=id?byId(S.clientes,id):{};
+  const ps=id?S.propostas.filter(p=>p.clienteId===id):[];
+  openModal(`${mhead(id?"Cliente":"Novo cliente")}<form class="form" id="formCli" data-id="${id||""}">
+    <label class="f">Nome<input id="cl_nome" name="nome" value="${esc(c.nome)}" required></label>
+    <label class="f">Empresa<input id="cl_emp" name="empresa" value="${esc(c.empresa)}"></label>
+    <label class="f">E-mail<input id="cl_email" name="email" value="${esc(c.email)}"></label>
+    <label class="f">Telefone<input id="cl_tel" name="telefone" value="${esc(c.telefone)}"></label>
+    <label class="f">CPF/CNPJ<input id="cl_doc" name="documento" value="${esc(c.documento)}"></label>
+    <label class="f">Cidade<input id="cl_cid" name="cidade" value="${esc(c.cidade)}"></label>
+    <label class="f full">Anotações<textarea id="cl_notas" name="notas">${esc(c.notas)}</textarea></label>
+  </form>
+  ${id?`<div class="sect"><h3>Propostas deste cliente <button class="btn sm" data-act="novaProposta" data-cli="${id}">+ Proposta</button></h3>${ps.length?`<div class="list">${ps.map(rowProp).join("")}</div>`:`<div style="color:var(--muted);font-size:14px">Nenhuma proposta ainda.</div>`}</div>`:""}
+  <div class="mfoot"><div class="g">${id?`<button class="btn danger" data-act="del" data-col="clientes" data-id="${id}">Excluir</button>`:""}</div><div class="g"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="submit" data-form="formCli">Salvar</button></div></div>`);
+}
+function mPropostaForm(id,preset){
+  const p=id?byId(S.propostas,id):{status:"enviada",dataEnvio:hoje(),...(preset||{})};
+  openModal(`${mhead(id?"Editar proposta":"Nova proposta")}<form class="form" id="formProp" data-id="${id||""}">
+    <label class="f full">Título do projeto<input id="pr_tit" name="titulo" value="${esc(p.titulo)}" placeholder="Landing page para clínica odontológica" required></label>
+    <label class="f">Cliente<select id="pr_cli" name="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
+    <label class="f">Plataforma<select id="pr_plat" name="plataformaId">${opts(S.plataformas,p.plataformaId,x=>x.nome,"Contato direto")}</select></label>
+    <label class="f">Status<select id="pr_st" name="status">${ST.status.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f">Valor proposto (R$)<input id="pr_val" name="valor" type="number" step="0.01" min="0" value="${esc(p.valor)}"></label>
+    <label class="f">Data de envio<input id="pr_dt" name="dataEnvio" type="date" value="${esc(p.dataEnvio)}"></label>
+    <label class="f">Prazo de entrega<input id="pr_prazo" name="prazo" value="${esc(p.prazo)}" placeholder="15 dias úteis"></label>
+    <label class="f full">Link da vaga / conversa<input id="pr_link" name="link" value="${esc(p.link)}" placeholder="https://"></label>
+    <label class="f full">Escopo / descrição<textarea id="pr_desc" name="descricao">${esc(p.descricao)}</textarea></label>
+    <label class="f full">Anotações internas<textarea id="pr_notas" name="notas" placeholder="Só você vê">${esc(p.notas)}</textarea></label>
+  </form>
+  ${!S.clientes.length?`<p style="color:var(--muted);font-size:13px">Dica: cadastre o cliente na aba Clientes para vinculá-lo.</p>`:""}
+  <div class="mfoot"><div class="g"></div><div class="g"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="submit" data-form="formProp">Salvar</button></div></div>`);
+}
+function mProposta(id){
+  const p=byId(S.propostas,id);if(!p)return closeModal();
+  const anex=p.anexos||[];const hist=(p.historico||[]).slice().reverse();
+  const orcs=S.orcamentos.filter(o=>o.propostaId===id);
+  openModal(`${mhead(esc(p.titulo||"Proposta"))}<div class="detail">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill ${p.status}">${STL[p.status]}</span><span class="money" style="font-weight:600">${brl(p.valor)}</span></div>
+    <dl><dt>Cliente</dt><dd>${esc(cliNome(p.clienteId))}</dd><dt>Plataforma</dt><dd>${esc(platNome(p.plataformaId))}</dd>
+    <dt>Enviada em</dt><dd>${dtBR(p.dataEnvio)}</dd><dt>Prazo</dt><dd>${esc(p.prazo||"—")}</dd>
+    ${p.link?`<dt>Link</dt><dd><a href="${esc(p.link)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(p.link)}</a></dd>`:""}
+    ${p.descricao?`<dt>Escopo</dt><dd style="white-space:pre-wrap">${esc(p.descricao)}</dd>`:""}
+    ${p.notas?`<dt>Anotações</dt><dd style="white-space:pre-wrap">${esc(p.notas)}</dd>`:""}</dl>
+    <div class="sect"><h3>Mudar status</h3><div style="display:flex;gap:6px;flex-wrap:wrap">${ST.status.map(([k,l])=>`<button class="btn sm ${p.status===k?"primary":""}" data-act="setStatus" data-id="${id}" data-st="${k}">${l}</button>`).join("")}</div></div>
+    <div class="sect"><h3>Anexos <span style="font:400 12px var(--f-body);color:var(--muted)">Qualquer arquivo: PDF, DOCX, imagens, ZIP…</span></h3>
+      <div class="files">${anex.map((a,i)=>`<div class="file"><span class="ext">${esc((a.nome.split(".").pop()||"").slice(0,4))}</span><a href="#" data-act="openFile" data-file="${esc(a.id)}" data-nome="${esc(a.nome)}">${esc(a.nome)}</a><span style="color:var(--muted);font-size:12px">${(a.tam/1024/1024).toFixed(1)} MB</span>${S.assets?`<button class="btn sm ghost danger" data-act="delAnexo" data-id="${id}" data-i="${i}" aria-label="Remover anexo">✕</button>`:""}</div>`).join("")}</div>
+      ${S.assets?`<label class="drop" id="drop" style="display:block;margin-top:8px">Arraste arquivos aqui ou <u>escolha no computador</u><input type="file" id="fileIn" data-id="${id}" multiple hidden></label>`:`<div style="color:var(--muted);font-size:13px">${anex.length?"":"Nenhum anexo."} Envio de arquivos disponível apenas para quem edita esta página.</div>`}
+      <div id="upmsg" style="font-size:13px;color:var(--muted);margin-top:6px"></div>
+    </div>
+    <div class="sect"><h3>Histórico</h3>
+      <div class="addline" style="margin-bottom:10px"><input id="histIn" placeholder="Ex.: cliente pediu desconto de 10%"><button class="btn" data-act="addHist" data-id="${id}">Anotar</button></div>
+      <div class="hist">${hist.length?hist.map(h=>`<div><small>${esc(h.data)}</small>${esc(h.texto)}</div>`).join(""):`<div style="border:0;padding:0;color:var(--muted)">Sem registros.</div>`}</div>
+    </div>
+    <div class="sect"><h3>Orçamentos ligados <button class="btn sm primary" data-act="novoOrc" data-prop="${id}">Gerar orçamento</button></h3>
+      ${orcs.length?orcs.map(o=>`<div class="file" style="cursor:pointer" data-open="orcView" data-id="${o.id}"><span class="ext">ORC</span><span style="flex:1">${esc(o.numero)} · ${dtBR(o.data)}</span><span class="money">${brl(orcTotal(o).total)}</span></div>`).join(""):`<div style="color:var(--muted);font-size:14px">Nenhum ainda.</div>`}
+    </div></div>
+  <div class="mfoot"><div class="g"><button class="btn danger" data-act="del" data-col="propostas" data-id="${id}">Excluir proposta</button></div><div class="g"><button class="btn" data-act="editProp" data-id="${id}">Editar dados</button><button class="btn primary" data-act="close">Fechar</button></div></div>`,true);
+  wireDrop();
+}
+function wireDrop(){
+  const d=$("#drop"),inp=$("#fileIn");if(!d||!inp)return;
+  inp.addEventListener("change",()=>upload(inp.dataset.id,[...inp.files]));
+  ["dragenter","dragover"].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.add("on")}));
+  ["dragleave","drop"].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.remove("on")}));
+  d.addEventListener("drop",ev=>upload(inp.dataset.id,[...ev.dataTransfer.files]));
+}
+const TYPES={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",svg:"image/svg+xml",txt:"text/plain",csv:"text/csv",md:"text/markdown",json:"application/json",mp4:"video/mp4",webm:"video/webm"};
+async function upload(pid,files){
+  const msg=$("#upmsg");const p=byId(S.propostas,pid);if(!p||!S.assets)return;
+  const novos=[];
+  for(const f of files){const ext=(f.name.split(".").pop()||"").toLowerCase();const type=TYPES[ext]||f.type||"application/octet-stream";
+    msg.textContent=`Enviando ${f.name}…`;
+    try{const fid=uid();await idbPut("arquivos",{id:fid,nome:f.name,tipo:f.type||type,blob:f});novos.push({id:fid,nome:f.name,tam:f.size,em:hoje()})}
+    catch(e){toast(`Falha ao guardar ${f.name}. O navegador pode estar sem espaço.`)}}
+  msg.textContent="";
+  if(novos.length){const atual=byId(S.propostas,pid);await save("propostas",pid,{...strip(atual),anexos:[...(atual.anexos||[]),...novos],atualizadoEm:new Date().toISOString()});toast(`${novos.length} anexo(s) salvo(s)`);mProposta(pid)}
+}
+const strip=o=>{const {id,...r}=o;return r};
+
+/* orçamento */
+function nextNumero(){const y=new Date().getFullYear();const n=S.orcamentos.filter(o=>(o.numero||"").startsWith(`ORC-${y}-`)).map(o=>parseInt(o.numero.split("-")[2])||0);return `ORC-${y}-${String(Math.max(0,...n)+1).padStart(3,"0")}`}
+let draft=null;
+function mOrcForm(id,propId){
+  if(id)draft=JSON.parse(JSON.stringify(byId(S.orcamentos,id)));
+  else{const pr=propId?byId(S.propostas,propId):null;
+    draft={numero:nextNumero(),data:hoje(),validadeDias:S.perfil.validadeDias||15,clienteId:pr?.clienteId||"",propostaId:propId||"",titulo:pr?.titulo||"",escopo:pr?.descricao||"",prazo:pr?.prazo||"",pagamento:S.perfil.pagamento||"50% na aprovação e 50% na entrega, via Pix",condicoes:S.perfil.condicoes||"",desconto:0,
+      itens:pr&&pr.valor?[{descricao:pr.titulo||"Desenvolvimento",qtd:1,unit:+pr.valor}]:[{descricao:"",qtd:1,unit:0}]}}
+  renderOrcForm(id);
+}
+function renderOrcForm(id){
+  const o=draft;const t=orcTotal(o);
+  openModal(`${mhead(`${id?"Editar":"Novo"} orçamento <span class="money" style="font-weight:400;color:var(--muted);font-size:15px">${esc(o.numero)}</span>`)}
+  <div class="form" id="orcF">
+    <label class="f">Cliente<select id="o_cli" data-k="clienteId">${opts(S.clientes,o.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
+    <label class="f">Proposta vinculada<select id="o_prop" data-k="propostaId">${opts(S.propostas,o.propostaId,x=>x.titulo||"Sem título","Nenhuma")}</select></label>
+    <label class="f full">Título<input id="o_tit" data-k="titulo" value="${esc(o.titulo)}" placeholder="Desenvolvimento de sistema de agendamento"></label>
+    <label class="f">Data de emissão<input id="o_dt" type="date" data-k="data" value="${esc(o.data)}"></label>
+    <label class="f">Validade (dias)<input id="o_val" type="number" min="1" data-k="validadeDias" value="${esc(o.validadeDias)}"></label>
+    <label class="f full">Escopo do serviço<textarea id="o_esc" data-k="escopo">${esc(o.escopo)}</textarea></label>
+  </div>
+  <div class="sect"><h3>Itens <button class="btn sm" data-act="addItem">+ Item</button></h3>
+    <div class="tblwrap"><table class="items"><thead><tr><th>Descrição</th><th>Qtd</th><th>Valor unit. (R$)</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody>
+    ${o.itens.map((it,i)=>`<tr><td><input id="it_d${i}" data-i="${i}" data-f="descricao" value="${esc(it.descricao)}" placeholder="Ex.: Tela de login e cadastro"></td>
+      <td class="n"><input id="it_q${i}" type="number" min="0" step="1" data-i="${i}" data-f="qtd" value="${esc(it.qtd)}"></td>
+      <td class="v"><input id="it_u${i}" type="number" min="0" step="0.01" data-i="${i}" data-f="unit" value="${esc(it.unit)}"></td>
+      <td class="tot money" id="it_t${i}">${brl(it.qtd*it.unit)}</td>
+      <td class="x"><button class="btn sm ghost" data-act="rmItem" data-i="${i}" aria-label="Remover item">✕</button></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="totals"><span>Subtotal <span class="money" id="o_sub">${brl(t.sub)}</span></span>
+      <label style="display:flex;gap:8px;align-items:center">Desconto (R$) <input id="o_desc" type="number" min="0" step="0.01" data-k="desconto" value="${esc(o.desconto)}" style="width:120px"></label>
+      <span>Total <b class="money" id="o_tot">${brl(t.total)}</b></span></div>
+  </div>
+  <div class="sect form">
+    <label class="f">Prazo de entrega<input id="o_prazo" data-k="prazo" value="${esc(o.prazo)}" placeholder="20 dias úteis"></label>
+    <label class="f">Forma de pagamento<input id="o_pag" data-k="pagamento" value="${esc(o.pagamento)}"></label>
+    <label class="f full">Condições gerais<textarea id="o_cond" data-k="condicoes">${esc(o.condicoes)}</textarea></label>
+  </div>
+  <div class="mfoot"><div class="g">${id?`<button class="btn danger" data-act="del" data-col="orcamentos" data-id="${id}">Excluir</button>`:""}</div>
+  <div class="g"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="saveOrc" data-id="${id||""}">Salvar e ver documento</button></div></div>`,true);
+}
+function docHTML(o){
+  const p=S.perfil,c=byId(S.clientes,o.clienteId)||{};const t=orcTotal(o);
+  const venc=(()=>{try{const d=new Date(o.data+"T12:00");d.setDate(d.getDate()+(+o.validadeDias||15));return d.toLocaleDateString("pt-BR")}catch(e){return""}})();
+  const dataExt=(()=>{try{return new Date(o.data+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"long",year:"numeric"})}catch(e){return dtBR(o.data)}})();
+  const L=(k,v)=>v?`<div><span style="color:#6b7383">${k}:</span> ${esc(v)}</div>`:"";
+  return `<div style="font-family:'IBM Plex Sans',Arial,sans-serif;color:#1d2330;font-size:13.5px;line-height:1.5">
+  <table style="width:100%;border-collapse:collapse;margin-bottom:22px"><tr>
+    <td style="vertical-align:top"><div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:22px;font-weight:700">${esc(p.nome||"Seu nome")}</div>
+      <div style="color:#5d6676;font-size:12.5px">${esc([p.documento&&("CPF/CNPJ "+p.documento),p.cidade].filter(Boolean).join(" · "))}<br>${esc([p.email,p.telefone,p.site].filter(Boolean).join(" · "))}</div></td>
+    <td style="vertical-align:top;text-align:right"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Orçamento</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500">${esc(o.numero)}</div>
+      <div style="font-size:12.5px;color:#5d6676">Emitido em ${dtBR(o.data)}<br>Válido até ${venc}</div></td></tr></table>
+  <div style="border-top:2px solid #1d2330;border-bottom:1px solid #d7dbe3;padding:12px 0;margin-bottom:20px">
+    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676;margin-bottom:4px">Cliente</div>
+    <div style="font-weight:600">${esc(c.nome||"—")}${c.empresa?` · ${esc(c.empresa)}`:""}</div>
+    <div style="font-size:12.5px">${L("CPF/CNPJ",c.documento)}${L("E-mail",c.email)}${L("Telefone",c.telefone)}${L("Cidade",c.cidade)}</div></div>
+  ${o.titulo?`<div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:18px;font-weight:600;margin-bottom:8px">${esc(o.titulo)}</div>`:""}
+  ${o.escopo?`<div style="margin-bottom:18px"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676;margin-bottom:4px">Escopo do serviço</div><div style="white-space:pre-wrap">${esc(o.escopo)}</div></div>`:""}
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;font-size:13px">
+    <thead><tr style="background:#f0f2f6"><th style="text-align:left;padding:8px;width:36px">#</th><th style="text-align:left;padding:8px">Descrição</th><th style="text-align:right;padding:8px;width:60px">Qtd</th><th style="text-align:right;padding:8px;width:120px">Unitário</th><th style="text-align:right;padding:8px;width:120px">Total</th></tr></thead>
+    <tbody>${(o.itens||[]).map((it,i)=>`<tr style="border-bottom:1px solid #e3e6ec"><td style="padding:8px;color:#6b7383">${i+1}</td><td style="padding:8px">${esc(it.descricao)}</td><td style="padding:8px;text-align:right">${esc(it.qtd)}</td><td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace">${brl(it.unit)}</td><td style="padding:8px;text-align:right;font-family:'IBM Plex Mono',monospace">${brl(it.qtd*it.unit)}</td></tr>`).join("")}</tbody></table>
+  <table style="margin-left:auto;font-size:13px;margin-bottom:22px"><tr><td style="padding:3px 12px;color:#5d6676">Subtotal</td><td style="text-align:right;font-family:'IBM Plex Mono',monospace">${brl(t.sub)}</td></tr>
+    ${t.desc?`<tr><td style="padding:3px 12px;color:#5d6676">Desconto</td><td style="text-align:right;font-family:'IBM Plex Mono',monospace">− ${brl(t.desc)}</td></tr>`:""}
+    <tr><td style="padding:8px 12px;font-weight:600;border-top:2px solid #1d2330">Total</td><td style="padding-top:8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;border-top:2px solid #1d2330">${brl(t.total)}</td></tr></table>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px"><tr>
+    <td style="vertical-align:top;padding-right:16px;width:50%"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Prazo de entrega</div>${esc(o.prazo||"A combinar")}</td>
+    <td style="vertical-align:top"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Forma de pagamento</div>${esc(o.pagamento||"A combinar")}</td></tr></table>
+  ${o.condicoes?`<div style="font-size:12.5px;margin-bottom:30px"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Condições gerais</div><div style="white-space:pre-wrap">${esc(o.condicoes)}</div></div>`:""}
+  <div style="font-size:12.5px;margin-bottom:46px">${esc(p.cidade||"")}${p.cidade?", ":""}${dataExt}.</div>
+  <table style="width:100%;font-size:12.5px"><tr>
+    <td style="width:45%;border-top:1px solid #1d2330;padding-top:6px;text-align:center">${esc(p.nome||"Prestador")}<br><span style="color:#6b7383">Prestador de serviço</span></td><td></td>
+    <td style="width:45%;border-top:1px solid #1d2330;padding-top:6px;text-align:center">${esc(c.nome||"Cliente")}<br><span style="color:#6b7383">De acordo — cliente</span></td></tr></table>
+  </div>`;
+}
+function mOrcView(id){
+  const o=byId(S.orcamentos,id);if(!o)return closeModal();
+  openModal(`${mhead(`Orçamento <span class="money">${esc(o.numero)}</span>`)}
+  <div class="docpaper">${docHTML(o)}</div>
+  <p style="color:var(--muted);font-size:13px;margin:12px 0 0">Em "Imprimir / PDF", escolha <b>Salvar como PDF</b> como destino para gerar o arquivo do cliente.</p>
+  <div class="mfoot"><div class="g"><button class="btn" data-act="editOrc" data-id="${id}">Editar</button><button class="btn" data-act="copyOrc" data-id="${id}">Copiar resumo p/ WhatsApp</button></div>
+  <div class="g"><button class="btn" data-act="dlOrc" data-id="${id}">Baixar HTML</button><button class="btn primary" data-act="printOrc" data-id="${id}">Imprimir / PDF</button></div></div>`,true);
+}
+function dlOrc(id){const o=byId(S.orcamentos,id);baixar(`${o.numero}.html`,new Blob([orcFileHTML(id)],{type:"text/html"}));toast("Arquivo baixado")}
+function orcFileHTML(id){
+  const o=byId(S.orcamentos,id);
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(o.numero)} — ${esc(cliNome(o.clienteId))}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>@page{size:A4;margin:16mm}body{margin:0;background:#e9ecf1}.p{background:#fff;max-width:794px;margin:24px auto;padding:48px 56px;box-shadow:0 4px 20px rgba(0,0,0,.08)}.hint{max-width:794px;margin:16px auto 0;font:13px Arial;color:#555;text-align:center}@media print{body{background:#fff}.p{box-shadow:none;margin:0;padding:0;max-width:none}.hint{display:none}}</style></head>
+<body><div class="hint">Para gerar PDF: Ctrl+P (ou Cmd+P) → Salvar como PDF.</div><div class="p">${docHTML(o)}</div></body></html>`;
+  return html;
+}
+function baixar(nome,blob){const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+function imprimirOrc(id){const html=orcFileHTML(id);const w=window.open("","_blank");if(!w){toast("Libere pop-ups para imprimir.");return}w.document.open();w.document.write(html.replace("</body>","<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body>"));w.document.close()}
+function copyOrc(id){
+  const o=byId(S.orcamentos,id);const t=orcTotal(o);
+  const txt=`*Orçamento ${o.numero}*\n${o.titulo||""}\nCliente: ${cliNome(o.clienteId)}\n\n${(o.itens||[]).map(i=>`• ${i.descricao} — ${i.qtd} × ${brl(i.unit)}`).join("\n")}\n${t.desc?`\nDesconto: ${brl(t.desc)}`:""}\n*Total: ${brl(t.total)}*\nPrazo: ${o.prazo||"a combinar"}\nPagamento: ${o.pagamento||"a combinar"}\nVálido por ${o.validadeDias||15} dias.\n\n${S.perfil.nome||""}`;
+  navigator.clipboard.writeText(txt).then(()=>toast("Resumo copiado"),()=>toast("Não deu para copiar neste app."));
+}
+
+/* ---------- backup ---------- */
+const toB64=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
+async function exportar(){
+  const out={app:"atelie-propostas",versao:1,exportadoEm:new Date().toISOString()};
+  for(const c of COLS)out[c]=await idbAll(c);
+  const arqs=await idbAll("arquivos");out.arquivos=[];
+  for(const f of arqs)out.arquivos.push({id:f.id,nome:f.nome,tipo:f.tipo,data:await toB64(f.blob)});
+  baixar(`backup-atelie-${hoje()}.json`,new Blob([JSON.stringify(out)],{type:"application/json"}));toast("Backup exportado")
+}
+async function importar(file){
+  try{const d=JSON.parse(await file.text());if(d.app!=="atelie-propostas")throw 0;
+    for(const c of [...COLS,"arquivos"])await tx(c,"readwrite",st=>st.clear());
+    for(const c of COLS)for(const v of d[c]||[])await idbPut(c,v);
+    for(const f of d.arquivos||[]){const blob=await (await fetch(f.data)).blob();await idbPut("arquivos",{id:f.id,nome:f.nome,tipo:f.tipo,blob})}
+    await loadAll();render();toast("Backup importado")}
+  catch(e){toast("Arquivo de backup inválido.")}
+}
+
+/* ---------- eventos ---------- */
+const formData=f=>Object.fromEntries([...f.querySelectorAll("[name]")].map(i=>[i.name,i.value.trim()]));
+document.addEventListener("click",async e=>{
+  const tab=e.target.closest("#tabs button");if(tab){S.tab=tab.dataset.tab;render();return}
+  if(e.target.matches(".ov")){closeModal();return}
+  const op=e.target.closest("[data-open]");const a=e.target.closest("[data-act]");
+  if(op&&!a){const id=op.dataset.id;({proposta:mProposta,cliente:mCliente,plataforma:mPlataforma,orcView:mOrcView})[op.dataset.open](id);return}
+  if(!a)return;const act=a.dataset.act,id=a.dataset.id;
+  if(act==="close")closeModal();
+  else if(act==="novaPlat")mPlataforma();
+  else if(act==="novoCliente")mCliente();
+  else if(act==="novaProposta")mPropostaForm(null,a.dataset.cli?{clienteId:a.dataset.cli}:null);
+  else if(act==="editProp")mPropostaForm(id);
+  else if(act==="novoOrc")mOrcForm(null,a.dataset.prop);
+  else if(act==="editOrc")mOrcForm(id);
+  else if(act==="verPlat"){S.filtro.plat=id;S.tab="propostas";render()}
+  else if(act==="submit"){const f=document.getElementById(a.dataset.form);if(!f.reportValidity())return;const d=formData(f);const fid=f.dataset.id||null;
+    const col={formPlat:"plataformas",formCli:"clientes",formProp:"propostas"}[f.id];
+    if(col==="propostas"){d.valor=d.valor?+d.valor:0;const old=fid?byId(S.propostas,fid):{};Object.assign(d,{anexos:old.anexos||[],historico:old.historico||[],criadoEm:old.criadoEm||new Date().toISOString(),atualizadoEm:new Date().toISOString()});
+      if(!fid)d.historico=[{data:new Date().toLocaleString("pt-BR"),texto:`Proposta registrada como ${STL[d.status]}`}]}
+    else{const old=fid?byId(S[col],fid):{};d.criadoEm=old.criadoEm||new Date().toISOString()}
+    a.disabled=true;try{const nid=await save(col,fid,d);toast("Salvo");if(col==="propostas")mProposta(nid);else closeModal()}catch(err){a.disabled=false}}
+  else if(act==="del"){if(!a.classList.contains("armed")){a.classList.add("armed");a.textContent="Confirmar exclusão";setTimeout(()=>{a.classList.remove("armed");a.textContent="Excluir"},4000);return}
+    await del(a.dataset.col,id);closeModal();toast("Excluído")}
+  else if(act==="setStatus"){const p=byId(S.propostas,id);if(p.status===a.dataset.st)return;
+    await save("propostas",id,{...strip(p),status:a.dataset.st,historico:[...(p.historico||[]),{data:new Date().toLocaleString("pt-BR"),texto:`Status: ${STL[p.status]} → ${STL[a.dataset.st]}`}],atualizadoEm:new Date().toISOString()});mProposta(id)}
+  else if(act==="addHist"){const v=$("#histIn").value.trim();if(!v)return;const p=byId(S.propostas,id);
+    await save("propostas",id,{...strip(p),historico:[...(p.historico||[]),{data:new Date().toLocaleString("pt-BR"),texto:v}],atualizadoEm:new Date().toISOString()});mProposta(id)}
+  else if(act==="delAnexo"){if(!a.classList.contains("armed")){a.classList.add("armed");a.textContent="Remover?";setTimeout(()=>{a.classList.remove("armed");a.textContent="✕"},4000);return}
+    const p=byId(S.propostas,id);const i=+a.dataset.i;const ax=(p.anexos||[])[i];const rest=(p.anexos||[]).filter((_,k)=>k!==i);
+    await save("propostas",id,{...strip(p),anexos:rest,atualizadoEm:new Date().toISOString()});try{if(ax)await idbDel("arquivos",ax.id)}catch(err){}mProposta(id)}
+  else if(act==="addItem"){draft.itens.push({descricao:"",qtd:1,unit:0});renderOrcForm(draft.id);const el=document.getElementById(`it_d${draft.itens.length-1}`);el&&el.focus()}
+  else if(act==="rmItem"){draft.itens.splice(+a.dataset.i,1);if(!draft.itens.length)draft.itens.push({descricao:"",qtd:1,unit:0});renderOrcForm(draft.id)}
+  else if(act==="saveOrc"){if(!draft.clienteId){toast("Escolha o cliente");return}
+    const d={...draft};delete d.id;d.itens=d.itens.filter(i=>i.descricao||i.unit);d.desconto=+d.desconto||0;d.validadeDias=+d.validadeDias||15;
+    a.disabled=true;try{const nid=await save("orcamentos",draft.id||null,d);draft=null;S.orcamentos=S.orcamentos.filter(o=>o.id!==nid).concat({id:nid,...d});mOrcView(nid)}catch(err){a.disabled=false}}
+  else if(act==="dlOrc")dlOrc(id);
+  else if(act==="printOrc")imprimirOrc(id);
+  else if(act==="openFile"){e.preventDefault();const f=await idbGet("arquivos",a.dataset.file);if(!f){toast("Arquivo não encontrado neste navegador.");return}
+    const u=URL.createObjectURL(f.blob);const w=window.open(u,"_blank");if(!w)baixar(f.nome,f.blob);setTimeout(()=>URL.revokeObjectURL(u),60000)}
+  else if(act==="exportar")exportar();
+  else if(act==="copyOrc")copyOrc(id);
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="fq"){S.filtro.q=t.value;render()}
+  else if(t.id==="fqc"){S.filtro.qc=t.value;render()}
+  else if(draft&&t.closest("#modalRoot")){
+    if(t.dataset.k){draft[t.dataset.k]=t.type==="number"?(+t.value||0):t.value}
+    else if(t.dataset.f){const it=draft.itens[+t.dataset.i];it[t.dataset.f]=t.dataset.f==="descricao"?t.value:(+t.value||0);const c=document.getElementById(`it_t${t.dataset.i}`);if(c)c.textContent=brl(it.qtd*it.unit)}
+    const tt=orcTotal(draft);const s=$("#o_sub"),o=$("#o_tot");if(s)s.textContent=brl(tt.sub);if(o)o.textContent=brl(tt.total);
+  }
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="impIn"&&t.files[0]){importar(t.files[0]);return}
+  if(t.id==="fs"){S.filtro.status=t.value;render()}
+  else if(t.id==="fp"){S.filtro.plat=t.value;render()}
+  else if(draft&&t.tagName==="SELECT"&&t.dataset.k){draft[t.dataset.k]=t.value;
+    if(t.dataset.k==="propostaId"&&t.value){const pr=byId(S.propostas,t.value);if(pr){if(!draft.clienteId)draft.clienteId=pr.clienteId||"";if(!draft.titulo)draft.titulo=pr.titulo||"";if(!draft.escopo)draft.escopo=pr.descricao||"";renderOrcForm(draft.id)}}}
+});
+document.addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(e.target.id==="formPerfil"){const d=formData(e.target);d.validadeDias=+d.validadeDias||15;
+    try{await idbPut("config",{...d,id:"perfil"});S.perfil=d;toast("Dados salvos")}catch(err){toast("Não foi possível salvar.")}}
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&$("#modalRoot").innerHTML)closeModal();
+  if(e.key==="Enter"&&e.target.id==="histIn"){e.preventDefault();document.querySelector('[data-act="addHist"]')?.click()}
+});
+boot();
+})();
+</script>
+</body>
+</html>
