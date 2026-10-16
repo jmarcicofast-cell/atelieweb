@@ -163,6 +163,26 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .chk input{width:auto}
 .pw{display:flex;gap:4px}.pw input{flex:1;min-width:0}
 @media (max-width:640px){.erow{grid-template-columns:auto 1fr auto}.erow input[type=date]{grid-column:2}.arow{grid-template-columns:1fr}.lrow{grid-template-columns:1fr auto}.lrow input{grid-column:1/-1}}
+.ptabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:-4px 0 18px}
+.ptabs button{border:0;background:none;font:500 14px var(--f-body);color:var(--muted);padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.ptabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.ptabs .cnt{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--sunk);font-size:12px;margin-left:4px}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gi{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;min-width:0}
+.gi .th{aspect-ratio:4/3;max-width:100%;background:var(--sunk);display:grid;place-items:center;cursor:pointer;overflow:hidden}
+.gi .th img{width:100%;height:100%;object-fit:cover}
+.gi .th .ic{font:600 15px var(--f-mono);color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:10px 12px;text-transform:uppercase}
+.gi .meta{padding:8px 10px;font-size:13px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.gi .meta b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gi .meta small{color:var(--muted);font-size:11px}
+.gi .acts{display:flex;border-top:1px solid var(--line)}
+.gi .acts button{flex:1;border:0;background:none;padding:7px;font:500 12px var(--f-body);color:var(--muted);cursor:pointer}
+.gi .acts button:hover{background:var(--sunk);color:var(--ink)}
+.gi .acts button+button{border-left:1px solid var(--line)}
+.gfil{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 12px}
+.lb{position:fixed;inset:0;z-index:40;background:rgba(5,8,15,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.lb img{max-width:100%;max-height:80vh;border-radius:6px}
+.lb div{color:#fff;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .secret{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:30;font-size:14px}
 /* documento formal (preview) */
@@ -469,11 +489,11 @@ function vProjetos(){
   return `<div class="head"><div><h1>Projetos</h1><p>Desenvolvimento dos trabalhos fechados e o pacote de entrega para o cliente.</p></div><button class="btn primary" data-act="novoProjeto">+ Projeto</button></div>
   ${ap.length?`<div class="banner" style="background:var(--ok-soft);color:var(--ok)">${ap.length} proposta(s) aprovada(s) sem projeto: ${ap.map(p=>`<button class="btn sm" data-act="abrirDev" data-id="${p.id}" style="margin:4px 4px 0 0">${esc(p.titulo||"Sem título")}</button>`).join("")}</div>`:""}
   <div class="panel">${list.length?`<div class="list">${list.map(p=>{const pr=progresso(p);return `<div class="row" data-open="projeto" data-id="${p.id}"><div class="t">${esc(p.titulo||"Projeto")}</div>
-    <div class="s">${esc(cliNome(p.clienteId))}${p.prazoEntrega?` · entrega ${dtBR(p.prazoEntrega)}`:""} · ${folhas(p).filter(x=>x.feito).length}/${folhas(p).length} tarefas<div class="prog" style="margin-top:6px;max-width:320px"><span style="width:${pr}%"></span></div></div>
+    <div class="s">${esc(cliNome(p.clienteId))}${p.prazoEntrega?` · entrega ${dtBR(p.prazoEntrega)}`:""} · ${folhas(p).filter(x=>x.feito).length}/${folhas(p).length} tarefas${(p.anexos||[]).length?` · ${p.anexos.length} anexo(s)`:""}<div class="prog" style="margin-top:6px;max-width:320px"><span style="width:${pr}%"></span></div></div>
     <div class="r"><span class="pill ${p.status}">${PSTL[p.status]||"A iniciar"}</span><span style="font-size:12px;color:var(--muted)">${pr}%</span></div></div>`}).join("")}</div>`
   :emptyBox("Nenhum projeto em desenvolvimento","Quando um cliente fechar, abra a proposta aprovada e clique em Abrir desenvolvimento.","novoProjeto","+ Projeto")}</div>`;
 }
-let pd=null,pdTimer=null;
+let pd=null,pdTimer=null,projTab="dados",galFiltro="todos",thumbURLs=[];
 async function abrirDev(propId){
   const ex=S.projetos.find(j=>j.propostaId===propId);if(ex)return mProjeto(ex.id);
   const pr=byId(S.propostas,propId)||{};
@@ -486,13 +506,50 @@ async function abrirDev(propId){
 }
 async function novoProjeto(){const id=await save("projetos",null,{titulo:"",clienteId:"",status:"iniciar",dataInicio:hoje(),etapas:[],acessos:[],links:[],criadoEm:new Date().toISOString()});mProjeto(id)}
 function salvarPD(){clearTimeout(pdTimer);pdTimer=setTimeout(async()=>{if(!pd)return;const {id,...r}=pd;try{await idbPut("projetos",{...r,id,atualizadoEm:new Date().toISOString()});const i=S.projetos.findIndex(x=>x.id===id);if(i>=0)S.projetos[i]={...pd};const el=$("#pdSaved");if(el)el.textContent="Salvo "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){toast("Não foi possível salvar.")}},600)}
-function mProjeto(id){
-  const p=byId(S.projetos,id);if(!p)return closeModal();pd=JSON.parse(JSON.stringify(p));renderProjeto();
+function mProjeto(id,tab){
+  const p=byId(S.projetos,id);if(!p)return closeModal();pd=JSON.parse(JSON.stringify(p));projTab=tab||"dados";renderProjeto();
+}
+function todosAnexos(p){
+  const prop=p.propostaId?byId(S.propostas,p.propostaId):null;
+  return [...(p.anexos||[]).map((a,i)=>({...a,origem:"projeto",i})),...((prop&&prop.anexos)||[]).map((a,i)=>({...a,origem:"proposta",i}))];
+}
+const ehImg=a=>/\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(a.nome||"")||/^image\//.test(a.tipo||"");
+const tamFmt=b=>b>=1048576?(b/1048576).toFixed(1)+" MB":Math.max(1,Math.round((b||0)/1024))+" KB";
+function tabsProj(){const n=todosAnexos(pd).length;return `<div class="ptabs" role="tablist"><button role="tab" aria-selected="${projTab==="dados"}" data-act="projTab" data-t="dados">Desenvolvimento</button><button role="tab" aria-selected="${projTab==="anexos"}" data-act="projTab" data-t="anexos">Anexos <span class="cnt">${n}</span></button></div>`}
+function renderAnexosProj(){
+  thumbURLs.forEach(u=>URL.revokeObjectURL(u));thumbURLs=[];
+  const all=todosAnexos(pd);
+  const nImg=all.filter(ehImg).length;
+  const list=all.filter(a=>galFiltro==="todos"||(galFiltro==="imagens"?ehImg(a):!ehImg(a)));
+  openModal(`${mhead(`${esc(pd.titulo||"Projeto")}`)}${tabsProj()}
+  <label class="drop" id="pdrop" style="display:block">Arraste arquivos e imagens aqui ou <u>escolha no computador</u><br><span style="font-size:12px">Qualquer formato: imagens, PDF, DOCX, ZIP, planilhas…</span><input type="file" id="projFile" multiple hidden></label>
+  <div id="pupmsg" style="font-size:13px;color:var(--muted);margin-top:6px"></div>
+  <div class="gfil">${[["todos",`Todos (${all.length})`],["imagens",`Imagens (${nImg})`],["arquivos",`Arquivos (${all.length-nImg})`]].map(([k,l])=>`<button class="btn sm ${galFiltro===k?"primary":""}" data-act="galFiltro" data-f="${k}">${l}</button>`).join("")}</div>
+  ${list.length?`<div class="gal">${list.map(a=>`<div class="gi"><div class="th" data-act="${ehImg(a)?"verImg":"openFile"}" data-file="${esc(a.id)}" data-nome="${esc(a.nome)}">${ehImg(a)?`<img data-thumb="${esc(a.id)}" alt="${esc(a.nome)}">`:`<span class="ic">${esc((a.nome.split(".").pop()||"arq").slice(0,4))}</span>`}</div>
+    <div class="meta"><b title="${esc(a.nome)}">${esc(a.nome)}</b><small>${tamFmt(a.tam)} · ${a.origem==="proposta"?"da proposta":"do projeto"}${a.em?` · ${dtBR(a.em)}`:""}</small></div>
+    <div class="acts"><button data-act="baixarArq" data-file="${esc(a.id)}">Baixar</button>${a.origem==="projeto"?`<button data-act="rmAnexoProj" data-i="${a.i}">Remover</button>`:""}</div></div>`).join("")}</div>`
+  :`<div class="empty"><b>${all.length?"Nada neste filtro":"Nenhum anexo ainda"}</b>${all.length?"":"Guarde aqui logo, fotos, textos e arquivos que o cliente mandou."}</div>`}
+  <div class="mfoot"><div class="g"></div><div class="g"><button class="btn" data-act="close">Fechar</button></div></div>`,true);
+  document.querySelectorAll("img[data-thumb]").forEach(async img=>{const f=await idbGet("arquivos",img.dataset.thumb);if(!f){img.replaceWith(Object.assign(document.createElement("span"),{className:"ic",textContent:"?"}));return}const u=URL.createObjectURL(f.blob);thumbURLs.push(u);img.src=u});
+  const d=$("#pdrop"),inp=$("#projFile");
+  inp.addEventListener("change",()=>uploadProj([...inp.files]));
+  ["dragenter","dragover"].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.add("on")}));
+  ["dragleave","drop"].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.remove("on")}));
+  d.addEventListener("drop",ev=>uploadProj([...ev.dataTransfer.files]));
+}
+async function persistPD(){clearTimeout(pdTimer);const {id,...r}=pd;await idbPut("projetos",{...r,id,atualizadoEm:new Date().toISOString()});const i=S.projetos.findIndex(x=>x.id===id);if(i>=0)S.projetos[i]=JSON.parse(JSON.stringify(pd))}
+async function uploadProj(files){
+  const msg=$("#pupmsg");let n=0;pd.anexos=pd.anexos||[];
+  for(const f of files){msg.textContent=`Guardando ${f.name}…`;
+    try{const fid=uid();await idbPut("arquivos",{id:fid,nome:f.name,tipo:f.type||"",blob:f});pd.anexos.push({id:fid,nome:f.name,tam:f.size,tipo:f.type||"",em:hoje()});n++}
+    catch(e){toast(`Falha ao guardar ${f.name}. O navegador pode estar sem espaço.`)}}
+  if(n){await persistPD();toast(`${n} arquivo(s) anexado(s)`)}renderAnexosProj();
 }
 function renderProjeto(){
+  if(projTab==="anexos")return renderAnexosProj();
   const p=pd;const pr=progresso(p);
   const v=k=>esc(p[k]);
-  openModal(`${mhead(`Desenvolvimento <span id="pdSaved" style="font:400 12px var(--f-body);color:var(--muted);margin-left:8px"></span>`)}
+  openModal(`${mhead(`Desenvolvimento <span id="pdSaved" style="font:400 12px var(--f-body);color:var(--muted);margin-left:8px"></span>`)}${tabsProj()}
   <div class="form">
     <label class="f full">Nome do projeto<input id="pj_tit" data-pk="titulo" value="${v("titulo")}"></label>
     <label class="f">Cliente<select id="pj_cli" data-pk="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
@@ -736,7 +793,7 @@ document.addEventListener("click",async e=>{
     else{const old=fid?byId(S[col],fid):{};d.criadoEm=old.criadoEm||new Date().toISOString()}
     a.disabled=true;try{const nid=await save(col,fid,d);toast("Salvo");if(col==="propostas")mProposta(nid);else closeModal()}catch(err){a.disabled=false}}
   else if(act==="del"){if(!a.classList.contains("armed")){a.classList.add("armed");a.textContent="Confirmar exclusão";setTimeout(()=>{a.classList.remove("armed");a.textContent="Excluir"},4000);return}
-    if(a.dataset.col==="projetos"){clearTimeout(pdTimer);pd=null}
+    if(a.dataset.col==="projetos"){clearTimeout(pdTimer);for(const ax of (pd&&pd.anexos)||[]){try{await idbDel("arquivos",ax.id)}catch(err){}}pd=null}
     await del(a.dataset.col,id);closeModal();toast("Excluído")}
   else if(act==="setStatus"){const p=byId(S.propostas,id);if(p.status===a.dataset.st)return;
     await save("propostas",id,{...strip(p),status:a.dataset.st,historico:[...(p.historico||[]),{data:new Date().toLocaleString("pt-BR"),texto:`Status: ${STL[p.status]} → ${STL[a.dataset.st]}`}],atualizadoEm:new Date().toISOString()});mProposta(id)}
@@ -764,6 +821,15 @@ document.addEventListener("click",async e=>{
     const pre={etapas:"et_t",acessos:"ac_s",links:"lk_t"}[l];const el=document.getElementById(pre+(pd[l].length-1));el&&el.focus()}
   else if(act==="rmRow"){if(!a.classList.contains("armed")&&a.dataset.list!=="etapas"){a.classList.add("armed");a.textContent="Confirmar";setTimeout(()=>{a.classList.remove("armed");a.textContent="Remover"},4000);return}
     pd[a.dataset.list].splice(+a.dataset.i,1);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}
+  else if(act==="projTab"){if(projTab==="dados")await persistPD();projTab=a.dataset.t;renderProjeto()}
+  else if(act==="galFiltro"){galFiltro=a.dataset.f;renderAnexosProj()}
+  else if(act==="verImg"){const f=await idbGet("arquivos",a.dataset.file);if(!f){toast("Arquivo não encontrado neste navegador.");return}const u=URL.createObjectURL(f.blob);
+    const lb=document.createElement("div");lb.className="lb";lb.innerHTML=`<img alt=""><div><span></span><button class="btn sm" data-lb="baixar">Baixar</button><button class="btn sm" data-lb="fechar">Fechar</button></div>`;
+    lb.querySelector("img").src=u;lb.querySelector("span").textContent=f.nome;document.body.appendChild(lb);
+    lb.addEventListener("click",ev=>{ev.stopPropagation();const b=ev.target.dataset.lb;if(b==="baixar"){baixar(f.nome,f.blob);return}if(b==="fechar"||ev.target===lb){lb.remove();URL.revokeObjectURL(u)}})}
+  else if(act==="baixarArq"){const f=await idbGet("arquivos",a.dataset.file);if(f)baixar(f.nome,f.blob);else toast("Arquivo não encontrado neste navegador.")}
+  else if(act==="rmAnexoProj"){if(!a.classList.contains("armed")){a.classList.add("armed");a.textContent="Confirmar";a.style.color="var(--bad)";setTimeout(()=>{if(a.isConnected){a.classList.remove("armed");a.textContent="Remover";a.style.color=""}},4000);return}
+    const ax=pd.anexos.splice(+a.dataset.i,1)[0];await persistPD();try{if(ax)await idbDel("arquivos",ax.id)}catch(err){}toast("Anexo removido");renderAnexosProj()}
   else if(act==="addSub"){const e=pd.etapas[+a.dataset.e];e.subs=e.subs||[];e.subs.push({texto:"",feito:false});syncEtapa(e);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;const el=document.getElementById(`sb_t${a.dataset.e}_${e.subs.length-1}`);el&&el.focus()}
   else if(act==="rmSub"){const e=pd.etapas[+a.dataset.e];e.subs.splice(+a.dataset.i,1);syncEtapa(e);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}
   else if(act==="verSenha"){const el=document.getElementById("ac_p"+a.dataset.i);const show=el.type==="password";el.type=show?"text":"password";a.textContent=show?"Ocultar":"Ver"}
@@ -814,7 +880,7 @@ document.addEventListener("submit",async e=>{
     const novo={...S.perfil,...d};try{await idbPut("config",{...novo,id:"perfil"});S.perfil=novo;toast("Dados salvos")}catch(err){toast("Não foi possível salvar.")}}
 });
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"&&$("#modalRoot").innerHTML)closeModal();
+  if(e.key==="Escape"){const lb=document.querySelector(".lb");if(lb){lb.remove();return}if($("#modalRoot").innerHTML)closeModal()}
   if(e.key==="Enter"&&e.target.id==="histIn"){e.preventDefault();document.querySelector('[data-act="addHist"]')?.click()}
 });
 boot();
