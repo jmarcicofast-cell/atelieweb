@@ -1,5 +1,9 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ateliê Web</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Ateliê Web — sites, sistemas sob medida e agentes de atendimento com IA para pequenos negócios.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +24,7 @@
   --bg:#131218; --paper:#1b1a22; --tint:#211d2e; --ink:#efedf5; --soft:#a6a1b5; --line:#2e2b38;
   --violet:#a78bfa; --violet-2:#c4b0ff; --violet-deep:#8b5cf6; --graphite:#0d0c11; --on-dark:#f4f2fa; --on-dark-soft:#a9a4b8; --wa:#3fbf74; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
@@ -215,7 +220,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .typing{display:inline-flex;gap:4px;padding:12px 14px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--soft);animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes bl{50%{opacity:.25}}
 </style>
-
+<style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}</style>
+</head>
+<body>
 <header class="nav" id="nav"><div class="wrap">
   <a class="logo" href="#topo"><img src="logo-simbolo.png" alt="">Ateliê <span>Web</span></a>
   <nav aria-label="Seções"><ul id="menu">
@@ -492,3 +499,6 @@ body.addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)ret
 document.getElementById("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;inp.value="";if(!live){body.querySelectorAll(".quick").forEach(q=>{if(!q.querySelector("a"))q.remove()});add(esc(v).replace(/\n/g,"<br>"),"me")}responder(v)});
 })();
 </script>
+
+</body>
+</html>
