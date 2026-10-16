@@ -8,6 +8,11 @@ service cloud.firestore {
     }
     function txt(v, max) { return v is string && v.size() <= max; }
 
+    // Dados do CRM (clientes, propostas, orçamentos, projetos, anexos): só a dona lê e grava
+    match /crm/{caminho=**} {
+      allow read, write: if isAdmin();
+    }
+
     // Status online/offline mostrado no chat do site
     match /config/status {
       allow read: if true;

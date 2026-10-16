@@ -6,8 +6,9 @@ CRM pessoal para propostas de programação: clientes, plataformas (Workana etc.
 
 Abra o site pelo GitHub Pages: `https://jmarcicofast-cell.github.io/atelieweb/`
 
-- Os dados ficam salvos **no navegador** de quem usa (IndexedDB). Nada é enviado para servidor nenhum.
-- Em **Meus dados → Backup**, exporte um arquivo `.json` periodicamente. Para usar em outro computador, importe esse arquivo lá.
+- Entre com o login do Ateliê Web (Meus dados → Nuvem). Com o login feito, clientes, propostas, orçamentos, projetos e anexos (até 15 MB cada) ficam salvos no Firebase (`crm/dados/...`) e aparecem em qualquer navegador onde você entrar. Sem login, os dados ficam só no navegador (IndexedDB) e sobem para a nuvem no próximo login.
+- As regras de `firestore.rules` precisam estar publicadas no console do Firebase (Firestore → Regras) para a nuvem funcionar.
+- Em **Meus dados → Backup**, dá para exportar uma cópia extra em `.json`.
 - Orçamentos: abra o orçamento e clique em **Imprimir / PDF** → destino "Salvar como PDF".
 
 ## Arquivos

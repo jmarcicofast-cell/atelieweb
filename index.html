@@ -267,15 +267,19 @@ const orcTotal=o=>{const sub=(o.itens||[]).reduce((s,i)=>s+(Number(i.qtd)||0)*(N
 /* ---------- boot ---------- */
 /* armazenamento local (IndexedDB): dados + arquivos ficam neste navegador */
 const COLS=["clientes","propostas","orcamentos","plataformas","projetos","config"];
-let IDB=null;
+let IDB=null;let idbPronto;const idbOk=new Promise(r=>{idbPronto=r});
 function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open("atelie-propostas",2);
   r.onupgradeneeded=()=>{const d=r.result;COLS.forEach(c=>{if(!d.objectStoreNames.contains(c))d.createObjectStore(c,{keyPath:"id"})});if(!d.objectStoreNames.contains("arquivos"))d.createObjectStore("arquivos",{keyPath:"id"})};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 function tx(store,mode,fn){return new Promise((res,rej)=>{const t=IDB.transaction(store,mode);const st=t.objectStore(store);let out;const r=fn(st);if(r)r.onsuccess=()=>{out=r.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error)})}
 const idbAll=c=>tx(c,"readonly",st=>st.getAll());
-const idbPut=(c,v)=>tx(c,"readwrite",st=>st.put(v));
-const idbDel=(c,id)=>tx(c,"readwrite",st=>st.delete(id));
-const idbGet=(c,id)=>tx(c,"readonly",st=>st.get(id));
+/* versões "L" = só local; as normais gravam local e espelham na nuvem (Firebase) quando você está logada */
+const idbPutL=(c,v)=>tx(c,"readwrite",st=>st.put(v));
+const idbDelL=(c,id)=>tx(c,"readwrite",st=>st.delete(id));
+const idbGetL=(c,id)=>tx(c,"readonly",st=>st.get(id));
+async function idbPut(c,v){if(c!=="arquivos")v={...v,_m:Date.now()};const r=await idbPutL(c,v);nuvemPut(c,v);return r}
+async function idbDel(c,id){const r=await idbDelL(c,id);nuvemDel(c,id);return r}
+async function idbGet(c,id){const r=await idbGetL(c,id);if(r||c!=="arquivos")return r;return baixarArqNuvem(id)}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 async function loadAll(){for(const c of ["clientes","propostas","orcamentos","plataformas","projetos"])S[c]=await idbAll(c);const p=await idbGet("config","perfil");S.perfil=p?strip(p):{}}
 async function boot(){
@@ -283,8 +287,9 @@ async function boot(){
   try{IDB=await idbOpen();S.db=true;S.assets=true;S.downloads=true;
     try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
     await loadAll();
-    if(!S.plataformas.length&&!S.propostas.length){await idbPut("plataformas",{id:"workana",nome:"Workana",url:"workana.com",status:"ativo",criadoEm:new Date().toISOString()});await loadAll()}
+    if(!S.plataformas.length&&!S.propostas.length){await idbPutL("plataformas",{id:"workana",nome:"Workana",url:"workana.com",status:"ativo",criadoEm:new Date().toISOString()});await loadAll()}
   }catch(e){S.offline=true}
+  idbPronto(!S.offline);
   render();
 }
 async function save(col,id,data){
@@ -296,7 +301,7 @@ async function del(col,id){try{await idbDel(col,id);await loadAll();render()}cat
 /* ---------- render ---------- */
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"true":"false"));
-  const banner=S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"";
+  const banner=(S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"")+(["chat","pedidos","perfil"].includes(S.tab)?"":vSync());
   const views={chat:vChat,pedidos:vPedidos,projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
   const active=document.activeElement;const keep=active&&active.id&&active.closest("#app")?active.id:null;const pos=keep&&active.selectionStart;
   $("#app").innerHTML=banner+views[S.tab]();
@@ -414,8 +419,9 @@ function vPerfil(){
     <label class="f full">Condições gerais padrão<textarea id="pf_cond" name="condicoes">${esc(p.condicoes||"Inclui até 2 rodadas de ajustes dentro do escopo descrito. Alterações fora do escopo serão orçadas à parte. Prazo de entrega contado a partir do pagamento da entrada e do envio dos materiais necessários.")}</textarea></label>
     <div class="full" style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Salvar meus dados</button></div>
   </form>
+  <section class="panel" style="margin-top:20px"><h2>Nuvem</h2>${vSyncPerfil()}</section>
   <section class="panel" style="margin-top:20px"><h2>Backup</h2>
-    <p style="color:var(--muted);margin:0 0 12px">Seus clientes, propostas e anexos ficam salvos <b>neste navegador</b>. Exporte um backup de vez em quando e guarde no Drive. Para usar em outro computador, importe o arquivo lá.</p>
+    <p style="color:var(--muted);margin:0 0 12px">Com o login feito, tudo já fica salvo na nuvem. O backup é uma cópia extra em arquivo: exporte de vez em quando e guarde no Drive.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="exportar">Exportar backup</button>
     <label class="btn" for="impIn">Importar backup</label><input type="file" id="impIn" accept=".json" hidden></div>
     <p style="color:var(--muted);font-size:13px;margin:10px 0 0">Importar substitui tudo o que está aqui pelos dados do arquivo. O backup inclui as senhas dos projetos: guarde-o em local seguro.</p>
@@ -804,7 +810,7 @@ async function exportar(){
 }
 async function importar(file){
   try{const d=JSON.parse(await file.text());if(d.app!=="atelie-propostas")throw 0;
-    for(const c of [...COLS,"arquivos"])await tx(c,"readwrite",st=>st.clear());
+    for(const c of [...COLS,"arquivos"]){if(N.on)for(const v of await idbAll(c))nuvemDel(c,v.id);await tx(c,"readwrite",st=>st.clear())}
     for(const c of COLS)for(const v of d[c]||[])await idbPut(c,v);
     for(const f of d.arquivos||[]){const blob=await (await fetch(f.data)).blob();await idbPut("arquivos",{id:f.id,nome:f.nome,tipo:f.tipo,blob})}
     await loadAll();render();toast("Backup importado")}
@@ -817,6 +823,92 @@ const W={ok:false,user:undefined,conversas:[],pedidos:[],msgs:[],conv:null,onlin
 try{if(window.firebase){firebase.initializeApp(FB);W.auth=firebase.auth();W.fs=firebase.firestore();W.ok=true}}catch(e){W.ok=false}
 const FTS=()=>firebase.firestore.FieldValue.serverTimestamp();
 const tsD=t=>t&&t.toDate?t.toDate():null;
+
+/* ---------- sincronização do CRM na nuvem (Firestore: crm/dados/<coleção>/<id>) ---------- */
+const ADMIN="atendimentoateliweb@gmail.com";
+const N={on:false,estado:"off",erro:"",subs:[],tRender:null};
+const nRef=c=>W.fs.collection("crm").doc("dados").collection(c);
+const PEND="atelie-exclusoes-pendentes";
+const lerPend=()=>{try{return JSON.parse(localStorage.getItem(PEND)||"[]")}catch(e){return []}};
+const gravarPend=l=>{try{localStorage.setItem(PEND,JSON.stringify(l))}catch(e){}};
+function nuvemFalha(e){N.estado="erro";N.erro=(e&&e.code)||"erro";render()}
+function nuvemPut(c,v){
+  if(!N.on)return;
+  if(c==="arquivos"){subirArq(v);return}
+  nRef(c).doc(v.id).set({j:JSON.stringify(v),m:v._m||Date.now(),del:false}).catch(nuvemFalha);
+}
+function nuvemDel(c,id){
+  const m=Date.now();
+  if(!N.on){gravarPend([...lerPend().filter(p=>!(p.c===c&&p.id===id)),{c,id,m}]);return}
+  if(c==="arquivos"){apagarArqNuvem(id);return}
+  nRef(c).doc(id).set({del:true,m}).catch(nuvemFalha);
+}
+/* anexos: guardados em pedaços de ~900 KB (limite do Firestore é 1 MB por documento) */
+const ARQ_MAX=15*1024*1024,PEDACO=900000;
+async function subirArq(f){
+  if(!N.on||!f||!f.blob)return;
+  if(f.blob.size>ARQ_MAX){toast(`"${f.nome}" tem mais de 15 MB: fica só neste navegador.`);return}
+  try{const d=await toB64(f.blob);const n=Math.ceil(d.length/PEDACO);const ref=nRef("arquivos").doc(f.id);
+    for(let i=0;i<n;i++)await ref.collection("partes").doc(String(i)).set({d:d.slice(i*PEDACO,(i+1)*PEDACO)});
+    await ref.set({nome:f.nome||"",tipo:f.tipo||"",n,m:Date.now(),del:false})}
+  catch(e){nuvemFalha(e)}
+}
+async function apagarArqNuvem(id){
+  try{const ref=nRef("arquivos").doc(id);const ps=await ref.collection("partes").get();for(const p of ps.docs)await p.ref.delete();await ref.set({del:true,m:Date.now()})}catch(e){nuvemFalha(e)}
+}
+async function baixarArqNuvem(id){
+  if(!N.on)return undefined;
+  try{const ref=nRef("arquivos").doc(id);const meta=await ref.get();if(!meta.exists||meta.data().del)return undefined;const md=meta.data();
+    const ps=await ref.collection("partes").get();const partes=ps.docs.sort((a,b)=>+a.id-+b.id).map(p=>p.data().d);if(partes.length<md.n)return undefined;
+    const blob=await (await fetch(partes.join(""))).blob();const f={id,nome:md.nome,tipo:md.tipo,blob};await idbPutL("arquivos",f);return f}
+  catch(e){return undefined}
+}
+function nuvemRender(){clearTimeout(N.tRender);N.tRender=setTimeout(async()=>{await loadAll();const a=document.activeElement;if(a&&a.closest&&a.closest("#app form"))return;render()},250)}
+/* aplica um documento remoto no navegador; devolve o registro local que precisa subir (se o local for mais novo) */
+async function aplicarRemoto(c,id,r){
+  const l=await idbGetL(c,id);const lm=(l&&l._m)||0;
+  if(r.del){if(l&&lm<=r.m)await idbDelL(c,id);return null}
+  if(!l||lm<r.m){await idbPutL(c,JSON.parse(r.j));return null}
+  return lm>r.m?l:null;
+}
+async function iniciarNuvem(){
+  if(!(await idbOk))return;
+  pararNuvem();N.estado="sincronizando";N.erro="";render();
+  try{
+    for(const p of lerPend()){if(p.c==="arquivos")await apagarArqNuvem(p.id);else await nRef(p.c).doc(p.id).set({del:true,m:p.m})}
+    gravarPend([]);
+    for(const c of COLS){
+      const snap=await nRef(c).get();const vistos=new Set();const subir=[];
+      for(const d of snap.docs){vistos.add(d.id);const l=await aplicarRemoto(c,d.id,d.data());if(l)subir.push(l)}
+      for(const l of await idbAll(c))if(!vistos.has(l.id)){let v=l;if(!v._m){v={...l,_m:Date.now()};await idbPutL(c,v)}subir.push(v)}
+      for(let i=0;i<subir.length;i+=400){const b=W.fs.batch();subir.slice(i,i+400).forEach(v=>b.set(nRef(c).doc(v.id),{j:JSON.stringify(v),m:v._m,del:false}));await b.commit()}
+    }
+    N.on=true;
+    const arqRem=await nRef("arquivos").get();const remIds=new Set();
+    for(const d of arqRem.docs){remIds.add(d.id);if(d.data().del)await idbDelL("arquivos",d.id)}
+    await loadAll();N.estado="ok";render();
+    for(const f of await idbAll("arquivos"))if(!remIds.has(f.id))await subirArq(f);
+    for(const c of COLS)N.subs.push(nRef(c).onSnapshot(snap=>{
+      if(snap.metadata.hasPendingWrites)return;
+      Promise.all(snap.docChanges().filter(ch=>ch.type!=="removed").map(ch=>aplicarRemoto(c,ch.doc.id,ch.doc.data()))).then(nuvemRender);
+    },nuvemFalha));
+  }catch(e){N.on=false;nuvemFalha(e)}
+}
+function pararNuvem(){N.subs.forEach(f=>f());N.subs=[];N.on=false;N.estado="off"}
+function vSyncPerfil(){
+  const ok=W.user&&W.user.email===ADMIN;
+  if(!ok){const f=vLogin();return `<p style="color:var(--muted);margin:0 0 12px">Entre com o login do Ateliê Web (${ADMIN}) para salvar propostas, clientes, orçamentos, projetos e anexos na nuvem e ver tudo em qualquer computador ou celular.</p>${W.user?`<div class="banner">Você entrou com ${esc(W.user.email)}, que não é o login do Ateliê Web. <button class="btn sm" data-wact="sair">Sair</button></div>`:f.replace('max-width:420px;margin:24px auto','max-width:420px;margin:0')}`}
+  const txt={sincronizando:"Sincronizando…",ok:"Tudo salvo na nuvem. Qualquer navegador onde você entrar com este login mostra os mesmos dados.",erro:"",off:"Conectando…"}[N.estado];
+  return `${N.estado==="erro"?vSync():`<p style="margin:0 0 12px">${txt}</p>`}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="color:var(--muted);font-size:13px">Conectada como ${esc(W.user.email)}</span><button class="btn ghost sm" data-wact="sair">Sair</button></div><p style="color:var(--muted);font-size:13px;margin:10px 0 0">Anexos de até 15 MB vão para a nuvem; os maiores ficam só no navegador onde foram enviados.</p>`;
+}
+function vSync(){
+  if(!W.ok)return `<div class="banner">Sem conexão com a nuvem: seus dados estão sendo salvos só neste navegador. Verifique a internet e recarregue.</div>`;
+  if(W.user===undefined)return "";
+  if(!W.user||W.user.email!==ADMIN)return `<div class="banner" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">Seus dados estão só neste navegador. Entre com o login do Ateliê Web para salvar na nuvem e ver de qualquer lugar.<button class="btn sm primary" data-act="irSync">Entrar e sincronizar</button></div>`;
+  if(N.estado==="erro")return `<div class="banner">${N.erro==="permission-denied"?"O Firebase recusou salvar os dados do CRM. Publique as novas regras de segurança (arquivo firestore.rules) no console do Firebase e recarregue a página.":"Não consegui sincronizar com a nuvem agora. Seus dados continuam salvos neste navegador; recarregue a página para tentar de novo."}</div>`;
+  if(N.estado==="sincronizando")return `<div class="banner" style="background:var(--info-soft);color:var(--info)">Sincronizando com a nuvem…</div>`;
+  return "";
+}
 function quando(t){const d=tsD(t);if(!d)return"agora";const h=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});return d.toDateString()===new Date().toDateString()?h:d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+h}
 let wSubs=[],msgSub=null;
 function bip(){try{const A=window.AudioContext||window.webkitAudioContext;const c=new A();[660,880].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,c.currentTime+i*.16);g.gain.exponentialRampToValueAtTime(.18,c.currentTime+i*.16+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+i*.16+.15);o.start(c.currentTime+i*.16);o.stop(c.currentTime+i*.16+.16)})}catch(e){}}
@@ -826,7 +918,7 @@ function badges(){
   b("chat","Chat",nc);b("pedidos","Pedidos do site",np);
   document.title=(nc+np?`(${nc+np}) `:"")+"Ateliê Web";
 }
-if(W.ok)W.auth.onAuthStateChanged(u=>{W.user=u||null;wSubs.forEach(f=>f());wSubs=[];if(msgSub){msgSub();msgSub=null}W.conversas=[];W.pedidos=[];W.conv=null;W.carregou={c:false,p:false};if(u)iniciarSite();render()});
+if(W.ok)W.auth.onAuthStateChanged(u=>{W.user=u||null;wSubs.forEach(f=>f());wSubs=[];if(msgSub){msgSub();msgSub=null}W.conversas=[];W.pedidos=[];W.conv=null;W.carregou={c:false,p:false};if(u)iniciarSite();if(u&&u.email===ADMIN)iniciarNuvem();else pararNuvem();render()});
 function iniciarSite(){
   wSubs.push(W.fs.doc("config/status").onSnapshot(d=>{W.online=!!(d.exists&&d.data().online);if(S.tab==="chat")render()},()=>{}));
   wSubs.push(W.fs.collection("conversas").orderBy("atualizadoEm","desc").limit(150).onSnapshot(snap=>{
@@ -949,6 +1041,7 @@ document.addEventListener("click",async e=>{
   else if(act==="editProp")mPropostaForm(id);
   else if(act==="novoOrc")mOrcForm(null,a.dataset.prop);
   else if(act==="editOrc")mOrcForm(id);
+  else if(act==="irSync"){S.tab="perfil";render()}
   else if(act==="verPlat"){S.filtro.plat=id;S.tab="propostas";render()}
   else if(act==="submit"){const f=document.getElementById(a.dataset.form);if(!f.reportValidity())return;const d=formData(f);const fid=f.dataset.id||null;
     const col={formPlat:"plataformas",formCli:"clientes",formProp:"propostas"}[f.id];
