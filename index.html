@@ -239,6 +239,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
     <button data-tab="clientes">Clientes</button>
     <button data-tab="orcamentos">Orçamentos</button>
     <button data-tab="perfil">Meus dados</button>
+    <button data-tab="usuarios" hidden>Usuários</button>
   </nav>
 </div></header>
 <main class="wrap" id="app"><div class="empty"><b>Carregando…</b>Conectando ao seu arquivo de propostas.</div></main>
@@ -300,9 +301,11 @@ async function del(col,id){try{await idbDel(col,id);await loadAll();render()}cat
 
 /* ---------- render ---------- */
 function render(){
+  if(S.tab==="usuarios"&&!gerente())S.tab="painel";
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"true":"false"));
+  const tu=document.querySelector('#tabs [data-tab="usuarios"]');if(tu)tu.hidden=!gerente();
   const banner=(S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"")+(["chat","pedidos","perfil"].includes(S.tab)?"":vSync());
-  const views={chat:vChat,pedidos:vPedidos,projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
+  const views={usuarios:vUsuarios,chat:vChat,pedidos:vPedidos,projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
   const active=document.activeElement;const keep=active&&active.id&&active.closest("#app")?active.id:null;const pos=keep&&active.selectionStart;
   $("#app").innerHTML=banner+views[S.tab]();
   if(keep){const el=document.getElementById(keep);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
@@ -330,7 +333,7 @@ function vPainel(){
     <div class="kpi"><small>Propostas enviadas</small><b>${env.length}</b><span>${envMes} neste mês</span></div>
     <div class="kpi"><small>Em aberto</small><b class="money">${brl(aberto.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${aberto.length} aguardando resposta</span></div>
     <div class="kpi"><small>Fechado</small><b class="money">${brl(apr.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${apr.length} aprovadas</span></div>
-    ${W.user?`<div class="kpi" style="cursor:pointer" data-wact="irPedidos"><small>Do site</small><b>${W.pedidos.filter(p=>p.status==="novo").length+W.conversas.filter(c=>c.pendente).length}</b><span>${W.pedidos.filter(p=>p.status==="novo").length} pedido(s) · ${W.conversas.filter(c=>c.pendente).length} chat(s)</span></div>`:""}
+    ${temAcesso()?`<div class="kpi" style="cursor:pointer" data-wact="irPedidos"><small>Do site</small><b>${W.pedidos.filter(p=>p.status==="novo").length+W.conversas.filter(c=>c.pendente).length}</b><span>${W.pedidos.filter(p=>p.status==="novo").length} pedido(s) · ${W.conversas.filter(c=>c.pendente).length} chat(s)</span></div>`:""}
     <div class="kpi"><small>Projetos ativos</small><b>${S.projetos.filter(j=>j.status!=="entregue").length}</b><span>${S.projetos.filter(j=>j.status==="entregue").length} entregues</span></div>
     <div class="kpi"><small>Taxa de aprovação</small><b>${conv}%</b><span>das enviadas</span></div>
   </div>
@@ -826,6 +829,9 @@ const tsD=t=>t&&t.toDate?t.toDate():null;
 
 /* ---------- sincronização do CRM na nuvem (Firestore: crm/dados/<coleção>/<id>) ---------- */
 const ADMIN="atendimentoateliweb@gmail.com";
+/* papel de quem está logado: "dona" (conta principal), "admin", "equipe" ou null (sem acesso) */
+const temAcesso=()=>!!(W.user&&W.papel);
+const gerente=()=>W.papel==="dona"||W.papel==="admin";
 const N={on:false,estado:"off",erro:"",subs:[],tRender:null};
 const nRef=c=>W.fs.collection("crm").doc("dados").collection(c);
 const PEND="atelie-exclusoes-pendentes";
@@ -895,16 +901,70 @@ async function iniciarNuvem(){
   }catch(e){N.on=false;nuvemFalha(e)}
 }
 function pararNuvem(){N.subs.forEach(f=>f());N.subs=[];N.on=false;N.estado="off"}
+/* ---------- usuários (quem pode entrar no Ateliê Web) ---------- */
+let uSub=null;W.usuarios=[];
+function ouvirUsuarios(){if(uSub)uSub();uSub=W.fs.collection("usuarios").onSnapshot(sn=>{W.usuarios=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.nome||a.id).localeCompare(b.nome||b.id));if(S.tab==="usuarios")render()},e=>{W.uErro=e.code;if(S.tab==="usuarios")render()})}
+const PAPEL={dona:"Conta principal",admin:"Administrador",equipe:"Equipe"};
+function vUsuarios(){
+  if(!gerente())return "";
+  const linha=(u,fixa)=>`<div class="row" style="cursor:default"><div class="t">${esc(u.nome||u.id)}${!fixa&&u.id===(W.user.email||"").toLowerCase()?" (você)":""}</div>
+    <div class="s">${esc(u.id)}</div>
+    <div class="r"><div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center">${fixa?`<span class="pill aprovada">${PAPEL.dona}</span>`:`
+      <select data-uact="papel" data-id="${esc(u.id)}" aria-label="Nível de acesso" style="width:auto"><option value="equipe" ${u.papel!=="admin"?"selected":""}>Equipe</option><option value="admin" ${u.papel==="admin"?"selected":""}>Administrador</option></select>
+      <span class="pill ${u.ativo===false?"recusada":"aprovada"}">${u.ativo===false?"Desativado":"Ativo"}</span>
+      <button class="btn sm" data-uact="senha" data-id="${esc(u.id)}">Trocar senha</button>
+      <button class="btn sm" data-uact="ativo" data-id="${esc(u.id)}">${u.ativo===false?"Reativar":"Desativar"}</button>
+      <button class="btn sm danger" data-uact="remover" data-id="${esc(u.id)}">Remover</button>`}</div></div></div>`;
+  return `<div class="head"><div><h1>Usuários</h1><p>Quem pode entrar no Ateliê Web. Todos veem os mesmos dados.</p></div></div>
+  ${W.uErro==="permission-denied"?`<div class="banner">O Firebase recusou acessar a lista de usuários. Publique as regras novas (firestore.rules) no console do Firebase.</div>`:""}
+  <form class="panel form" id="formUsuario" autocomplete="off">
+    <h2 class="full" style="margin:0">Adicionar usuário</h2>
+    <label class="f">Nome<input id="nu_nome" required maxlength="80"></label>
+    <label class="f">E-mail<input id="nu_email" type="email" required autocomplete="off"></label>
+    <label class="f">Senha inicial<input id="nu_senha" type="text" minlength="6" required autocomplete="new-password" placeholder="mínimo 6 caracteres"></label>
+    <label class="f">Nível<select id="nu_papel"><option value="equipe">Equipe: usa o CRM, chat e pedidos</option><option value="admin">Administrador: tudo, inclusive usuários</option></select></label>
+    <div class="full" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><span style="color:var(--muted);font-size:13px">Passe o e-mail e a senha inicial para a pessoa. Ela pode trocar depois pelo botão Trocar senha.</span><button class="btn primary" type="submit">Adicionar</button></div>
+  </form>
+  <div class="panel" style="margin-top:20px"><div class="list">${linha({id:ADMIN,nome:"Ateliê Web"},true)}${W.usuarios.map(u=>linha(u,false)).join("")}</div></div>`;
+}
+let criador=null;
+async function criarUsuario(){
+  const nome=$("#nu_nome").value.trim(),email=$("#nu_email").value.trim().toLowerCase(),senha=$("#nu_senha").value,papel=$("#nu_papel").value;
+  if(email===ADMIN||W.usuarios.some(u=>u.id===email)){toast("Esse e-mail já está na lista.");return}
+  const bt=$("#formUsuario button[type=submit]");bt.disabled=true;
+  try{
+    // cria a conta numa conexão separada, para você continuar logada
+    if(!criador)criador=firebase.initializeApp(FB,"criador");
+    let jaExistia=false;
+    try{await criador.auth().createUserWithEmailAndPassword(email,senha);await criador.auth().signOut()}
+    catch(e){if(e.code==="auth/email-already-in-use")jaExistia=true;else throw e}
+    await W.fs.collection("usuarios").doc(email).set({nome,papel,ativo:true,criadoPor:W.user.email,criadoEm:FTS()});
+    toast(jaExistia?"Usuário liberado. Essa conta já existia: a pessoa entra com a senha que já tinha.":"Usuário criado");
+    render();
+  }catch(e){bt.disabled=false;toast({"auth/invalid-email":"E-mail inválido.","auth/weak-password":"A senha precisa ter pelo menos 6 caracteres.","auth/operation-not-allowed":"Ative o login por e-mail/senha no Firebase (Authentication).","permission-denied":"O Firebase recusou. Publique as regras novas."}[e.code]||"Não consegui criar o usuário.")}
+}
+document.addEventListener("submit",e=>{if(e.target.id==="formUsuario"){e.preventDefault();criarUsuario()}});
+document.addEventListener("change",async e=>{const t=e.target;if(t.dataset&&t.dataset.uact==="papel"){try{await W.fs.collection("usuarios").doc(t.dataset.id).update({papel:t.value});toast("Nível alterado")}catch(err){toast("Não consegui alterar.")}}});
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("button[data-uact]");if(!a)return;const id=a.dataset.id,k=a.dataset.uact;const u=W.usuarios.find(x=>x.id===id);if(!u)return;
+  if(id===(W.user.email||"").toLowerCase()&&k!=="senha"){toast("Você não pode desativar ou remover o próprio acesso.");return}
+  try{
+    if(k==="senha"){await W.auth.sendPasswordResetEmail(id);toast("Enviamos um e-mail para "+id+" criar uma senha nova.")}
+    else if(k==="ativo"){await W.fs.collection("usuarios").doc(id).update({ativo:u.ativo===false});toast(u.ativo===false?"Acesso reativado":"Acesso desativado")}
+    else if(k==="remover"){if(!confirm(`Remover ${u.nome||id}? A pessoa perde o acesso ao Ateliê Web.`))return;await W.fs.collection("usuarios").doc(id).delete();toast("Usuário removido")}
+  }catch(err){toast("Não consegui fazer isso agora.")}
+});
 function vSyncPerfil(){
-  const ok=W.user&&W.user.email===ADMIN;
-  if(!ok){const f=vLogin();return `<p style="color:var(--muted);margin:0 0 12px">Entre com o login do Ateliê Web (${ADMIN}) para salvar propostas, clientes, orçamentos, projetos e anexos na nuvem e ver tudo em qualquer computador ou celular.</p>${W.user?`<div class="banner">Você entrou com ${esc(W.user.email)}, que não é o login do Ateliê Web. <button class="btn sm" data-wact="sair">Sair</button></div>`:f.replace('max-width:420px;margin:24px auto','max-width:420px;margin:0')}`}
+  const ok=temAcesso();
+  if(!ok){const f=vLogin();return `<p style="color:var(--muted);margin:0 0 12px">Entre com o seu login do Ateliê Web para salvar propostas, clientes, orçamentos, projetos e anexos na nuvem e ver tudo em qualquer computador ou celular.</p>${W.user?(W.papel===undefined?`<p>Verificando acesso…</p>`:`<div class="banner">O login ${esc(W.user.email)} não tem acesso ao Ateliê Web (ou foi desativado). Peça para uma administradora liberar em Usuários. <button class="btn sm" data-wact="sair">Sair</button></div>`):f.replace('max-width:420px;margin:24px auto','max-width:420px;margin:0')}`}
   const txt={sincronizando:"Sincronizando…",ok:"Tudo salvo na nuvem. Qualquer navegador onde você entrar com este login mostra os mesmos dados.",erro:"",off:"Conectando…"}[N.estado];
   return `${N.estado==="erro"?vSync():`<p style="margin:0 0 12px">${txt}</p>`}<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="color:var(--muted);font-size:13px">Conectada como ${esc(W.user.email)}</span><button class="btn ghost sm" data-wact="sair">Sair</button></div><p style="color:var(--muted);font-size:13px;margin:10px 0 0">Anexos de até 15 MB vão para a nuvem; os maiores ficam só no navegador onde foram enviados.</p>`;
 }
 function vSync(){
   if(!W.ok)return `<div class="banner">Sem conexão com a nuvem: seus dados estão sendo salvos só neste navegador. Verifique a internet e recarregue.</div>`;
   if(W.user===undefined)return "";
-  if(!W.user||W.user.email!==ADMIN)return `<div class="banner" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">Seus dados estão só neste navegador. Entre com o login do Ateliê Web para salvar na nuvem e ver de qualquer lugar.<button class="btn sm primary" data-act="irSync">Entrar e sincronizar</button></div>`;
+  if(W.user&&W.papel===undefined)return "";
+  if(!temAcesso())return `<div class="banner" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">Seus dados estão só neste navegador. Entre com o login do Ateliê Web para salvar na nuvem e ver de qualquer lugar.<button class="btn sm primary" data-act="irSync">Entrar e sincronizar</button></div>`;
   if(N.estado==="erro")return `<div class="banner">${N.erro==="permission-denied"?"O Firebase recusou salvar os dados do CRM. Publique as novas regras de segurança (arquivo firestore.rules) no console do Firebase e recarregue a página.":"Não consegui sincronizar com a nuvem agora. Seus dados continuam salvos neste navegador; recarregue a página para tentar de novo."}</div>`;
   if(N.estado==="sincronizando")return `<div class="banner" style="background:var(--info-soft);color:var(--info)">Sincronizando com a nuvem…</div>`;
   return "";
@@ -918,7 +978,17 @@ function badges(){
   b("chat","Chat",nc);b("pedidos","Pedidos do site",np);
   document.title=(nc+np?`(${nc+np}) `:"")+"Ateliê Web";
 }
-if(W.ok)W.auth.onAuthStateChanged(u=>{W.user=u||null;wSubs.forEach(f=>f());wSubs=[];if(msgSub){msgSub();msgSub=null}W.conversas=[];W.pedidos=[];W.conv=null;W.carregou={c:false,p:false};if(u)iniciarSite();if(u&&u.email===ADMIN)iniciarNuvem();else pararNuvem();render()});
+if(W.ok)W.auth.onAuthStateChanged(u=>{W.user=u||null;wSubs.forEach(f=>f());wSubs=[];if(msgSub){msgSub();msgSub=null}W.conversas=[];W.pedidos=[];W.conv=null;W.carregou={c:false,p:false};pararNuvem();uSub&&uSub();uSub=null;W.usuarios=[];W.papel=u?undefined:null;render();if(u)definirPapel(u)});
+async function definirPapel(u){
+  const em=(u.email||"").toLowerCase();let papel=null;
+  if(em===ADMIN)papel="dona";
+  else{try{const d=await W.fs.collection("usuarios").doc(em).get();if(d.exists&&d.data().ativo!==false)papel=d.data().papel==="admin"?"admin":"equipe"}catch(e){papel=null}}
+  if(W.user!==u)return;
+  W.papel=papel;
+  if(papel){iniciarSite();iniciarNuvem();if(gerente())ouvirUsuarios()}
+  else if(S.tab==="usuarios")S.tab="painel";
+  render();
+}
 function iniciarSite(){
   wSubs.push(W.fs.doc("config/status").onSnapshot(d=>{W.online=!!(d.exists&&d.data().online);if(S.tab==="chat")render()},()=>{}));
   wSubs.push(W.fs.collection("conversas").orderBy("atualizadoEm","desc").limit(150).onSnapshot(snap=>{
@@ -946,14 +1016,14 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 function vLogin(){
   if(!W.ok)return `<div class="banner">Não consegui carregar a conexão com o site. Verifique a internet e recarregue a página.</div>`;
   if(W.user===undefined)return `<div class="empty"><b>Conectando…</b></div>`;
-  return `<div class="panel" style="max-width:420px;margin:24px auto"><h2 style="margin-bottom:4px">Entrar</h2><p style="color:var(--muted);margin:0 0 14px;font-size:14px">Use o e-mail e a senha que você cadastrou no Firebase. Só você vê as conversas e os pedidos.</p>
+  return `<div class="panel" style="max-width:420px;margin:24px auto"><h2 style="margin-bottom:4px">Entrar</h2><p style="color:var(--muted);margin:0 0 14px;font-size:14px">Use o seu e-mail e a sua senha do Ateliê Web.</p>
   <form id="formLogin" style="display:flex;flex-direction:column;gap:10px"><label class="f">E-mail<input id="lgEmail" type="email" autocomplete="username" required></label><label class="f">Senha<input id="lgSenha" type="password" autocomplete="current-password" required></label>
   ${W.loginErr?`<div style="color:var(--bad);font-size:13px">${esc(W.loginErr)}</div>`:""}<button class="btn primary" type="submit">Entrar</button></form></div>`;
 }
 const permErr=()=>W.erro==="permission-denied"?`<div class="banner">O Firebase recusou o acesso. Confira se as regras de segurança foram publicadas e se você entrou com o e-mail certo.</div>`:"";
 const QR=["Olá! Aqui é a Juliana, do Ateliê Web. Como posso te ajudar?","Pode me passar seu WhatsApp para eu enviar o orçamento?","Vou preparar seu orçamento e te retorno ainda hoje.","Obrigada pelo contato! Qualquer dúvida, estou por aqui."];
 function vChat(){
-  if(!W.user)return `<div class="head"><div><h1>Chat do site</h1><p>Responda aqui quem chama no chat do site do Ateliê Web.</p></div></div>`+vLogin();
+  if(!temAcesso())return `<div class="head"><div><h1>Chat do site</h1><p>Responda aqui quem chama no chat do site do Ateliê Web.</p></div></div>`+(W.user?`<div class="panel">${vSyncPerfil()}</div>`:vLogin());
   const c=W.conv?byId(W.conversas,W.conv):null;
   return `<div class="head"><div><h1>Chat do site</h1><p>${W.conversas.length} conversa(s) · ${W.conversas.filter(x=>x.pendente).length} aguardando resposta</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="onoff ${W.online?"on":""}" data-wact="online"><i></i>${W.online?"Você está online":"Você está offline"}</button><button class="btn ghost sm" data-wact="sair">Sair</button></div></div>
@@ -972,7 +1042,7 @@ function vChat(){
 const PS=[["novo","Novo"],["contato","Em contato"],["convertido","Convertido"],["descartado","Descartado"]];const PSL=Object.fromEntries(PS);
 function waLink(num,txt){let d=String(num||"").replace(/\D/g,"");if(d.length>=10&&d.length<=11)d="55"+d;return d?`https://wa.me/${d}?text=${encodeURIComponent(txt)}`:""}
 function vPedidos(){
-  if(!W.user)return `<div class="head"><div><h1>Pedidos do site</h1><p>Pedidos de orçamento enviados pelo formulário do site.</p></div></div>`+vLogin();
+  if(!temAcesso())return `<div class="head"><div><h1>Pedidos do site</h1><p>Pedidos de orçamento enviados pelo formulário do site.</p></div></div>`+(W.user?`<div class="panel">${vSyncPerfil()}</div>`:vLogin());
   const list=W.pedidos.filter(p=>W.pf==="todos"||p.status===W.pf);
   return `<div class="head"><div><h1>Pedidos do site</h1><p>${W.pedidos.filter(p=>p.status==="novo").length} novo(s) · ${W.pedidos.length} no total</p></div><button class="btn ghost sm" data-wact="sair">Sair</button></div>
   ${permErr()}

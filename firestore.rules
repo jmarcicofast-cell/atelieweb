@@ -2,13 +2,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Só a dona do Ateliê Web (login do CRM) é administradora
-    function isAdmin() {
+    // Conta principal do Ateliê Web
+    function isDona() {
       return request.auth != null && request.auth.token.email == "atendimentoateliweb@gmail.com";
     }
+    // Usuário cadastrado na página Usuários e ativo
+    function cadastro() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.token.email.lower())).data;
+    }
+    function isMembro() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.token.email.lower()))
+        && cadastro().ativo == true;
+    }
+    // Quem pode usar o CRM, o chat e os pedidos
+    function isAdmin() { return isDona() || isMembro(); }
+    // Quem pode gerenciar usuários
+    function isGerente() { return isDona() || (isMembro() && cadastro().papel == 'admin'); }
     function txt(v, max) { return v is string && v.size() <= max; }
 
-    // Dados do CRM (clientes, propostas, orçamentos, projetos, anexos): só a dona lê e grava
+    // Usuários do Ateliê Web (página Usuários)
+    match /usuarios/{email} {
+      allow get: if request.auth != null && request.auth.token.email.lower() == email;
+      allow read: if isGerente();
+      allow write: if isGerente() && email != "atendimentoateliweb@gmail.com";
+    }
+
+    // Dados do CRM (clientes, propostas, orçamentos, projetos, anexos): só quem tem acesso
     match /crm/{caminho=**} {
       allow read, write: if isAdmin();
     }
