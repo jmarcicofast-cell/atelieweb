@@ -1,0 +1,494 @@
+<title>Ateliê Web</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Ateliê Web — sites, sistemas sob medida e agentes de atendimento com IA para pequenos negócios.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: faixa de navegação fixa; hero assimétrico com a "fita" da logo; seções em largura contida alternando fundo claro e grafite; widget de chat flutuante. */
+:root{
+  --bg:#fbfaff; --paper:#ffffff; --tint:#f3effd; --ink:#1d1b24; --soft:#5f5b6b; --line:#e7e3f0;
+  --violet:#7c3aed; --violet-2:#9b6bff; --violet-deep:#5b21b6; --graphite:#2b2a31; --on-dark:#f4f2fa; --on-dark-soft:#b8b3c7;
+  --wa:#1f9d55;
+  --f-display:"Sora",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Figtree",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131218; --paper:#1b1a22; --tint:#211d2e; --ink:#efedf5; --soft:#a6a1b5; --line:#2e2b38;
+  --violet:#a78bfa; --violet-2:#c4b0ff; --violet-deep:#8b5cf6; --graphite:#0d0c11; --on-dark:#f4f2fa; --on-dark-soft:#a9a4b8; --wa:#3fbf74; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131218; --paper:#1b1a22; --tint:#211d2e; --ink:#efedf5; --soft:#a6a1b5; --line:#2e2b38;
+  --violet:#a78bfa; --violet-2:#c4b0ff; --violet-deep:#8b5cf6; --graphite:#0d0c11; --on-dark:#f4f2fa; --on-dark-soft:#a9a4b8; --wa:#3fbf74; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.025em;text-wrap:balance;margin:0;line-height:1.08}
+.eyebrow{font:600 13px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:6px}
+
+/* nav */
+header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid transparent;transition:border-color .2s}
+header.nav.scrolled{border-bottom-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 19px var(--f-display);letter-spacing:-.02em}
+.logo img{height:30px;width:auto}
+.logo span{color:var(--violet)}
+.nav ul{display:flex;gap:4px;list-style:none;margin:0;padding:0}
+.nav ul a{text-decoration:none;font-weight:500;font-size:15px;color:var(--soft);padding:8px 12px;border-radius:8px}
+.nav ul a:hover{color:var(--ink);background:var(--tint)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--f-body);text-decoration:none;border:0;cursor:pointer;border-radius:999px;padding:12px 22px;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--violet);color:#fff;box-shadow:0 8px 24px -8px color-mix(in srgb,var(--violet) 70%,transparent)}
+:root:not([data-theme="light"]) .btn-primary{color:#fff}
+.btn-primary:hover{background:var(--violet-deep)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--violet);color:var(--violet)}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-wa:hover{filter:brightness(1.08)}
+.btn svg{width:18px;height:18px;flex:0 0 auto}
+.menu-btn{display:none;background:none;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--ink)}
+@media (max-width:860px){
+  .nav ul{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;background:var(--paper);border-bottom:1px solid var(--line);padding:8px max(20px,env(safe-area-inset-left,0px)) 16px}
+  .nav ul.open{display:flex}
+  .nav ul a{display:block;padding:12px}
+  .menu-btn{display:block}
+  .nav .cta-nav{display:none}
+}
+
+/* hero */
+.hero{position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-block:72px 88px}
+.hero h1{font-size:clamp(40px,6.2vw,74px);font-weight:800}
+.hero h1 em{font-style:normal;color:var(--violet);position:relative;white-space:nowrap}
+.hero p.lead{font-size:clamp(18px,1.6vw,21px);color:var(--soft);max-width:34ch;margin:22px 0 32px}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap}
+.hero .proof{display:flex;gap:28px;flex-wrap:wrap;margin-top:40px;color:var(--soft);font-size:14px}
+.hero .proof b{display:block;font:700 26px var(--f-display);color:var(--ink);letter-spacing:-.02em}
+.stage{position:relative;aspect-ratio:1/1;max-width:100%}
+.stage svg.ribbon{position:absolute;inset:-6% -14% -6% -6%;width:120%;height:112%;overflow:visible}
+.ribbon path{fill:none;stroke-linecap:round;stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 2.2s cubic-bezier(.6,.1,.2,1) forwards}
+.ribbon .r2{animation-delay:.25s}.ribbon .r3{animation-delay:.5s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.card-float{position:absolute;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px -24px rgba(40,20,90,.35);padding:16px}
+.cf-1{left:4%;top:12%;width:62%;animation:float 7s ease-in-out infinite}
+.cf-2{right:2%;bottom:10%;width:54%;animation:float 8s ease-in-out -2s infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+.cf-head{display:flex;gap:6px;margin-bottom:12px}.cf-head i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.bar{height:9px;border-radius:5px;background:var(--tint);margin:8px 0}
+.bar.v{background:linear-gradient(90deg,var(--violet),var(--violet-2))}
+.chatbub{font-size:13px;padding:8px 12px;border-radius:14px;max-width:85%;margin:6px 0;line-height:1.35}
+.chatbub.in{background:var(--tint);border-bottom-left-radius:4px}
+.chatbub.out{background:var(--violet);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr;padding-block:40px 56px}.stage{max-width:440px;width:100%;margin:0 auto}}
+
+/* sections */
+section.block{padding-block:96px}
+@media (max-width:640px){section.block{padding-block:64px}}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:44px}
+.sec-head h2{font-size:clamp(32px,4.4vw,52px);font-weight:700;max-width:16ch;margin-top:10px}
+.sec-head p{color:var(--soft);max-width:44ch;margin:0}
+
+/* quem somos */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.about .story p{font-size:18px;color:var(--soft);margin:0 0 18px;max-width:58ch}
+.about .story p strong{color:var(--ink);font-weight:600}
+.services{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.svc{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;transition:border-color .2s,transform .2s}
+.svc:hover{border-color:var(--violet);transform:translateY(-3px)}
+.svc .ic{width:42px;height:42px;border-radius:12px;background:var(--tint);color:var(--violet);display:grid;place-items:center;margin-bottom:14px}
+.svc .ic svg{width:22px;height:22px}
+.svc h3{font-size:18px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+.svc p{margin:0;font-size:15px;color:var(--soft);line-height:1.5}
+@media (max-width:860px){.about{grid-template-columns:1fr;gap:36px}}
+@media (max-width:480px){.services{grid-template-columns:1fr}}
+
+/* portfolio */
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:500 14px var(--f-body);background:var(--paper);border:1.5px solid var(--line);color:var(--soft);border-radius:999px;padding:8px 16px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid-pf{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+@media (max-width:960px){.grid-pf{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.grid-pf{grid-template-columns:1fr}}
+.pf{background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
+.pf:hover{transform:translateY(-4px);box-shadow:0 28px 60px -30px rgba(60,30,120,.45)}
+.pf .shot{aspect-ratio:16/10;max-width:100%;background:var(--tint);position:relative;padding:18px 18px 0;overflow:hidden}
+.pf .win{background:var(--paper);border-radius:10px 10px 0 0;height:100%;box-shadow:0 10px 30px -14px rgba(40,20,90,.35);padding:10px;display:flex;flex-direction:column;gap:6px}
+.pf .win .dots{display:flex;gap:4px;margin-bottom:4px}.pf .win .dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.pf .body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1}
+.pf .tag{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.pf h3{font-size:20px;font-weight:600;letter-spacing:-.015em}
+.pf p{margin:0;color:var(--soft);font-size:15px;line-height:1.5}
+.pf .stack{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.pf .stack span{font-size:12px;background:var(--tint);color:var(--soft);border-radius:6px;padding:3px 8px}
+.m-row{display:flex;gap:6px}.m-col{flex:1;display:flex;flex-direction:column;gap:6px}
+.m-b{height:7px;border-radius:4px;background:var(--tint)}.m-b.v{background:var(--violet)}.m-b.g{background:var(--graphite);opacity:.8}
+.m-box{border-radius:6px;background:var(--tint)}.m-box.v{background:linear-gradient(135deg,var(--violet),var(--violet-2))}
+.m-kpi{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px}
+
+/* diferenciais (faixa grafite) */
+.dark{background:var(--graphite);color:var(--on-dark);position:relative;overflow:hidden}
+.dark .sec-head p{color:var(--on-dark-soft)}
+.dark .eyebrow{color:#c4b0ff}
+.diffs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:22px;overflow:hidden}
+.diff{background:var(--graphite);padding:32px 28px}
+.diff .n{font:700 15px var(--f-display);color:#c4b0ff;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.diff .n::after{content:"";height:1px;flex:1;background:rgba(255,255,255,.14)}
+.diff h3{font-size:21px;font-weight:600;letter-spacing:-.015em;margin-bottom:10px;color:var(--on-dark)}
+.diff p{margin:0;color:var(--on-dark-soft);font-size:15.5px;line-height:1.55}
+@media (max-width:900px){.diffs{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.diffs{grid-template-columns:1fr}}
+.dark .glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.35),transparent 70%);right:-160px;top:-160px;pointer-events:none}
+
+/* processo */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;counter-reset:s}
+.step{position:relative;padding-top:56px}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:0;left:0;width:40px;height:40px;border-radius:50%;background:var(--tint);color:var(--violet);font:700 16px var(--f-display);display:grid;place-items:center}
+.step::after{content:"";position:absolute;top:20px;left:52px;right:-12px;height:2px;background:linear-gradient(90deg,var(--violet),transparent)}
+.step:last-child::after{display:none}
+.step h3{font-size:19px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+.step p{margin:0;color:var(--soft);font-size:15px}
+@media (max-width:860px){.steps{grid-template-columns:1fr 1fr}.step::after{display:none}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+
+/* contato */
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.cbox{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.cbox.feature{background:linear-gradient(150deg,var(--violet-deep),var(--violet));color:#fff;border:0}
+.cbox.feature p{color:rgba(255,255,255,.85)}
+.cbox h3{font-size:26px;font-weight:700}
+.cbox p{margin:0;color:var(--soft)}
+.cbox label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500;color:var(--soft)}
+.cbox input,.cbox select,.cbox textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+.cbox textarea{min-height:96px;resize:vertical}
+.cbox input:focus,.cbox select:focus,.cbox textarea:focus{border-color:var(--violet);outline:none}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.feature .btn-light{background:#fff;color:var(--violet-deep)}
+.feature .btn-light:hover{background:#f1ebff}
+.feature .opts{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.feature .num{font:600 15px var(--f-body);background:rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;user-select:all}
+@media (max-width:860px){.contact{grid-template-columns:1fr}}
+@media (max-width:480px){.frow{grid-template-columns:1fr}.cbox{padding:24px}}
+
+footer{border-top:1px solid var(--line);padding-block:36px;color:var(--soft);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* chat widget */
+.fab{position:fixed;right:max(20px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+.fab button,.fab a{width:58px;height:58px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;box-shadow:0 14px 30px -10px rgba(30,10,70,.5);transition:transform .2s}
+.fab button:hover,.fab a:hover{transform:scale(1.06)}
+.fab .f-chat{background:var(--violet);color:#fff}
+.fab .f-wa{background:var(--wa);color:#fff}
+.fab svg{width:26px;height:26px}
+.chat{position:fixed;right:max(20px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:31;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 140px));background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 80px -20px rgba(30,10,70,.45);display:flex;flex-direction:column;overflow:hidden;transform-origin:bottom right;animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.92) translateY(10px)}}
+.chat-h{background:var(--graphite);color:var(--on-dark);padding:16px 18px;display:flex;align-items:center;gap:12px}
+.chat-h .av{width:38px;height:38px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:0 0 auto;overflow:hidden}
+.chat-h .av img{width:30px}
+.chat-h b{font:600 15px var(--f-display);display:block}
+.chat-h small{color:var(--on-dark-soft);font-size:12px;display:flex;align-items:center;gap:6px}
+.chat-h small::before{content:"";width:7px;height:7px;border-radius:50%;background:#3fbf74}
+.chat-h button{margin-left:auto;background:none;border:0;color:var(--on-dark);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px}
+.chat-b{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.msg{max-width:84%;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.45;animation:pop .18s ease-out}
+.msg.bot{background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.me{background:var(--violet);color:#fff;margin-left:auto;border-bottom-right-radius:5px}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.quick button{font:500 14px var(--f-body);background:var(--paper);color:var(--violet);border:1.5px solid color-mix(in srgb,var(--violet) 40%,transparent);border-radius:999px;padding:7px 12px;cursor:pointer}
+.quick button:hover{background:var(--tint)}
+.quick a.btn{padding:9px 16px;font-size:14px}
+.chat-f{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:var(--paper)}
+.chat-f input{flex:1;min-width:0;font:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;background:var(--bg);color:var(--ink)}
+.chat-f input:focus{outline:none;border-color:var(--violet)}
+.chat-f button{border:0;background:var(--violet);color:#fff;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+.chat-h small.off::before{background:#e8b45a}
+.chat-h .hbtn{margin-left:auto}
+.chat-h .hbtn+button{margin-left:0}
+.sysnote{align-self:center;font-size:12px;color:var(--soft);background:var(--tint);border-radius:999px;padding:4px 12px;margin:4px 0}
+.msg .who{display:block;font-size:11px;font-weight:600;color:var(--violet);margin-bottom:2px}
+.msg .hr{display:block;font-size:10.5px;opacity:.65;margin-top:3px;text-align:right}
+.okbox{background:var(--tint);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.okbox b{font-family:var(--f-display);font-size:18px}
+.typing{display:inline-flex;gap:4px;padding:12px 14px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--soft);animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{opacity:.25}}
+</style>
+
+<header class="nav" id="nav"><div class="wrap">
+  <a class="logo" href="#topo"><img src="logo-simbolo.png" alt="">Ateliê <span>Web</span></a>
+  <nav aria-label="Seções"><ul id="menu">
+    <li><a href="#quem-somos">Quem somos</a></li>
+    <li><a href="#portfolio">Portfólio</a></li>
+    <li><a href="#diferenciais">Diferenciais</a></li>
+    <li><a href="#como-funciona">Como funciona</a></li>
+    <li><a href="#contato">Contato</a></li>
+  </ul></nav>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn-primary cta-nav" data-chat>Fale com a gente</button>
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</div></header>
+
+<main id="topo">
+<section class="hero"><div class="wrap">
+  <div>
+    <div class="eyebrow">Sites · Sistemas · Atendimento com IA</div>
+    <h1 style="margin-top:16px">Tecnologia sob medida, feita com <em>olhar de ateliê</em>.</h1>
+    <p class="lead">Criamos sites, sistemas e automações que fazem o seu negócio vender mais e atender melhor, sem complicação.</p>
+    <div class="ctas">
+      <a class="btn btn-wa" data-wa="Olá! Vim pelo site do Ateliê Web e quero fazer um orçamento." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>Orçamento no WhatsApp</a>
+      <a class="btn btn-ghost" href="#portfolio">Ver portfólio</a>
+    </div>
+    <div class="proof">
+      <div><b>100%</b>sob medida</div>
+      <div><b>Entrega</b>com documentação</div>
+      <div><b>Suporte</b>pós-entrega</div>
+    </div>
+  </div>
+  <div class="stage" aria-hidden="true">
+    <svg class="ribbon" viewBox="0 0 600 600">
+      <defs><linearGradient id="gv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b6bff"/><stop offset="1" stop-color="#5b21b6"/></linearGradient></defs>
+      <path class="r1" d="M40 470 C 140 200, 200 90, 260 210 S 330 520, 420 330 S 520 120, 570 140" stroke="url(#gv)" stroke-width="46" opacity=".95"/>
+      <path class="r2" d="M150 380 C 260 300, 360 300, 470 250" stroke="var(--graphite)" stroke-width="18" opacity=".85"/>
+      <path class="r3" d="M60 300 C 160 360, 360 330, 560 110" stroke="#a78bfa" stroke-width="6" opacity=".9"/>
+    </svg>
+    <div class="card-float cf-1"><div class="cf-head"><i></i><i></i><i></i></div>
+      <div class="bar v" style="width:60%;height:14px"></div><div class="bar" style="width:90%"></div><div class="bar" style="width:75%"></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><div class="bar v" style="flex:1;height:48px;border-radius:10px;margin:0"></div><div class="bar" style="flex:1;height:48px;border-radius:10px;margin:0"></div></div></div>
+    <div class="card-float cf-2"><div class="chatbub in">Oi! Quero um site para minha loja 🛍️</div><div class="chatbub out">Perfeito! Te mando o orçamento hoje.</div></div>
+  </div>
+</div></section>
+
+<section class="block" id="quem-somos" style="background:var(--paper);border-block:1px solid var(--line)"><div class="wrap about">
+  <div class="story">
+    <div class="eyebrow">Quem somos</div>
+    <h2 style="font-size:clamp(32px,4.4vw,50px);font-weight:700;margin:12px 0 26px">Nascemos dentro da operação de vendas.</h2>
+    <p>O Ateliê Web foi criado por <strong>Juliana Marcico</strong>, que passou anos liderando equipes comerciais e de atendimento. Ali ela viu de perto o que trava um negócio: planilhas soltas, pedidos perdidos no WhatsApp e cliente esperando resposta.</p>
+    <p>Por isso cada projeto começa entendendo <strong>como você vende e atende</strong>. Só depois vem o código. O resultado são ferramentas que a sua equipe usa de verdade, porque foram pensadas para a rotina dela.</p>
+    <p>Trabalhamos como um ateliê: <strong>poucos projetos por vez, feitos à mão</strong>, com atenção a cada detalhe e contato direto com quem desenvolve.</p>
+  </div>
+  <div class="services">
+    <div class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18M8 21h8"/></svg></div><h3>Sites e landing pages</h3><p>Rápidos, bonitos no celular e pensados para gerar contato.</p></div>
+    <div class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H4zM8 19h8M12 15v4"/><path d="M8 9h3M8 12h6"/></svg></div><h3>Sistemas sob medida</h3><p>CRM, controle de pedidos, painéis e orçamentos do seu jeito.</p></div>
+    <div class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg></div><h3>Atendimento com IA</h3><p>Agentes que respondem no WhatsApp 24h e passam o cliente pronto para você.</p></div>
+    <div class="svc"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/></svg></div><h3>Automações e extensões</h3><p>Ferramentas que eliminam tarefas repetitivas do dia a dia.</p></div>
+  </div>
+</div></section>
+
+<section class="block" id="portfolio"><div class="wrap">
+  <div class="sec-head">
+    <div><div class="eyebrow">Portfólio</div><h2>Projetos que resolvem problemas reais.</h2></div>
+    <div class="filters" role="group" aria-label="Filtrar portfólio">
+      <button class="chip" aria-pressed="true" data-f="todos">Todos</button>
+      <button class="chip" aria-pressed="false" data-f="site">Sites</button>
+      <button class="chip" aria-pressed="false" data-f="sistema">Sistemas</button>
+      <button class="chip" aria-pressed="false" data-f="ia">IA e automação</button>
+    </div>
+  </div>
+  <div class="grid-pf" id="pfGrid">
+    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-row"><div class="m-kpi"><div class="m-b v" style="width:50%"></div><div class="m-b" style="margin-top:4px"></div></div><div class="m-kpi"><div class="m-b g" style="width:60%"></div><div class="m-b" style="margin-top:4px"></div></div><div class="m-kpi"><div class="m-b v" style="width:40%"></div><div class="m-b" style="margin-top:4px"></div></div></div>
+      <div class="m-b" style="width:100%"></div><div class="m-b" style="width:85%"></div><div class="m-b v" style="width:40%"></div><div class="m-b" style="width:92%"></div></div></div>
+      <div class="body"><span class="tag">Sistema</span><h3>CRM de propostas e orçamentos</h3><p>Clientes, propostas com anexos, orçamentos formais em PDF e acompanhamento de projetos até a entrega.</p><div class="stack"><span>HTML/JS</span><span>Offline</span><span>PDF</span></div></div></article>
+    <article class="pf" data-cat="ia"><div class="shot"><div class="win" style="background:var(--bg)"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-b" style="width:60%;height:18px;border-radius:9px"></div><div class="m-b v" style="width:55%;height:18px;border-radius:9px;margin-left:auto"></div><div class="m-b" style="width:70%;height:18px;border-radius:9px"></div><div class="m-b v" style="width:45%;height:18px;border-radius:9px;margin-left:auto"></div></div></div>
+      <div class="body"><span class="tag">IA e automação</span><h3>Agente de atendimento no WhatsApp</h3><p>Responde dúvidas, apresenta produtos e qualifica o cliente a qualquer hora, passando para o vendedor só o que importa.</p><div class="stack"><span>IA</span><span>WhatsApp</span><span>Atendimento 24h</span></div></div></article>
+    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-row" style="flex:1"><div class="m-col"><div class="m-b g" style="width:70%"></div><div class="m-b"></div><div class="m-b"></div><div class="m-b"></div></div><div class="m-col"><div class="m-b v" style="width:50%"></div><div class="m-b"></div><div class="m-b v" style="width:80%"></div><div class="m-b"></div></div><div class="m-col"><div class="m-b g" style="width:60%"></div><div class="m-b"></div><div class="m-b"></div><div class="m-b v" style="width:65%"></div></div></div></div></div>
+      <div class="body"><span class="tag">Sistema</span><h3>Comparador de preços por região</h3><p>Painel que cruza preços da empresa com os da concorrência por região, para a equipe negociar com segurança.</p><div class="stack"><span>Painel</span><span>Inteligência comercial</span></div></div></article>
+    <article class="pf" data-cat="ia"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-row" style="flex:1"><div class="m-box" style="flex:2"></div><div class="m-col" style="flex:1;background:var(--tint);border-radius:6px;padding:6px"><div class="m-b v"></div><div class="m-b g" style="width:70%"></div><div class="m-b"></div><div class="m-b v" style="width:50%"></div></div></div></div></div>
+      <div class="body"><span class="tag">Extensão</span><h3>Guia do vendedor no WhatsApp Web</h3><p>Extensão para o navegador que mostra pedidos, preços e roteiros de venda ao lado da conversa com o cliente.</p><div class="stack"><span>Chrome</span><span>WhatsApp Web</span></div></div></article>
+    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-b g" style="width:40%"></div>
+      <div class="m-row" style="align-items:flex-end;flex:1;gap:8px;padding:6px 4px 0"><div class="m-box v" style="flex:1;height:40%"></div><div class="m-box" style="flex:1;height:65%"></div><div class="m-box v" style="flex:1;height:85%"></div><div class="m-box" style="flex:1;height:55%"></div><div class="m-box v" style="flex:1;height:95%"></div></div></div></div>
+      <div class="body"><span class="tag">Sistema</span><h3>Painel de desempenho de equipe</h3><p>Metas de faturamento, ligações e produtos em tempo real, com visão por vendedor e ranking.</p><div class="stack"><span>Dashboard</span><span>Metas</span></div></div></article>
+    <article class="pf" data-cat="site"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-box v" style="height:38%"></div><div class="m-row"><div class="m-box" style="flex:1;height:34px"></div><div class="m-box" style="flex:1;height:34px"></div><div class="m-box" style="flex:1;height:34px"></div></div><div class="m-b" style="width:70%"></div></div></div>
+      <div class="body"><span class="tag">Site</span><h3>Site institucional Ateliê Web</h3><p>Este site: apresentação clara, portfólio filtrável e atendimento direto por chat e WhatsApp.</p><div class="stack"><span>Responsivo</span><span>Tema claro/escuro</span></div></div></article>
+  </div>
+</div></section>
+
+<section class="block dark" id="diferenciais"><div class="glow"></div><div class="wrap" style="position:relative">
+  <div class="sec-head"><div><div class="eyebrow">Diferenciais</div><h2>Por que trabalhar com o Ateliê.</h2></div><p>Mais do que entregar código: entregar algo que funciona no seu dia a dia.</p></div>
+  <div class="diffs">
+    <div class="diff"><div class="n">01</div><h3>Visão de negócio</h3><p>Experiência real em vendas e atendimento. Entendemos o seu processo antes de propor qualquer tela.</p></div>
+    <div class="diff"><div class="n">02</div><h3>Feito sob medida</h3><p>Nada de template genérico. Cada projeto é desenhado para o seu público, a sua marca e a sua rotina.</p></div>
+    <div class="diff"><div class="n">03</div><h3>Orçamento claro</h3><p>Escopo, prazo e valor por escrito antes de começar. Sem surpresa no meio do caminho.</p></div>
+    <div class="diff"><div class="n">04</div><h3>Você acompanha tudo</h3><p>Etapas combinadas e atualizações frequentes. Você sabe exatamente em que ponto está o projeto.</p></div>
+    <div class="diff"><div class="n">05</div><h3>Entrega documentada</h3><p>No final você recebe um documento com links, acessos e instruções de uso. Tudo seu, organizado.</p></div>
+    <div class="diff"><div class="n">06</div><h3>Suporte depois da entrega</h3><p>Período de suporte para ajustes e dúvidas. Não sumimos depois que o projeto vai ao ar.</p></div>
+  </div>
+</div></section>
+
+<section class="block" id="como-funciona"><div class="wrap">
+  <div class="sec-head"><div><div class="eyebrow">Como funciona</div><h2>Do primeiro contato à entrega.</h2></div></div>
+  <div class="steps">
+    <div class="step"><h3>Conversa</h3><p>Você conta o que precisa pelo chat ou WhatsApp. Entendemos o objetivo e o seu público.</p></div>
+    <div class="step"><h3>Orçamento</h3><p>Enviamos um orçamento formal com escopo, prazo e forma de pagamento.</p></div>
+    <div class="step"><h3>Desenvolvimento</h3><p>Construímos por etapas e você aprova cada parte antes de seguir.</p></div>
+    <div class="step"><h3>Entrega e suporte</h3><p>Publicamos, entregamos a documentação e ficamos por perto para ajustes.</p></div>
+  </div>
+</div></section>
+
+<section class="block" id="contato" style="padding-top:0"><div class="wrap">
+  <div class="sec-head"><div><div class="eyebrow">Contato</div><h2>Vamos tirar sua ideia do papel?</h2></div><p>Escolha como prefere falar. Respondemos rápido, em horário comercial.</p></div>
+  <div class="contact">
+    <div class="cbox feature">
+      <h3>Atendimento direto</h3>
+      <p>Fale agora com a gente pelo chat aqui do site ou chame no WhatsApp. É o jeito mais rápido de receber um orçamento.</p>
+      <div class="opts">
+        <a class="btn btn-light" data-wa="Olá! Vim pelo site do Ateliê Web e gostaria de conversar sobre um projeto." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>Chamar no WhatsApp</a>
+        <button class="btn btn-light" data-chat style="background:rgba(255,255,255,.16);color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg>Abrir o chat do site</button>
+        <div class="num"><span>WhatsApp</span><span id="numTxt"></span></div>
+      </div>
+    </div>
+    <form class="cbox" id="form">
+      <h3>Pedir orçamento</h3>
+      <p>Preencha e retornamos com uma proposta. Se tiver pressa, chame no WhatsApp.</p>
+      <div class="frow"><label>Seu nome<input id="fNome" required autocomplete="name" maxlength="100"></label><label>Empresa<input id="fEmp" autocomplete="organization" maxlength="100"></label></div>
+      <div class="frow"><label>WhatsApp<input id="fWa" required inputmode="tel" autocomplete="tel" placeholder="(21) 90000-0000" maxlength="30"></label><label>E-mail<input id="fEmail" type="email" autocomplete="email" maxlength="120"></label></div>
+      <label>O que você precisa?<select id="fTipo"><option>Site ou landing page</option><option>Sistema sob medida</option><option>Agente de atendimento com IA</option><option>Automação ou extensão</option><option>Ainda não sei, quero conversar</option></select></label>
+      <label>Conte um pouco sobre o projeto<textarea id="fMsg" maxlength="3000" placeholder="Ex.: tenho uma loja de roupas e quero vender pelo site"></textarea></label>
+      <button class="btn btn-primary" type="submit" id="fBtn" style="align-self:flex-start">Enviar pedido</button>
+    </form>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <a class="logo" href="#topo" style="font-size:16px"><img src="logo-simbolo.png" alt="" style="height:24px">Ateliê <span>Web</span></a>
+  <span>Sites, sistemas e atendimento com IA · Rio de Janeiro</span>
+  <span>© <span id="ano"></span> Ateliê Web</span>
+</div></footer>
+
+<div class="fab">
+  <a class="f-wa" data-wa="Olá! Vim pelo site do Ateliê Web." href="#" target="_blank" rel="noopener" aria-label="Chamar no WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg></a>
+  <button class="f-chat" id="chatFab" aria-label="Abrir chat de atendimento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg></button>
+</div>
+<div class="chat" id="chat" hidden role="dialog" aria-label="Chat de atendimento">
+  <div class="chat-h"><div class="av"><img src="logo-simbolo.png" alt=""></div><div><b>Ateliê Web</b><small id="chatStatus" class="off">Respondemos em breve</small></div><button class="hbtn" id="chatNew" aria-label="Começar nova conversa" title="Nova conversa" hidden>↺</button><button id="chatClose" aria-label="Fechar chat">×</button></div>
+  <div class="chat-b" id="chatBody" aria-live="polite"></div>
+  <form class="chat-f" id="chatForm"><input id="chatIn" placeholder="Escreva sua mensagem…" autocomplete="off"><button aria-label="Enviar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+/* ===== CONFIGURAÇÃO: troque pelo seu número com DDI e DDD, só números ===== */
+const WHATSAPP = "5521983798817";
+const NUM_VISIVEL = "(21) 98379-8817";
+const FB_CONFIG = {apiKey:"AIzaSyDlVjzYA6ecVdEVMM1G-0F73zBKqAKkqWg",authDomain:"atelieweb.firebaseapp.com",projectId:"atelieweb",storageBucket:"atelieweb.firebasestorage.app",messagingSenderId:"1043385790217",appId:"1:1043385790217:web:a29e89674c1fb7d2d1add8"};
+/* ======================================================================== */
+
+const wa = t => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(t)}`;
+let db=null;try{if(window.firebase){firebase.initializeApp(FB_CONFIG);db=firebase.firestore()}}catch(e){db=null}
+const TS=()=>firebase.firestore.FieldValue.serverTimestamp();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+const rid=()=>Array.from(crypto.getRandomValues(new Uint8Array(15)),b=>"abcdefghijkmnpqrstuvwxyz23456789"[b%32]).join("");
+document.querySelectorAll("[data-wa]").forEach(a=>a.href=wa(a.dataset.wa));
+document.getElementById("numTxt").textContent=NUM_VISIVEL;
+document.getElementById("ano").textContent=new Date().getFullYear();
+
+/* nav */
+const nav=document.getElementById("nav");
+addEventListener("scroll",()=>nav.classList.toggle("scrolled",scrollY>8),{passive:true});
+const menu=document.getElementById("menu"),mb=document.getElementById("menuBtn");
+mb.addEventListener("click",()=>{const o=menu.classList.toggle("open");mb.setAttribute("aria-expanded",o)});
+menu.addEventListener("click",e=>{if(e.target.tagName==="A"){menu.classList.remove("open");mb.setAttribute("aria-expanded","false")}});
+
+/* portfólio */
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));
+  const f=c.dataset.f;document.querySelectorAll("#pfGrid .pf").forEach(p=>p.hidden=!(f==="todos"||p.dataset.cat===f));
+}));
+
+/* formulário → WhatsApp */
+document.getElementById("form").addEventListener("submit",async e=>{
+  e.preventDefault();const f=e.target;const g=id=>document.getElementById(id).value.trim();
+  const d={nome:g("fNome"),empresa:g("fEmp"),whatsapp:g("fWa"),email:g("fEmail"),tipo:g("fTipo"),mensagem:g("fMsg")};
+  const t=`Olá! Sou ${d.nome}${d.empresa?` da ${d.empresa}`:""}.\nPreciso de: ${d.tipo}.\n${d.mensagem}`;
+  const btn=document.getElementById("fBtn");btn.disabled=true;btn.textContent="Enviando…";
+  let ok=false;
+  if(db){try{await db.collection("pedidos").add({...d,status:"novo",criadoEm:TS()});ok=true}catch(err){ok=false}}
+  const box=document.createElement("div");box.className="okbox";
+  box.innerHTML=ok?`<b>Pedido recebido!</b><span>Obrigado, ${esc(d.nome.split(" ")[0])}. Vamos analisar e retornar pelo WhatsApp${d.email?" ou e-mail":""} em breve.</span><a class="btn btn-wa" target="_blank" rel="noopener" style="align-self:flex-start">Quero falar agora pelo WhatsApp</a>`
+    :`<b>Quase lá</b><span>Não conseguimos registrar seu pedido agora. Toque abaixo para enviá-lo pelo WhatsApp.</span><a class="btn btn-wa" target="_blank" rel="noopener" style="align-self:flex-start">Enviar pelo WhatsApp</a>`;
+  box.querySelector("a").href=wa(t);
+  [...f.children].forEach(c=>{if(c.tagName!=="H3")c.hidden=true});f.appendChild(box);
+});
+
+/* chat: robô de triagem + conversa ao vivo com a equipe (Firebase) */
+const chat=document.getElementById("chat"),body=document.getElementById("chatBody"),inp=document.getElementById("chatIn"),stEl=document.getElementById("chatStatus"),newBtn=document.getElementById("chatNew");
+const ctx={nome:"",interesse:"",detalhe:""};let etapa="inicio",iniciado=false,live=false,online=false,cid=lsGet("aw_cid"),unsub=null;const vistos=new Set();
+function updStatus(){stEl.textContent=online?"Online agora":"Respondemos em breve";stEl.classList.toggle("off",!online)}
+if(db)db.doc("config/status").onSnapshot(d=>{online=!!(d.exists&&d.data().online);updStatus()},()=>{});
+function add(html,who){const d=document.createElement("div");d.className="msg "+who;d.innerHTML=html;body.appendChild(d);body.scrollTop=body.scrollHeight;return d}
+function note(t){const d=document.createElement("div");d.className="sysnote";d.textContent=t;body.appendChild(d);body.scrollTop=body.scrollHeight}
+function bot(html,quick){const t=document.createElement("div");t.className="msg bot typing";t.innerHTML="<i></i><i></i><i></i>";body.appendChild(t);body.scrollTop=body.scrollHeight;
+  setTimeout(()=>{t.remove();add(html,"bot");if(quick){const q=document.createElement("div");q.className="quick";q.innerHTML=quick;body.appendChild(q);body.scrollTop=body.scrollHeight}},650)}
+const opt=(l)=>`<button type="button" data-q="${esc(l)}">${esc(l)}</button>`;
+const RESP={
+  "Quero um site":"Ótimo! Fazemos sites e landing pages rápidos, bonitos no celular e pensados para gerar contato. Você já tem domínio e logo, ou começamos do zero?",
+  "Sistema sob medida":"Legal! Criamos CRMs, controle de pedidos, painéis de metas e geradores de orçamento do jeito que a sua equipe trabalha. Qual processo você quer organizar?",
+  "Atendimento com IA":"Nosso agente atende no WhatsApp 24h: responde dúvidas, apresenta produtos e passa o cliente pronto para você. Qual é o seu tipo de negócio?",
+  "Quanto custa?":"Cada projeto é sob medida, então o valor depende do escopo. Depois de uma conversa rápida enviamos um orçamento formal, com prazo e forma de pagamento, sem compromisso. Me conta o que você precisa?",
+  "Prazo de entrega":"Uma landing page costuma ficar pronta em poucos dias. Sistemas variam conforme o tamanho e o prazo vem escrito no orçamento. O que você tem em mente?"
+};
+const FALAR="Falar com a equipe",ENVIAR="Enviar para a equipe aqui";
+function menuInicial(){return [...Object.keys(RESP),FALAR].map(opt).join("")}
+function resumo(){return [`Olá! Sou ${ctx.nome||"um visitante do site"}.`,ctx.interesse&&ctx.interesse!==FALAR?`Interesse: ${ctx.interesse}.`:"",ctx.detalhe?`${ctx.detalhe}`:""].filter(Boolean).join("\n")}
+function oferecer(){
+  bot(`Perfeito${ctx.nome?", "+esc(ctx.nome):""}! Como prefere seguir?`,(db?opt(ENVIAR):"")+`<a class="btn btn-wa" href="${wa(resumo())}" target="_blank" rel="noopener">Continuar no WhatsApp</a>`);
+  etapa="oferta";
+}
+function hora(ts){try{const d=ts&&ts.toDate?ts.toDate():new Date();return d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+function escutar(){
+  if(unsub)unsub();
+  unsub=db.collection("conversas").doc(cid).collection("mensagens").orderBy("em").onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{if(ch.type!=="added"||vistos.has(ch.doc.id))return;vistos.add(ch.doc.id);const m=ch.doc.data({serverTimestamps:"estimate"});
+      const el=add(`${m.de==="atelie"?'<span class="who">Ateliê Web</span>':""}${esc(m.texto).replace(/\n/g,"<br>")}<span class="hr">${hora(m.em)}</span>`,m.de==="atelie"?"bot":"me");
+      if(m.de==="atelie"&&chat.hidden){document.getElementById("chatFab").style.boxShadow="0 0 0 4px #e8b45a"}});
+  },err=>{if(err.code==="permission-denied"){lsSet("aw_cid",null);cid=null;live=false;note("Essa conversa foi encerrada.");bot("Quer começar uma nova?",menuInicial());etapa="menu"}});
+}
+async function entrarAoVivo(primeira){
+  if(!db){oferecer();return}
+  try{
+    if(!cid){cid=rid();await db.collection("conversas").doc(cid).set({nome:(ctx.nome||"Visitante").slice(0,80),interesse:(ctx.interesse||"").slice(0,80),criadoEm:TS(),atualizadoEm:TS(),ultimaMsg:"",pendente:true,origem:"site"});lsSet("aw_cid",cid)}
+    live=true;etapa="live";newBtn.hidden=false;body.querySelectorAll(".quick").forEach(q=>q.remove());
+    note(online?"Você está falando com a equipe do Ateliê Web":"Deixe sua mensagem. Respondemos aqui mesmo, assim que possível");
+    escutar();if(primeira)await enviar(primeira);
+  }catch(e){note("Não foi possível conectar agora.");oferecer()}
+}
+async function enviar(t){
+  t=t.slice(0,2000);const ref=db.collection("conversas").doc(cid);
+  try{await ref.collection("mensagens").add({de:"visitante",texto:t,em:TS()});await ref.update({ultimaMsg:t.slice(0,140),atualizadoEm:TS(),pendente:true})}
+  catch(e){note("Mensagem não enviada. Tente de novo ou chame no WhatsApp.")}
+}
+function responder(txt){
+  if(live){enviar(txt);return}
+  if(txt==="Voltar ao início"){etapa="menu";bot("Claro! Sobre o que você quer saber?",menuInicial());return}
+  if(txt===FALAR){ctx.interesse=ctx.interesse||FALAR;entrarAoVivo(resumo());return}
+  if(txt===ENVIAR){entrarAoVivo(resumo());return}
+  if(etapa==="nome"){ctx.nome=txt.split(" ")[0].replace(/^./,c=>c.toUpperCase()).slice(0,40);etapa="menu";bot(`Prazer, ${esc(ctx.nome)}! Como posso ajudar?`,menuInicial());return}
+  if(RESP[txt]){ctx.interesse=txt;etapa="detalhe";bot(RESP[txt]);return}
+  ctx.detalhe=(ctx.detalhe?ctx.detalhe+"\n":"")+txt;ctx.interesse=ctx.interesse||"Conversar sobre um projeto";oferecer();
+}
+function abrir(){chat.hidden=false;document.getElementById("chatFab").style.boxShadow="";
+  if(!iniciado){iniciado=true;
+    if(cid&&db){live=true;etapa="live";newBtn.hidden=false;note("Continuando sua conversa");escutar()}
+    else{etapa="nome";bot("Olá! 👋 Bem-vindo ao <b>Ateliê Web</b>.");setTimeout(()=>bot("Para começar, qual é o seu nome?"),800)}}
+  setTimeout(()=>inp.focus(),300)}
+newBtn.addEventListener("click",()=>{if(unsub)unsub();unsub=null;lsSet("aw_cid",null);cid=null;live=false;vistos.clear();body.innerHTML="";newBtn.hidden=true;Object.assign(ctx,{nome:"",interesse:"",detalhe:""});etapa="nome";bot("Nova conversa! Qual é o seu nome?")});
+document.getElementById("chatFab").addEventListener("click",()=>chat.hidden?abrir():chat.hidden=true);
+document.querySelectorAll("[data-chat]").forEach(b=>b.addEventListener("click",abrir));
+document.getElementById("chatClose").addEventListener("click",()=>chat.hidden=true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!chat.hidden)chat.hidden=true});
+body.addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)return;b.parentElement.remove();add(esc(b.dataset.q),"me");responder(b.dataset.q)});
+document.getElementById("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;inp.value="";if(!live){body.querySelectorAll(".quick").forEach(q=>{if(!q.querySelector("a"))q.remove()});add(esc(v).replace(/\n/g,"<br>"),"me")}responder(v)});
+})();
+</script>

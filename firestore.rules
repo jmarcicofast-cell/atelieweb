@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Só a dona do Ateliê Web (login do CRM) é administradora
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "jmarcico.fast@gmail.com";
+    }
+    function txt(v, max) { return v is string && v.size() <= max; }
+
+    // Status online/offline mostrado no chat do site
+    match /config/status {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Pedidos de orçamento do formulário do site
+    match /pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['nome','empresa','whatsapp','email','tipo','mensagem','status','criadoEm'])
+        && txt(request.resource.data.nome, 100) && request.resource.data.nome.size() > 0
+        && txt(request.resource.data.empresa, 100) && txt(request.resource.data.whatsapp, 30)
+        && txt(request.resource.data.email, 120) && txt(request.resource.data.tipo, 80)
+        && txt(request.resource.data.mensagem, 3000)
+        && request.resource.data.status == 'novo' && request.resource.data.criadoEm == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Conversas do chat do site (o visitante só conhece o código da própria conversa)
+    match /conversas/{cid} {
+      allow get: if true;
+      allow list, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['nome','interesse','criadoEm','atualizadoEm','ultimaMsg','pendente','origem'])
+        && txt(request.resource.data.nome, 80) && txt(request.resource.data.interesse, 80)
+        && txt(request.resource.data.ultimaMsg, 140) && request.resource.data.origem == 'site';
+      allow update: if isAdmin()
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimaMsg','atualizadoEm','pendente'])
+            && txt(request.resource.data.ultimaMsg, 140));
+
+      match /mensagens/{mid} {
+        allow read: if true;
+        allow create: if isAdmin()
+          || (exists(/databases/$(database)/documents/conversas/$(cid))
+              && request.resource.data.keys().hasOnly(['de','texto','em'])
+              && request.resource.data.de == 'visitante'
+              && txt(request.resource.data.texto, 2000) && request.resource.data.texto.size() > 0
+              && request.resource.data.em == request.time);
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}

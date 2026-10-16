@@ -184,6 +184,39 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .lb img{max-width:100%;max-height:80vh;border-radius:6px}
 .lb div{color:#fff;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .secret{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px}
+.nbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font:600 11px var(--f-body);margin-left:5px;vertical-align:1px}
+.chatwrap{display:grid;grid-template-columns:300px 1fr;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);height:calc(100vh - 230px);min-height:480px;overflow:hidden}
+.clist{border-right:1px solid var(--line);overflow-y:auto;min-width:0}
+.citem{padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 8px}
+.citem:hover{background:var(--sunk)}.citem.on{background:var(--accent-soft)}
+.citem b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.citem small{color:var(--muted);font-size:12px;white-space:nowrap}
+.citem span{grid-column:1/-1;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.citem.pend b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px;vertical-align:1px}
+.cpane{display:flex;flex-direction:column;min-width:0;min-height:0}
+.chead{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chead .who{flex:1;min-width:0}.chead .who b{display:block}.chead .who small{color:var(--muted)}
+.wmsgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--bg);min-height:0}
+.wm{max-width:76%;padding:9px 13px;border-radius:14px;font-size:14.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.wm.v{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.wm.a{background:var(--accent);color:var(--accent-ink);margin-left:auto;border-bottom-right-radius:4px}
+.wm small{display:block;font-size:10.5px;opacity:.65;margin-top:3px;text-align:right}
+.wreply{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.wreply .qr{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.wreply .qr button{flex:0 0 auto;font:500 12px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
+.wreply .row2{display:flex;gap:8px;align-items:flex-end}
+.wreply textarea{min-height:44px;max-height:140px;resize:none;flex:1}
+.onoff{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 8px;background:var(--surface);cursor:pointer;font:500 14px var(--f-body);color:var(--ink)}
+.onoff i{width:34px;height:20px;border-radius:10px;background:var(--line);position:relative;transition:background .2s}
+.onoff i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.onoff.on i{background:var(--ok)}.onoff.on i::after{left:16px}
+.ped{border-top:1px solid var(--line);padding:14px 4px;display:grid;grid-template-columns:1fr auto;gap:6px 14px}
+.ped:first-child{border-top:0}
+.ped.novo{background:var(--accent-soft);border-radius:8px;padding-inline:12px;border-top-color:transparent;margin-top:4px}
+.ped .msgp{grid-column:1/-1;font-size:14px;white-space:pre-wrap;color:var(--ink);background:var(--sunk);border-radius:8px;padding:8px 10px}
+.ped .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill.novo{background:var(--accent-soft);color:var(--accent)}.pill.contato{background:var(--warn-soft);color:var(--warn)}.pill.convertido{background:var(--ok-soft);color:var(--ok)}.pill.descartado{background:var(--sunk);color:var(--muted)}
+@media (max-width:760px){.chatwrap{grid-template-columns:1fr;height:calc(100vh - 200px)}.chatwrap.aberto .clist{display:none}.chatwrap:not(.aberto) .cpane{display:none}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:30;font-size:14px}
 /* documento formal (preview) */
 .docpaper{background:#fff;color:#1d2330;border:1px solid var(--line);border-radius:6px;padding:36px 40px;font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;overflow-x:auto}
@@ -201,6 +234,8 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
     <button data-tab="plataformas">Plataformas</button>
     <button data-tab="propostas">Propostas</button>
     <button data-tab="projetos">Projetos</button>
+    <button data-tab="chat">Chat</button>
+    <button data-tab="pedidos">Pedidos do site</button>
     <button data-tab="clientes">Clientes</button>
     <button data-tab="orcamentos">Orçamentos</button>
     <button data-tab="perfil">Meus dados</button>
@@ -209,6 +244,9 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 <main class="wrap" id="app"><div class="empty"><b>Carregando…</b>Conectando ao seu arquivo de propostas.</div></main>
 <div id="modalRoot"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
 const ST={status:[["rascunho","Rascunho"],["enviada","Enviada"],["negociacao","Em negociação"],["aprovada","Aprovada"],["recusada","Recusada"]]};
@@ -259,10 +297,12 @@ async function del(col,id){try{await idbDel(col,id);await loadAll();render()}cat
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"true":"false"));
   const banner=S.offline?`<div class="banner">Este navegador bloqueou o armazenamento local (janela anônima?). Abra numa janela normal para salvar seus dados.</div>`:"";
-  const views={projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
+  const views={chat:vChat,pedidos:vPedidos,projetos:vProjetos,painel:vPainel,plataformas:vPlataformas,propostas:vPropostas,clientes:vClientes,orcamentos:vOrcamentos,perfil:vPerfil};
   const active=document.activeElement;const keep=active&&active.id&&active.closest("#app")?active.id:null;const pos=keep&&active.selectionStart;
   $("#app").innerHTML=banner+views[S.tab]();
   if(keep){const el=document.getElementById(keep);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
+  const wm=document.getElementById("wMsgs");if(wm)wm.scrollTop=wm.scrollHeight;
+  badges();
 }
 function platStats(pid){
   const ps=S.propostas.filter(p=>(p.plataformaId||"")===pid);
@@ -285,6 +325,7 @@ function vPainel(){
     <div class="kpi"><small>Propostas enviadas</small><b>${env.length}</b><span>${envMes} neste mês</span></div>
     <div class="kpi"><small>Em aberto</small><b class="money">${brl(aberto.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${aberto.length} aguardando resposta</span></div>
     <div class="kpi"><small>Fechado</small><b class="money">${brl(apr.reduce((s,p)=>s+(+p.valor||0),0))}</b><span>${apr.length} aprovadas</span></div>
+    ${W.user?`<div class="kpi" style="cursor:pointer" data-wact="irPedidos"><small>Do site</small><b>${W.pedidos.filter(p=>p.status==="novo").length+W.conversas.filter(c=>c.pendente).length}</b><span>${W.pedidos.filter(p=>p.status==="novo").length} pedido(s) · ${W.conversas.filter(c=>c.pendente).length} chat(s)</span></div>`:""}
     <div class="kpi"><small>Projetos ativos</small><b>${S.projetos.filter(j=>j.status!=="entregue").length}</b><span>${S.projetos.filter(j=>j.status==="entregue").length} entregues</span></div>
     <div class="kpi"><small>Taxa de aprovação</small><b>${conv}%</b><span>das enviadas</span></div>
   </div>
@@ -769,6 +810,129 @@ async function importar(file){
     await loadAll();render();toast("Backup importado")}
   catch(e){toast("Arquivo de backup inválido.")}
 }
+
+/* ---------- integração com o site (Firebase): chat ao vivo + pedidos de orçamento ---------- */
+const FB={apiKey:"AIzaSyDlVjzYA6ecVdEVMM1G-0F73zBKqAKkqWg",authDomain:"atelieweb.firebaseapp.com",projectId:"atelieweb",storageBucket:"atelieweb.firebasestorage.app",messagingSenderId:"1043385790217",appId:"1:1043385790217:web:a29e89674c1fb7d2d1add8"};
+const W={ok:false,user:undefined,conversas:[],pedidos:[],msgs:[],conv:null,online:false,draft:"",loginErr:"",pf:"todos",carregou:{c:false,p:false}};
+try{if(window.firebase){firebase.initializeApp(FB);W.auth=firebase.auth();W.fs=firebase.firestore();W.ok=true}}catch(e){W.ok=false}
+const FTS=()=>firebase.firestore.FieldValue.serverTimestamp();
+const tsD=t=>t&&t.toDate?t.toDate():null;
+function quando(t){const d=tsD(t);if(!d)return"agora";const h=d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});return d.toDateString()===new Date().toDateString()?h:d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+h}
+let wSubs=[],msgSub=null;
+function bip(){try{const A=window.AudioContext||window.webkitAudioContext;const c=new A();[660,880].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);g.gain.setValueAtTime(.0001,c.currentTime+i*.16);g.gain.exponentialRampToValueAtTime(.18,c.currentTime+i*.16+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+i*.16+.15);o.start(c.currentTime+i*.16);o.stop(c.currentTime+i*.16+.16)})}catch(e){}}
+function badges(){
+  const nc=W.conversas.filter(c=>c.pendente).length,np=W.pedidos.filter(p=>p.status==="novo").length;
+  const b=(t,l,n)=>{const el=document.querySelector(`#tabs [data-tab="${t}"]`);if(el)el.innerHTML=l+(n?`<span class="nbadge">${n}</span>`:"")};
+  b("chat","Chat",nc);b("pedidos","Pedidos do site",np);
+  document.title=(nc+np?`(${nc+np}) `:"")+"Ateliê Web";
+}
+if(W.ok)W.auth.onAuthStateChanged(u=>{W.user=u||null;wSubs.forEach(f=>f());wSubs=[];if(msgSub){msgSub();msgSub=null}W.conversas=[];W.pedidos=[];W.conv=null;W.carregou={c:false,p:false};if(u)iniciarSite();render()});
+function iniciarSite(){
+  wSubs.push(W.fs.doc("config/status").onSnapshot(d=>{W.online=!!(d.exists&&d.data().online);if(S.tab==="chat")render()},()=>{}));
+  wSubs.push(W.fs.collection("conversas").orderBy("atualizadoEm","desc").limit(150).onSnapshot(snap=>{
+    if(W.carregou.c)snap.docChanges().forEach(ch=>{const c=ch.doc.data();if(ch.type!=="removed"&&c.pendente&&!(W.conv===ch.doc.id&&S.tab==="chat"&&document.visibilityState==="visible"))bip()});
+    W.carregou.c=true;W.conversas=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));
+    if(["chat","painel"].includes(S.tab))render();else badges();
+  },e=>{W.erro=e.code;render()}));
+  wSubs.push(W.fs.collection("pedidos").orderBy("criadoEm","desc").limit(300).onSnapshot(snap=>{
+    if(W.carregou.p&&snap.docChanges().some(ch=>ch.type==="added"))bip();
+    W.carregou.p=true;W.pedidos=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));
+    if(["pedidos","painel"].includes(S.tab))render();else badges();
+  },e=>{W.erro=e.code;render()}));
+}
+function abrirConversa(id){
+  if(msgSub)msgSub();W.conv=id;W.msgs=[];
+  msgSub=W.fs.collection("conversas").doc(id).collection("mensagens").orderBy("em").onSnapshot(snap=>{
+    W.msgs=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));
+    const c=byId(W.conversas,id);if(c&&c.pendente&&document.visibilityState==="visible")W.fs.collection("conversas").doc(id).update({pendente:false}).catch(()=>{});
+    if(S.tab==="chat")render();
+  },()=>{});
+  const c=byId(W.conversas,id);if(c&&c.pendente)W.fs.collection("conversas").doc(id).update({pendente:false}).catch(()=>{});
+  render();
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&W.conv&&S.tab==="chat"){const c=byId(W.conversas,W.conv);if(c&&c.pendente)W.fs.collection("conversas").doc(W.conv).update({pendente:false}).catch(()=>{})}});
+function vLogin(){
+  if(!W.ok)return `<div class="banner">Não consegui carregar a conexão com o site. Verifique a internet e recarregue a página.</div>`;
+  if(W.user===undefined)return `<div class="empty"><b>Conectando…</b></div>`;
+  return `<div class="panel" style="max-width:420px;margin:24px auto"><h2 style="margin-bottom:4px">Entrar</h2><p style="color:var(--muted);margin:0 0 14px;font-size:14px">Use o e-mail e a senha que você cadastrou no Firebase. Só você vê as conversas e os pedidos.</p>
+  <form id="formLogin" style="display:flex;flex-direction:column;gap:10px"><label class="f">E-mail<input id="lgEmail" type="email" autocomplete="username" required></label><label class="f">Senha<input id="lgSenha" type="password" autocomplete="current-password" required></label>
+  ${W.loginErr?`<div style="color:var(--bad);font-size:13px">${esc(W.loginErr)}</div>`:""}<button class="btn primary" type="submit">Entrar</button></form></div>`;
+}
+const permErr=()=>W.erro==="permission-denied"?`<div class="banner">O Firebase recusou o acesso. Confira se as regras de segurança foram publicadas e se você entrou com o e-mail certo.</div>`:"";
+const QR=["Olá! Aqui é a Juliana, do Ateliê Web. Como posso te ajudar?","Pode me passar seu WhatsApp para eu enviar o orçamento?","Vou preparar seu orçamento e te retorno ainda hoje.","Obrigada pelo contato! Qualquer dúvida, estou por aqui."];
+function vChat(){
+  if(!W.user)return `<div class="head"><div><h1>Chat do site</h1><p>Responda aqui quem chama no chat do site do Ateliê Web.</p></div></div>`+vLogin();
+  const c=W.conv?byId(W.conversas,W.conv):null;
+  return `<div class="head"><div><h1>Chat do site</h1><p>${W.conversas.length} conversa(s) · ${W.conversas.filter(x=>x.pendente).length} aguardando resposta</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="onoff ${W.online?"on":""}" data-wact="online"><i></i>${W.online?"Você está online":"Você está offline"}</button><button class="btn ghost sm" data-wact="sair">Sair</button></div></div>
+  ${permErr()}
+  <div class="chatwrap ${c?"aberto":""}">
+    <div class="clist">${W.conversas.length?W.conversas.map(x=>`<div class="citem ${x.id===W.conv?"on":""} ${x.pendente?"pend":""}" data-wact="abrir" data-id="${x.id}"><b>${esc(x.nome||"Visitante")}</b><small>${quando(x.atualizadoEm)}</small><span>${esc(x.ultimaMsg||x.interesse||"…")}</span></div>`).join("")
+      :`<div class="empty" style="padding:40px 16px"><b>Nenhuma conversa ainda</b>Quando alguém escrever no chat do site, aparece aqui.</div>`}</div>
+    <div class="cpane">${c?`<div class="chead"><button class="btn ghost sm" data-wact="voltar" aria-label="Voltar">←</button><div class="who"><b>${esc(c.nome||"Visitante")}</b><small>${esc(c.interesse||"Chat do site")} · início ${quando(c.criadoEm)}</small></div>
+        <button class="btn sm" data-wact="convConv">Converter em cliente</button><button class="btn sm danger" data-wact="delConv">Excluir</button></div>
+      <div class="wmsgs" id="wMsgs">${W.msgs.map(m=>`<div class="wm ${m.de==="atelie"?"a":"v"}">${esc(m.texto)}<small>${quando(m.em)}</small></div>`).join("")||`<div class="empty">Carregando mensagens…</div>`}</div>
+      <form class="wreply" id="formReply"><div class="qr">${QR.map((q,i)=>`<button type="button" data-wact="qr" data-i="${i}">${esc(q.length>38?q.slice(0,36)+"…":q)}</button>`).join("")}</div>
+        <div class="row2"><textarea id="wDraft" placeholder="Escreva sua resposta… (Enter envia, Shift+Enter quebra linha)">${esc(W.draft)}</textarea><button class="btn primary" type="submit">Enviar</button></div></form>`
+      :`<div class="empty" style="margin:auto"><b>Escolha uma conversa</b>${W.online?"Você aparece como online no site.":"Ligue o botão \"online\" para os visitantes saberem que você está respondendo."}</div>`}</div>
+  </div>`;
+}
+const PS=[["novo","Novo"],["contato","Em contato"],["convertido","Convertido"],["descartado","Descartado"]];const PSL=Object.fromEntries(PS);
+function waLink(num,txt){let d=String(num||"").replace(/\D/g,"");if(d.length>=10&&d.length<=11)d="55"+d;return d?`https://wa.me/${d}?text=${encodeURIComponent(txt)}`:""}
+function vPedidos(){
+  if(!W.user)return `<div class="head"><div><h1>Pedidos do site</h1><p>Pedidos de orçamento enviados pelo formulário do site.</p></div></div>`+vLogin();
+  const list=W.pedidos.filter(p=>W.pf==="todos"||p.status===W.pf);
+  return `<div class="head"><div><h1>Pedidos do site</h1><p>${W.pedidos.filter(p=>p.status==="novo").length} novo(s) · ${W.pedidos.length} no total</p></div><button class="btn ghost sm" data-wact="sair">Sair</button></div>
+  ${permErr()}
+  <div class="toolbar">${[["todos","Todos"],...PS].map(([k,l])=>`<button class="btn sm ${W.pf===k?"primary":""}" data-wact="pf" data-f="${k}">${l} (${k==="todos"?W.pedidos.length:W.pedidos.filter(p=>p.status===k).length})</button>`).join("")}</div>
+  <div class="panel">${list.length?`<div class="list">${list.map(p=>{const pn=(p.nome||"").split(" ")[0];const wl=waLink(p.whatsapp,`Olá, ${pn}! Aqui é a Juliana, do Ateliê Web. Recebi seu pedido de orçamento (${p.tipo||"projeto"}) pelo site. Podemos conversar?`);
+    return `<div class="ped ${p.status==="novo"?"novo":""}"><div style="min-width:0"><div class="t" style="font-weight:600">${esc(p.nome)}${p.empresa?` <span style="color:var(--muted);font-weight:400">· ${esc(p.empresa)}</span>`:""}</div>
+      <div style="font-size:13px;color:var(--muted)">${esc(p.tipo||"")} · ${quando(p.criadoEm)}</div>
+      <div style="font-size:13px;margin-top:2px">${p.whatsapp?`📱 <span style="user-select:all">${esc(p.whatsapp)}</span>`:""}${p.email?` · ✉️ <span style="user-select:all">${esc(p.email)}</span>`:""}</div></div>
+      <div><select data-wact="pst" data-id="${p.id}" aria-label="Situação" style="width:auto">${PS.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></div>
+      ${p.mensagem?`<div class="msgp">${esc(p.mensagem)}</div>`:""}
+      <div class="acts">${wl?`<a class="btn sm primary" href="${esc(wl)}" target="_blank" rel="noopener">Chamar no WhatsApp</a>`:""}${p.email?`<button class="btn sm" data-wact="copEmail" data-v="${esc(p.email)}">Copiar e-mail</button>`:""}
+      ${p.status!=="convertido"?`<button class="btn sm" data-wact="convPed" data-id="${p.id}">Converter em cliente + proposta</button>`:`<span class="pill convertido">Convertido</span>`}<button class="btn sm ghost danger" data-wact="delPed" data-id="${p.id}">Excluir</button></div></div>`}).join("")}</div>`
+   :`<div class="empty"><b>${W.pedidos.length?"Nada neste filtro":"Nenhum pedido ainda"}</b>${W.pedidos.length?"":"Quando alguém preencher \"Pedir orçamento\" no site, o pedido aparece aqui."}</div>`}</div>`;
+}
+async function platSite(){let p=S.plataformas.find(x=>x.id==="site-atelieweb");if(!p){await idbPut("plataformas",{id:"site-atelieweb",nome:"Site Ateliê Web",url:"",status:"ativo",criadoEm:new Date().toISOString()});await loadAll()}return "site-atelieweb"}
+async function converter({nome,empresa,email,telefone,titulo,descricao,origem}){
+  const pid=await platSite();
+  const cid=await save("clientes",null,{nome:nome||"Cliente do site",empresa:empresa||"",email:email||"",telefone:telefone||"",notas:`Veio pelo ${origem}.`,criadoEm:new Date().toISOString()});
+  const prid=await save("propostas",null,{titulo,clienteId:cid,plataformaId:pid,status:"rascunho",valor:0,dataEnvio:"",prazo:"",link:"",descricao:descricao||"",notas:"",anexos:[],historico:[{data:new Date().toLocaleString("pt-BR"),texto:`Criada a partir do ${origem}`}],criadoEm:new Date().toISOString(),atualizadoEm:new Date().toISOString()});
+  return prid;
+}
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("[data-wact]");if(!a||a.tagName==="SELECT")return;const k=a.dataset.wact;
+  if(k==="sair"){W.auth.signOut();return}
+  if(k==="irPedidos"){S.tab="pedidos";render();return}
+  if(k==="online"){try{await W.fs.doc("config/status").set({online:!W.online,atualizadoEm:FTS()})}catch(err){toast("Não consegui mudar o status. Confira as regras do Firebase.")}return}
+  if(k==="abrir"){W.draft="";abrirConversa(a.dataset.id);setTimeout(()=>{const t=$("#wDraft");t&&t.focus()},50);return}
+  if(k==="voltar"){if(msgSub)msgSub();msgSub=null;W.conv=null;render();return}
+  if(k==="qr"){W.draft=QR[+a.dataset.i];render();const t=$("#wDraft");if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}return}
+  if(k==="pf"){W.pf=a.dataset.f;render();return}
+  if(k==="copEmail"){navigator.clipboard.writeText(a.dataset.v).then(()=>toast("E-mail copiado"),()=>toast(a.dataset.v));return}
+  if(k==="delPed"||k==="delConv"){if(!a.classList.contains("armed")){a.classList.add("armed");const t=a.textContent;a.textContent="Confirmar";setTimeout(()=>{if(a.isConnected){a.classList.remove("armed");a.textContent=t}},4000);return}
+    try{if(k==="delPed")await W.fs.collection("pedidos").doc(a.dataset.id).delete();
+      else{const id=W.conv;const ref=W.fs.collection("conversas").doc(id);const b=W.fs.batch();W.msgs.forEach(m=>b.delete(ref.collection("mensagens").doc(m.id)));b.delete(ref);if(msgSub)msgSub();msgSub=null;W.conv=null;await b.commit()}
+      toast("Excluído")}catch(err){toast("Não foi possível excluir.")}return}
+  if(k==="convPed"){const p=byId(W.pedidos,a.dataset.id);a.disabled=true;
+    const prid=await converter({nome:p.nome,empresa:p.empresa,email:p.email,telefone:p.whatsapp,titulo:`${p.tipo||"Projeto"} — ${p.empresa||p.nome}`,descricao:p.mensagem,origem:"formulário do site"});
+    try{await W.fs.collection("pedidos").doc(p.id).update({status:"convertido"})}catch(err){}
+    toast("Cliente e proposta criados");mProposta(prid);return}
+  if(k==="convConv"){const c=byId(W.conversas,W.conv);a.disabled=true;
+    const txt=W.msgs.filter(m=>m.de==="visitante").map(m=>m.texto).join("\n");
+    const prid=await converter({nome:c.nome,titulo:`${c.interesse&&c.interesse!=="Falar com a equipe"?c.interesse:"Projeto"} — ${c.nome||"cliente do site"}`,descricao:txt,origem:"chat do site"});
+    toast("Cliente e proposta criados");mProposta(prid);a.disabled=false;return}
+});
+document.addEventListener("change",async e=>{const t=e.target;if(t.dataset&&t.dataset.wact==="pst"){try{await W.fs.collection("pedidos").doc(t.dataset.id).update({status:t.value})}catch(err){toast("Não foi possível atualizar.")}}});
+document.addEventListener("input",e=>{if(e.target.id==="wDraft")W.draft=e.target.value});
+document.addEventListener("keydown",e=>{if(e.target.id==="wDraft"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#formReply").requestSubmit()}});
+document.addEventListener("submit",async e=>{
+  if(e.target.id==="formLogin"){e.preventDefault();W.loginErr="";try{await W.auth.signInWithEmailAndPassword($("#lgEmail").value.trim(),$("#lgSenha").value)}catch(err){W.loginErr=err.code==="auth/too-many-requests"?"Muitas tentativas. Aguarde alguns minutos.":"E-mail ou senha incorretos.";render()}}
+  if(e.target.id==="formReply"){e.preventDefault();const t=W.draft.trim();if(!t||!W.conv)return;W.draft="";const ref=W.fs.collection("conversas").doc(W.conv);
+    try{await ref.collection("mensagens").add({de:"atelie",texto:t.slice(0,2000),em:FTS()});await ref.update({ultimaMsg:"Você: "+t.slice(0,130),atualizadoEm:FTS(),pendente:false})}catch(err){W.draft=t;toast("Mensagem não enviada.");render()}}
+});
 
 /* ---------- eventos ---------- */
 const formData=f=>Object.fromEntries([...f.querySelectorAll("[name]")].map(i=>[i.name,i.value.trim()]));
