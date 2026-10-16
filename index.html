@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Ateliê de Propostas</title>
+<title>Ateliê Web</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: barra de abas fixa no topo; cada aba é uma mesa de trabalho com lista à esquerda e ações à direita; modais para editar. */
 :root{
   --bg:#f3f4f7; --surface:#ffffff; --sunk:#eceef3; --ink:#1a2130; --muted:#5d6676; --line:#dde1e9;
-  --accent:#2f4bd1; --accent-ink:#ffffff; --accent-soft:#e6eafb;
+  --accent:#6d3fe0; --accent-ink:#ffffff; --accent-soft:#efe8fd;
   --ok:#1f7a4d; --ok-soft:#e1f2e8; --warn:#9a6200; --warn-soft:#fbefd8; --bad:#b4312b; --bad-soft:#f9e3e1; --info:#30608f; --info-soft:#e2ecf6;
   --f-display:"Familjen Grotesk",ui-sans-serif,system-ui,sans-serif;
   --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
@@ -19,12 +20,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#12151c; --surface:#1a1f29; --sunk:#151921; --ink:#e6e9f0; --muted:#9aa3b3; --line:#2b3240;
-  --accent:#8199ff; --accent-ink:#0f1422; --accent-soft:#232c4d;
+  --accent:#a78bfa; --accent-ink:#160f2a; --accent-soft:#2b2144;
   --ok:#6fcf9a; --ok-soft:#183325; --warn:#e8b45a; --warn-soft:#382a12; --bad:#f08a83; --bad-soft:#3a1d1b; --info:#8fb8e3; --info-soft:#1b2a3b;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12151c; --surface:#1a1f29; --sunk:#151921; --ink:#e6e9f0; --muted:#9aa3b3; --line:#2b3240;
-  --accent:#8199ff; --accent-ink:#0f1422; --accent-soft:#232c4d;
+  --accent:#a78bfa; --accent-ink:#160f2a; --accent-soft:#2b2144;
   --ok:#6fcf9a; --ok-soft:#183325; --warn:#e8b45a; --warn-soft:#382a12; --bad:#f08a83; --bad-soft:#3a1d1b; --info:#8fb8e3; --info-soft:#1b2a3b;
   color-scheme:dark}
 *{box-sizing:border-box}
@@ -34,7 +35,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px}
 .brand{font:700 20px/1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
-.brand i{width:22px;height:22px;border-radius:6px;background:var(--accent);display:inline-grid;place-items:center;color:var(--accent-ink);font:600 12px var(--f-mono);font-style:normal}
+.brand img{height:30px;width:auto;display:block}
+.brand b{font-weight:700}.brand b span{color:var(--accent)}
 nav.tabs{display:flex;gap:4px;flex-wrap:wrap;overflow-x:auto}
 nav.tabs button{border:0;background:none;color:var(--muted);font:500 14px var(--f-body);padding:8px 12px;border-radius:8px;cursor:pointer}
 nav.tabs button[aria-current="true"]{background:var(--accent-soft);color:var(--ink)}
@@ -173,7 +175,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 <body>
 
 <header class="top"><div class="wrap">
-  <div class="brand"><i>{ }</i>Ateliê de Propostas</div>
+  <div class="brand"><img src="logo-simbolo.png" alt=""><b>Ateliê <span>Web</span></b></div>
   <nav class="tabs" id="tabs">
     <button data-tab="painel" aria-current="true">Painel</button>
     <button data-tab="plataformas">Plataformas</button>
@@ -331,6 +333,14 @@ function vOrcamentos(){
 function vPerfil(){
   const p=S.perfil;
   return `<div class="head"><div><h1>Meus dados</h1><p>Aparecem no cabeçalho e nas condições padrão de cada orçamento.</p></div></div>
+  <section class="panel" style="margin-bottom:20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+    <div style="width:220px;height:110px;border:1.5px dashed var(--line);border-radius:10px;display:grid;place-items:center;background:#fff;overflow:hidden;flex:0 0 auto">
+      ${p.logo?`<img src="${p.logo}" alt="Sua logo" style="max-width:200px;max-height:96px">`:`<span style="color:#7a8190;font-size:13px">Sem logo</span>`}</div>
+    <div style="flex:1 1 240px;min-width:0"><h2 style="margin-bottom:4px">Logo nos documentos</h2>
+      <p style="color:var(--muted);margin:0 0 10px;font-size:14px">Aparece no topo dos orçamentos e dos documentos de entrega. Use PNG com fundo transparente ou branco.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn primary" for="logoIn">${p.logo?"Trocar logo":"Enviar logo"}</label><input type="file" id="logoIn" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+      <button class="btn" data-act="logoPadrao">Usar logo Ateliê Web</button>${p.logo?`<button class="btn danger" data-act="logoRemover">Remover</button>`:""}</div></div>
+  </section>
   <form class="panel form" id="formPerfil">
     <label class="f">Nome ou nome profissional<input id="pf_nome" name="nome" value="${esc(p.nome)}" required></label>
     <label class="f">CPF ou CNPJ<input id="pf_doc" name="documento" value="${esc(p.documento)}"></label>
@@ -539,10 +549,10 @@ function entregaHTML(p){
   const lk=(p.links||[]).filter(l=>l.entregar!==false&&l.url);
   const et=(p.etapas||[]).filter(e=>e.texto&&(e.feito||(e.subs||[]).some(x=>x.feito)));
   const H=t=>`<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676;margin:22px 0 8px;font-weight:600">${t}</div>`;
-  const link=u=>`<a href="${esc(u)}" style="color:#2f4bd1;word-break:break-all">${esc(u)}</a>`;
+  const link=u=>`<a href="${esc(u)}" style="color:#6d3fe0;word-break:break-all">${esc(u)}</a>`;
   return `<div style="font-family:'IBM Plex Sans',Arial,sans-serif;color:#1d2330;font-size:13.5px;line-height:1.55">
   <table style="width:100%;border-collapse:collapse;margin-bottom:18px"><tr>
-    <td style="vertical-align:top"><div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:20px;font-weight:700">${esc(P.nome||"")}</div><div style="color:#5d6676;font-size:12.5px">${esc([P.email,P.telefone,P.site].filter(Boolean).join(" · "))}</div></td>
+    <td style="vertical-align:top">${logoTag(64)}<div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:${P.logo?15:20}px;font-weight:700">${esc(P.nome||"")}</div><div style="color:#5d6676;font-size:12.5px">${esc([P.email,P.telefone,P.site].filter(Boolean).join(" · "))}</div></td>
     <td style="vertical-align:top;text-align:right"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Documento de entrega</div><div style="font-size:12.5px;color:#5d6676">${new Date().toLocaleDateString("pt-BR")}</div></td></tr></table>
   <div style="border-top:2px solid #1d2330;border-bottom:1px solid #d7dbe3;padding:12px 0">
     <div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:22px;font-weight:700">${esc(p.titulo||"Projeto")}</div>
@@ -627,7 +637,7 @@ function docHTML(o){
   const L=(k,v)=>v?`<div><span style="color:#6b7383">${k}:</span> ${esc(v)}</div>`:"";
   return `<div style="font-family:'IBM Plex Sans',Arial,sans-serif;color:#1d2330;font-size:13.5px;line-height:1.5">
   <table style="width:100%;border-collapse:collapse;margin-bottom:22px"><tr>
-    <td style="vertical-align:top"><div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:22px;font-weight:700">${esc(p.nome||"Seu nome")}</div>
+    <td style="vertical-align:top">${logoTag(70)}<div style="font-family:'Familjen Grotesk',Arial,sans-serif;font-size:${p.logo?16:22}px;font-weight:700">${esc(p.nome||"Seu nome")}</div>
       <div style="color:#5d6676;font-size:12.5px">${esc([p.documento&&("CPF/CNPJ "+p.documento),p.cidade].filter(Boolean).join(" · "))}<br>${esc([p.email,p.telefone,p.site].filter(Boolean).join(" · "))}</div></td>
     <td style="vertical-align:top;text-align:right"><div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5d6676">Orçamento</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:500">${esc(o.numero)}</div>
@@ -678,6 +688,12 @@ function copyOrc(id){
   const txt=`*Orçamento ${o.numero}*\n${o.titulo||""}\nCliente: ${cliNome(o.clienteId)}\n\n${(o.itens||[]).map(i=>`• ${i.descricao} — ${i.qtd} × ${brl(i.unit)}`).join("\n")}\n${t.desc?`\nDesconto: ${brl(t.desc)}`:""}\n*Total: ${brl(t.total)}*\nPrazo: ${o.prazo||"a combinar"}\nPagamento: ${o.pagamento||"a combinar"}\nVálido por ${o.validadeDias||15} dias.\n\n${S.perfil.nome||""}`;
   navigator.clipboard.writeText(txt).then(()=>toast("Resumo copiado"),()=>toast("Não deu para copiar neste app."));
 }
+
+/* ---------- logo ---------- */
+function imgParaDataURL(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/im.width,300/im.height);const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im.onerror=rej;im.src=src})}
+async function salvarLogo(dataUrl){const novo={...S.perfil,logo:dataUrl};await idbPut("config",{...novo,id:"perfil"});S.perfil=novo;render()}
+async function enviarLogo(file){try{const u=URL.createObjectURL(file);const d=await imgParaDataURL(u);URL.revokeObjectURL(u);await salvarLogo(d);toast("Logo salva")}catch(e){toast("Não consegui ler essa imagem. Tente um PNG ou JPG.")}}
+const logoTag=(max)=>S.perfil.logo?`<img src="${S.perfil.logo}" alt="" style="max-height:${max}px;max-width:240px;display:block;margin-bottom:6px">`:"";
 
 /* ---------- backup ---------- */
 const toB64=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
@@ -759,6 +775,8 @@ document.addEventListener("click",async e=>{
   else if(act==="openFile"){e.preventDefault();const f=await idbGet("arquivos",a.dataset.file);if(!f){toast("Arquivo não encontrado neste navegador.");return}
     const u=URL.createObjectURL(f.blob);const w=window.open(u,"_blank");if(!w)baixar(f.nome,f.blob);setTimeout(()=>URL.revokeObjectURL(u),60000)}
   else if(act==="exportar")exportar();
+  else if(act==="logoPadrao"){try{await salvarLogo(await imgParaDataURL("logo.png"));toast("Logo aplicada")}catch(err){toast("Não consegui carregar a logo padrão.")}}
+  else if(act==="logoRemover"){const {logo,...r}=S.perfil;await idbPut("config",{...r,id:"perfil"});S.perfil=r;render();toast("Logo removida")}
   else if(act==="copyOrc")copyOrc(id);
 });
 document.addEventListener("input",e=>{
@@ -780,6 +798,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id==="impIn"&&t.files[0]){importar(t.files[0]);return}
+  if(t.id==="logoIn"&&t.files[0]){enviarLogo(t.files[0]);return}
   if(pd&&t.type==="checkbox"&&t.dataset.sub!==undefined){const e=pd.etapas[+t.dataset.sub];e.subs[+t.dataset.i].feito=t.checked;syncEtapa(e);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;return}
   if(pd&&t.type==="checkbox"&&t.dataset.list==="etapas"){const e=pd.etapas[+t.dataset.i];e.feito=t.checked;(e.subs||[]).forEach(x=>x.feito=t.checked);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;return}
   if(pd&&t.type==="checkbox"&&t.dataset.list){const row=pd[t.dataset.list][+t.dataset.i];row[t.dataset.f]=t.checked;salvarPD();if(t.dataset.list==="etapas"){const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}return}
@@ -792,7 +811,7 @@ document.addEventListener("change",e=>{
 document.addEventListener("submit",async e=>{
   e.preventDefault();
   if(e.target.id==="formPerfil"){const d=formData(e.target);d.validadeDias=+d.validadeDias||15;
-    try{await idbPut("config",{...d,id:"perfil"});S.perfil=d;toast("Dados salvos")}catch(err){toast("Não foi possível salvar.")}}
+    const novo={...S.perfil,...d};try{await idbPut("config",{...novo,id:"perfil"});S.perfil=novo;toast("Dados salvos")}catch(err){toast("Não foi possível salvar.")}}
 });
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&$("#modalRoot").innerHTML)closeModal();

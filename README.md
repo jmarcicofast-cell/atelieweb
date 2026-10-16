@@ -1,4 +1,4 @@
-# Ateliê de Propostas
+# Ateliê Web
 
 CRM pessoal para propostas de programação: clientes, plataformas (Workana etc.), propostas com anexos e histórico, e orçamentos formais numerados prontos para imprimir em PDF.
 
