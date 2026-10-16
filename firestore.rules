@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // Só a dona do Ateliê Web (login do CRM) é administradora
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == "jmarcico.fast@gmail.com";
+      return request.auth != null && request.auth.token.email == "atendimentoateliweb@gmail.com";
     }
     function txt(v, max) { return v is string && v.size() <= max; }
 
