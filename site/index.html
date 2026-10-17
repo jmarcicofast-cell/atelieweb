@@ -121,6 +121,9 @@ section.block{padding-block:96px}
 .pf{background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
 .pf:hover{transform:translateY(-4px);box-shadow:0 28px 60px -30px rgba(60,30,120,.45)}
 .pf .shot{aspect-ratio:16/10;max-width:100%;background:var(--tint);position:relative;padding:18px 18px 0;overflow:hidden}
+.pf{text-decoration:none;color:inherit}
+.pf .shotimg{padding:0}
+.pf .shotimg img{width:100%;height:100%;object-fit:cover;object-position:top}
 .pf .win{background:var(--paper);border-radius:10px 10px 0 0;height:100%;box-shadow:0 10px 30px -14px rgba(40,20,90,.35);padding:10px;display:flex;flex-direction:column;gap:6px}
 .pf .win .dots{display:flex;gap:4px;margin-bottom:4px}.pf .win .dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
 .pf .body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1}
@@ -210,6 +213,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .chat-f input:focus{outline:none;border-color:var(--violet)}
 .chat-f button{border:0;background:var(--violet);color:#fff;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
 .chat-h small.off::before{background:#e8b45a}
+.chat-h > div:nth-child(2){flex:1;min-width:0}
 .chat-h .hbtn{margin-left:auto}
 .chat-h .hbtn+button{margin-left:0}
 .sysnote{align-self:center;font-size:12px;color:var(--soft);background:var(--tint);border-radius:999px;padding:4px 12px;margin:4px 0}
@@ -227,7 +231,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   <a class="logo" href="#topo"><img src="logo-simbolo.png" alt="">Ateliê <span>Web</span></a>
   <nav aria-label="Seções"><ul id="menu">
     <li><a href="#quem-somos">Quem somos</a></li>
-    <li><a href="#portfolio">Portfólio</a></li>
+    <li><a href="portfolio.html">Portfólio</a></li>
     <li><a href="#diferenciais">Diferenciais</a></li>
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#contato">Contato</a></li>
@@ -246,7 +250,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <p class="lead">Criamos sites, sistemas e automações que fazem o seu negócio vender mais e atender melhor, sem complicação.</p>
     <div class="ctas">
       <a class="btn btn-wa" data-wa="Olá! Vim pelo site do Ateliê Web e quero fazer um orçamento." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>Orçamento no WhatsApp</a>
-      <a class="btn btn-ghost" href="#portfolio">Ver portfólio</a>
+      <a class="btn btn-ghost" href="portfolio.html">Ver portfólio</a>
     </div>
     <div class="proof">
       <div><b>100%</b>sob medida</div>
@@ -291,32 +295,33 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
       <button class="chip" aria-pressed="true" data-f="todos">Todos</button>
       <button class="chip" aria-pressed="false" data-f="site">Sites</button>
       <button class="chip" aria-pressed="false" data-f="sistema">Sistemas</button>
-      <button class="chip" aria-pressed="false" data-f="ia">IA e automação</button>
+      <button class="chip" aria-pressed="false" data-f="ia">Extensões</button>
     </div>
   </div>
   <div class="grid-pf" id="pfGrid">
-    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
-      <div class="m-row"><div class="m-kpi"><div class="m-b v" style="width:50%"></div><div class="m-b" style="margin-top:4px"></div></div><div class="m-kpi"><div class="m-b g" style="width:60%"></div><div class="m-b" style="margin-top:4px"></div></div><div class="m-kpi"><div class="m-b v" style="width:40%"></div><div class="m-b" style="margin-top:4px"></div></div></div>
-      <div class="m-b" style="width:100%"></div><div class="m-b" style="width:85%"></div><div class="m-b v" style="width:40%"></div><div class="m-b" style="width:92%"></div></div></div>
-      <div class="body"><span class="tag">Sistema</span><h3>CRM de propostas e orçamentos</h3><p>Clientes, propostas com anexos, orçamentos formais em PDF e acompanhamento de projetos até a entrega.</p><div class="stack"><span>HTML/JS</span><span>Offline</span><span>PDF</span></div></div></article>
-    <article class="pf" data-cat="ia"><div class="shot"><div class="win" style="background:var(--bg)"><div class="dots"><i></i><i></i><i></i></div>
-      <div class="m-b" style="width:60%;height:18px;border-radius:9px"></div><div class="m-b v" style="width:55%;height:18px;border-radius:9px;margin-left:auto"></div><div class="m-b" style="width:70%;height:18px;border-radius:9px"></div><div class="m-b v" style="width:45%;height:18px;border-radius:9px;margin-left:auto"></div></div></div>
-      <div class="body"><span class="tag">IA e automação</span><h3>Agente de atendimento no WhatsApp</h3><p>Responde dúvidas, apresenta produtos e qualifica o cliente a qualquer hora, passando para o vendedor só o que importa.</p><div class="stack"><span>IA</span><span>WhatsApp</span><span>Atendimento 24h</span></div></div></article>
-    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
-      <div class="m-row" style="flex:1"><div class="m-col"><div class="m-b g" style="width:70%"></div><div class="m-b"></div><div class="m-b"></div><div class="m-b"></div></div><div class="m-col"><div class="m-b v" style="width:50%"></div><div class="m-b"></div><div class="m-b v" style="width:80%"></div><div class="m-b"></div></div><div class="m-col"><div class="m-b g" style="width:60%"></div><div class="m-b"></div><div class="m-b"></div><div class="m-b v" style="width:65%"></div></div></div></div></div>
-      <div class="body"><span class="tag">Sistema</span><h3>Comparador de preços por região</h3><p>Painel que cruza preços da empresa com os da concorrência por região, para a equipe negociar com segurança.</p><div class="stack"><span>Painel</span><span>Inteligência comercial</span></div></div></article>
-    <article class="pf" data-cat="ia"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+    <a class="pf" data-cat="sistema" href="portfolio.html#crm"><div class="shot shotimg"><img src="img/crm-painel.webp" alt="Painel do CRM Ateliê de Propostas" loading="lazy"></div>
+      <div class="body"><span class="tag">Sistema</span><h3>Ateliê de Propostas: CRM completo</h3><p>Clientes, propostas com anexos, orçamento formal em PDF e projetos com etapas até o documento de entrega.</p><div class="stack"><span>Firebase</span><span>Tempo real</span><span>PDF</span></div></div></a>
+    <a class="pf" data-cat="site" href="portfolio.html#site"><div class="shot shotimg"><img src="img/site-hero.webp" alt="Site do Ateliê Web" loading="lazy"></div>
+      <div class="body"><span class="tag">Site</span><h3>Site com chat ao vivo integrado</h3><p>O visitante conversa pelo site e a resposta sai de dentro do CRM, com pedidos de orçamento caindo direto no sistema.</p><div class="stack"><span>Chat em tempo real</span><span>Integração</span></div></div></a>
+    <a class="pf" data-cat="sistema" href="portfolio.html#projetos"><div class="shot"><div class="win" style="background:#1e1c26"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-row"><div class="m-kpi" style="border-color:#2e2b38"><div class="m-b v" style="width:50%"></div></div><div class="m-kpi" style="border-color:#2e2b38"><div class="m-b v" style="width:40%"></div></div><div class="m-kpi" style="border-color:#2e2b38"><div class="m-b v" style="width:60%"></div></div></div>
+      <div class="m-b v" style="width:90%"></div><div class="m-b v" style="width:70%"></div><div class="m-b v" style="width:52%"></div><div class="m-b v" style="width:34%"></div></div></div>
+      <div class="body"><span class="tag">Vendas</span><h3>Inteligência competitiva</h3><p>Preços da concorrência coletados em campo e transformados em ranking, alertas e análise por marca, em 27 estados.</p><div class="stack"><span>Dashboard</span><span>Offline</span></div></div></a>
+    <a class="pf" data-cat="ia" href="portfolio.html#projetos"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
       <div class="m-row" style="flex:1"><div class="m-box" style="flex:2"></div><div class="m-col" style="flex:1;background:var(--tint);border-radius:6px;padding:6px"><div class="m-b v"></div><div class="m-b g" style="width:70%"></div><div class="m-b"></div><div class="m-b v" style="width:50%"></div></div></div></div></div>
-      <div class="body"><span class="tag">Extensão</span><h3>Guia do vendedor no WhatsApp Web</h3><p>Extensão para o navegador que mostra pedidos, preços e roteiros de venda ao lado da conversa com o cliente.</p><div class="stack"><span>Chrome</span><span>WhatsApp Web</span></div></div></article>
-    <article class="pf" data-cat="sistema"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="body"><span class="tag">Extensão</span><h3>Guia do Vendedor no WhatsApp Web</h3><p>Contatos em Kanban, metas e pedidos abertos ao lado da conversa com o cliente.</p><div class="stack"><span>Chrome</span><span>WhatsApp Web</span></div></div></a>
+    <a class="pf" data-cat="sistema" href="portfolio.html#projetos"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="m-row"><div class="m-kpi"><div class="m-b g" style="width:40%"></div><div class="m-b v" style="width:70%;margin-top:4px"></div></div><div class="m-kpi"><div class="m-b g" style="width:40%"></div><div class="m-b" style="width:55%;margin-top:4px;background:#1f9d55"></div></div></div>
+      <div class="m-b" style="width:100%"></div><div class="m-b" style="width:80%"></div><div class="m-b" style="width:90%"></div></div></div>
+      <div class="body"><span class="tag">Sistema</span><h3>Grade de pedidos para fábrica</h3><p>Do envio ao retorno de cada material, com margem inicial e final e faltas por fábrica.</p><div class="stack"><span>Dashboard</span><span>CSV</span></div></div></a>
+    <a class="pf" data-cat="sistema" href="portfolio.html#projetos"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
       <div class="m-b g" style="width:40%"></div>
       <div class="m-row" style="align-items:flex-end;flex:1;gap:8px;padding:6px 4px 0"><div class="m-box v" style="flex:1;height:40%"></div><div class="m-box" style="flex:1;height:65%"></div><div class="m-box v" style="flex:1;height:85%"></div><div class="m-box" style="flex:1;height:55%"></div><div class="m-box v" style="flex:1;height:95%"></div></div></div></div>
-      <div class="body"><span class="tag">Sistema</span><h3>Painel de desempenho de equipe</h3><p>Metas de faturamento, ligações e produtos em tempo real, com visão por vendedor e ranking.</p><div class="stack"><span>Dashboard</span><span>Metas</span></div></div></article>
-    <article class="pf" data-cat="site"><div class="shot"><div class="win"><div class="dots"><i></i><i></i><i></i></div>
-      <div class="m-box v" style="height:38%"></div><div class="m-row"><div class="m-box" style="flex:1;height:34px"></div><div class="m-box" style="flex:1;height:34px"></div><div class="m-box" style="flex:1;height:34px"></div></div><div class="m-b" style="width:70%"></div></div></div>
-      <div class="body"><span class="tag">Site</span><h3>Site institucional Ateliê Web</h3><p>Este site: apresentação clara, portfólio filtrável e atendimento direto por chat e WhatsApp.</p><div class="stack"><span>Responsivo</span><span>Tema claro/escuro</span></div></div></article>
+      <div class="body"><span class="tag">Gestão</span><h3>Painéis de metas e desempenho</h3><p>Faturamento da equipe acompanhado dia a dia contra a meta, com painéis individuais por vendedor.</p><div class="stack"><span>Metas</span><span>Indicadores</span></div></div></a>
   </div>
-</div></section>
+  <div style="display:flex;justify-content:center;margin-top:36px"><a class="btn btn-primary" href="portfolio.html">Ver portfólio completo</a></div>
+</div>
+</section>
 
 <section class="block dark" id="diferenciais"><div class="glow"></div><div class="wrap" style="position:relative">
   <div class="sec-head"><div><div class="eyebrow">Diferenciais</div><h2>Por que trabalhar com o Ateliê.</h2></div><p>Mais do que entregar código: entregar algo que funciona no seu dia a dia.</p></div>

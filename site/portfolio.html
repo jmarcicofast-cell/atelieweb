@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Portfólio · Ateliê Web</title>
+<meta name="description" content="Projetos do Ateliê Web: sistemas sob medida, sites e ferramentas para vendas, atendimento e gestão de equipes.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: mesma identidade do site. Abertura curta com números do portfólio; dois estudos de caso com telas reais; grade filtrável de projetos com ficha em janela; faixa "no ateliê agora"; chamada final. */
+:root{
+  --bg:#fbfaff; --paper:#ffffff; --tint:#f3effd; --ink:#1d1b24; --soft:#5f5b6b; --line:#e7e3f0;
+  --violet:#7c3aed; --violet-2:#9b6bff; --violet-deep:#5b21b6; --graphite:#2b2a31; --on-dark:#f4f2fa; --on-dark-soft:#b8b3c7;
+  --wa:#1f9d55; --ok:#1f7a4d;
+  --f-display:"Sora",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Figtree",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131218; --paper:#1b1a22; --tint:#211d2e; --ink:#efedf5; --soft:#a6a1b5; --line:#2e2b38;
+  --violet:#a78bfa; --violet-2:#c4b0ff; --violet-deep:#8b5cf6; --graphite:#0d0c11; --wa:#3fbf74; --ok:#6fcf9a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131218; --paper:#1b1a22; --tint:#211d2e; --ink:#efedf5; --soft:#a6a1b5; --line:#2e2b38;
+  --violet:#a78bfa; --violet-2:#c4b0ff; --violet-deep:#8b5cf6; --graphite:#0d0c11; --wa:#3fbf74; --ok:#6fcf9a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.025em;text-wrap:balance;margin:0;line-height:1.1}
+.eyebrow{font:600 13px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:6px}
+
+header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:700 19px var(--f-display);letter-spacing:-.02em}
+.logo img{height:30px;width:auto}
+.logo span{color:var(--violet)}
+.nav nav{display:flex;gap:4px}
+.nav nav a{text-decoration:none;font-weight:500;font-size:15px;color:var(--soft);padding:8px 12px;border-radius:8px}
+.nav nav a:hover,.nav nav a[aria-current="page"]{color:var(--ink);background:var(--tint)}
+@media (max-width:720px){.nav nav a.hide-sm{display:none}}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--f-body);text-decoration:none;border:0;cursor:pointer;border-radius:999px;padding:12px 22px;transition:transform .15s,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--violet);color:#fff}
+.btn-primary:hover{background:var(--violet-deep)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--violet);color:var(--violet)}
+.btn-wa{background:var(--wa);color:#fff}
+.btn svg{width:18px;height:18px;flex:0 0 auto}
+
+/* abertura */
+.intro{padding-block:64px 40px}
+.intro h1{font-size:clamp(38px,5.6vw,64px);font-weight:800;max-width:15ch;margin-top:14px}
+.intro h1 em{font-style:normal;color:var(--violet)}
+.intro p{font-size:clamp(17px,1.5vw,20px);color:var(--soft);max-width:60ch;margin:20px 0 0}
+.stats{display:flex;flex-wrap:wrap;gap:14px 40px;margin-top:36px;padding-top:28px;border-top:1px solid var(--line)}
+.stats div{min-width:120px}
+.stats b{display:block;font:700 34px/1 var(--f-display);letter-spacing:-.03em}
+.stats span{color:var(--soft);font-size:14px}
+
+/* estudos de caso */
+.case,#projetos{scroll-margin-top:80px}
+.case{display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:center;padding-block:56px;border-top:1px solid var(--line)}
+.case.rev{grid-template-columns:1fr 1.25fr}
+.case.rev .gal{order:2}
+@media (max-width:900px){.case,.case.rev{grid-template-columns:1fr;gap:28px}.case.rev .gal{order:0}}
+.case h2{font-size:clamp(28px,3.6vw,40px);font-weight:700;margin:10px 0 14px}
+.case .lead{color:var(--soft);font-size:17.5px;margin:0 0 20px}
+.dsr{display:grid;gap:14px;margin:0 0 22px}
+.dsr div{display:grid;grid-template-columns:96px 1fr;gap:12px;font-size:15.5px}
+.dsr dt{font:600 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--violet);padding-top:3px}
+.dsr dd{margin:0;color:var(--ink)}
+@media (max-width:480px){.dsr div{grid-template-columns:1fr;gap:2px}}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:12.5px;background:var(--tint);color:var(--soft);border-radius:6px;padding:4px 9px}
+.gal{min-width:0}
+.gal .main{border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 70px -36px rgba(50,20,110,.5);background:var(--paper);cursor:zoom-in;aspect-ratio:1600/1012;max-width:100%}
+.gal .main img{width:100%;height:100%;object-fit:cover;object-position:top}
+.gal .thumbs{display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:4px}
+.gal .thumbs button{flex:0 0 auto;border:2px solid transparent;border-radius:10px;padding:0;background:var(--paper);cursor:pointer;overflow:hidden;width:120px;text-align:left}
+.gal .thumbs button[aria-pressed="true"]{border-color:var(--violet)}
+.gal .thumbs img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top}
+.gal .thumbs small{display:block;font-size:12px;color:var(--soft);padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gal .note{font-size:12.5px;color:var(--soft);margin-top:8px}
+.duo{position:relative;padding:0 14% 16% 0}
+.duo .phone{position:absolute;right:0;bottom:0;width:27%;border-radius:22px;overflow:hidden;border:6px solid var(--graphite);box-shadow:0 30px 60px -24px rgba(30,10,70,.6);cursor:zoom-in;background:var(--paper)}
+.duo .main{cursor:zoom-in}
+@media (max-width:560px){.duo .phone{border-width:4px;border-radius:14px}}
+
+/* grade */
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.sec-head h2{font-size:clamp(30px,4vw,46px);font-weight:700;margin-top:10px;max-width:18ch}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:500 14px var(--f-body);background:var(--paper);border:1.5px solid var(--line);color:var(--soft);border-radius:999px;padding:8px 15px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip b{font-weight:600;opacity:.6;margin-left:3px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+@media (max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-align:left;font:inherit;color:inherit;padding:0}
+.card:hover{transform:translateY(-4px);box-shadow:0 26px 56px -30px rgba(60,30,120,.45);border-color:color-mix(in srgb,var(--violet) 35%,var(--line))}
+.card .shot{aspect-ratio:16/10;max-width:100%;background:var(--tint);padding:16px 16px 0;overflow:hidden}
+.card .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:7px;flex:1}
+.card .cat{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.card h3{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.card p{margin:0;color:var(--soft);font-size:15px;line-height:1.5}
+.card .more{margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:var(--violet)}
+
+/* mini interfaces desenhadas */
+.ui{background:var(--paper);border-radius:10px 10px 0 0;height:100%;box-shadow:0 10px 30px -14px rgba(40,20,90,.35);padding:10px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.ui.dark{background:#1e1c26}
+.ui .dots{display:flex;gap:4px;margin-bottom:2px}.ui .dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.r{display:flex;gap:6px}.c{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.b{height:7px;border-radius:4px;background:var(--tint)}.b.v{background:var(--violet)}.b.g{background:var(--graphite);opacity:.75}.b.ok{background:#1f9d55}.b.w{background:#e8b45a}
+.ui.dark .b{background:#2e2b38}.ui.dark .b.v{background:#a78bfa}
+.box{border-radius:6px;background:var(--tint)}.box.v{background:linear-gradient(135deg,var(--violet),var(--violet-2))}
+.kpi{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px}
+.ui.dark .kpi{border-color:#2e2b38}
+.bub{height:14px;border-radius:7px;background:var(--tint)}.bub.v{background:var(--violet);margin-left:auto}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--tint);flex:0 0 auto}.dot.v{background:var(--violet)}
+
+/* no ateliê agora */
+.lab{background:var(--graphite);color:var(--on-dark);border-radius:28px;padding:44px clamp(22px,4vw,48px);margin-block:72px;position:relative;overflow:hidden}
+.lab::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.38),transparent 70%);right:-140px;top:-160px;pointer-events:none}
+.lab .eyebrow{color:#c4b0ff}
+.lab h2{font-size:clamp(28px,3.6vw,40px);font-weight:700;margin:10px 0 8px;color:var(--on-dark)}
+.lab > p{color:var(--on-dark-soft);margin:0 0 28px;max-width:60ch}
+.labs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative;z-index:1}
+@media (max-width:860px){.labs{grid-template-columns:1fr}}
+.labs article{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:22px}
+.labs .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#e8c27a;margin-bottom:10px}
+.labs .st::before{content:"";width:7px;height:7px;border-radius:50%;background:#e8b45a;animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.labs h3{font-size:18px;font-weight:600;margin-bottom:6px;color:var(--on-dark)}
+.labs p{margin:0;color:var(--on-dark-soft);font-size:15px}
+
+/* chamada final */
+.cta{text-align:center;padding-block:24px 96px}
+.cta h2{font-size:clamp(30px,4vw,48px);font-weight:700;max-width:20ch;margin:10px auto 14px}
+.cta p{color:var(--soft);max-width:52ch;margin:0 auto 26px}
+.cta .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+footer{border-top:1px solid var(--line);padding-block:32px;color:var(--soft);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* janelas */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(14,10,24,.6);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:calc(28px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 40px max(14px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--paper);border-radius:24px;width:100%;max-width:760px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.5);animation:up .25s ease-out}
+@keyframes up{from{opacity:0;transform:translateY(16px)}}
+.sheet .shot{aspect-ratio:16/8;max-width:100%;background:var(--tint);padding:24px 28px 0}
+.sheet .in{padding:26px clamp(20px,4vw,34px) 30px}
+.sheet .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet h2{font-size:clamp(24px,3vw,30px);font-weight:700;margin-top:6px}
+.sheet .x{background:var(--tint);border:0;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;color:var(--ink);flex:0 0 auto}
+.sheet h4{font:600 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin:22px 0 6px}
+.sheet p{margin:0;color:var(--ink)}
+.sheet ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.sheet .foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(8,6,14,.9);display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));cursor:zoom-out}
+.lb img{max-height:92vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+.fab{position:fixed;right:max(20px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;width:58px;height:58px;border-radius:50%;background:var(--wa);color:#fff;display:grid;place-items:center;box-shadow:0 14px 30px -10px rgba(30,10,70,.5)}
+.fab svg{width:26px;height:26px}
+</style>
+</head>
+<body>
+
+<header class="nav"><div class="wrap">
+  <a class="logo" href="./"><img src="logo-simbolo.png" alt="">Ateliê <span>Web</span></a>
+  <nav aria-label="Páginas">
+    <a class="hide-sm" href="./#quem-somos">Quem somos</a>
+    <a href="portfolio.html" aria-current="page">Portfólio</a>
+    <a class="hide-sm" href="./#diferenciais">Diferenciais</a>
+    <a href="./#contato">Contato</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="intro"><div class="wrap">
+  <div class="eyebrow">Portfólio</div>
+  <h1>Ferramentas que nasceram <em>dentro da operação</em>.</h1>
+  <p>Cada projeto aqui resolveu um problema real de vendas, atendimento ou gestão. Muitos começaram numa equipe comercial de atacado e hoje servem de base para o que fazemos para nossos clientes.</p>
+  <div class="stats" id="stats"></div>
+</div></section>
+
+<div class="wrap">
+  <article class="case" id="crm">
+    <div class="gal" data-gal="crm">
+      <div class="main" role="button" tabindex="0" aria-label="Ampliar imagem"><img src="img/crm-painel.webp" alt="Painel do CRM com propostas enviadas, valores em aberto e fechados" width="1600" height="1012"></div>
+      <div class="thumbs" role="group" aria-label="Telas do sistema">
+        <button aria-pressed="true" data-src="img/crm-painel.webp" data-alt="Painel do CRM"><img src="img/crm-painel.webp" alt="" loading="lazy"><small>Painel</small></button>
+        <button aria-pressed="false" data-src="img/crm-plataformas.webp" data-alt="Propostas por plataforma"><img src="img/crm-plataformas.webp" alt="" loading="lazy"><small>Plataformas</small></button>
+        <button aria-pressed="false" data-src="img/crm-projeto.webp" data-alt="Etapas e sub-etapas do projeto"><img src="img/crm-projeto.webp" alt="" loading="lazy"><small>Projeto</small></button>
+        <button aria-pressed="false" data-src="img/crm-orcamento.webp" data-alt="Orçamento formal numerado"><img src="img/crm-orcamento.webp" alt="" loading="lazy"><small>Orçamento</small></button>
+      </div>
+      <div class="note">Telas reais do sistema, preenchidas com dados de demonstração.</div>
+    </div>
+    <div>
+      <div class="eyebrow">Sistema sob medida · Estudo de caso</div>
+      <h2>Ateliê de Propostas: CRM do primeiro contato à entrega</h2>
+      <p class="lead">O sistema que usamos para tocar o próprio Ateliê, pensado para quem vende serviços e precisa organizar propostas, orçamentos e projetos.</p>
+      <dl class="dsr">
+        <div><dt>Desafio</dt><dd>Propostas espalhadas entre plataformas de freelance, WhatsApp e e-mail, sem saber o que estava em aberto nem o que tinha sido fechado.</dd></div>
+        <div><dt>Solução</dt><dd>Painel único com clientes, propostas e anexos, orçamento formal em PDF com logo, acompanhamento de projeto com etapas e sub-etapas, e documento de entrega gerado automaticamente.</dd></div>
+        <div><dt>Destaques</dt><dd>Taxa de aprovação por plataforma, chat e pedidos do site caindo direto no sistema, sincronização na nuvem e controle de usuários.</dd></div>
+      </dl>
+      <div class="tags"><span>Aplicação web</span><span>Firebase</span><span>Tempo real</span><span>PDF</span><span>Responsivo</span></div>
+    </div>
+  </article>
+
+  <article class="case rev" id="site">
+    <div class="gal">
+      <div class="duo">
+        <div class="main" role="button" tabindex="0" aria-label="Ampliar imagem" data-zoom="img/site-hero.webp"><img src="img/site-hero.webp" alt="Página inicial do site do Ateliê Web" width="1600" height="1012"></div>
+        <div class="phone" role="button" tabindex="0" aria-label="Ampliar imagem" data-zoom="img/site-chat.webp"><img src="img/site-chat.webp" alt="Chat do site aberto no celular" width="600" height="1200"></div>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow">Site + atendimento · Estudo de caso</div>
+      <h2>Site do Ateliê Web com chat ao vivo integrado</h2>
+      <p class="lead">Site institucional que já nasce conectado ao atendimento: o visitante conversa pelo site e a resposta sai de dentro do CRM.</p>
+      <dl class="dsr">
+        <div><dt>Desafio</dt><dd>Transformar visita em conversa sem depender de ferramentas pagas de chat e sem perder o histórico do contato.</dd></div>
+        <div><dt>Solução</dt><dd>Chat com triagem automática (nome, interesse, dúvidas frequentes) que passa para atendimento humano em tempo real, e formulário de orçamento que vira pedido no CRM.</dd></div>
+        <div><dt>Destaques</dt><dd>Status online e offline, aviso sonoro de nova mensagem, conversão do contato em cliente e proposta com um clique, e WhatsApp sempre à mão.</dd></div>
+      </dl>
+      <div class="tags"><span>Site institucional</span><span>Chat em tempo real</span><span>Integração</span><span>Tema claro/escuro</span></div>
+    </div>
+  </article>
+</div>
+
+<section class="wrap" style="padding-top:56px;border-top:1px solid var(--line)" id="projetos">
+  <div class="sec-head">
+    <div><div class="eyebrow">Mais projetos</div><h2>Do comercial à gestão de equipe</h2></div>
+    <div class="filters" id="filters" role="group" aria-label="Filtrar projetos"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p style="color:var(--soft);font-size:14px;margin:18px 0 0">Projetos feitos para empresas são apresentados sem nomes e sem dados internos, por respeito à confidencialidade.</p>
+</section>
+
+<div class="wrap">
+  <section class="lab">
+    <div class="eyebrow">No ateliê agora</div>
+    <h2>Em desenvolvimento</h2>
+    <p>Projetos que estamos construindo. Se algum deles resolve algo para o seu negócio, fale com a gente.</p>
+    <div class="labs" id="labs"></div>
+  </section>
+</div>
+
+<section class="cta"><div class="wrap">
+  <div class="eyebrow">Seu projeto</div>
+  <h2>Tem um processo que poderia funcionar melhor?</h2>
+  <p>Conte como sua equipe trabalha hoje. A gente desenha a ferramenta em volta disso.</p>
+  <div class="row">
+    <a class="btn btn-wa" data-wa="Olá! Vi o portfólio do Ateliê Web e quero conversar sobre um projeto." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>Conversar no WhatsApp</a>
+    <a class="btn btn-ghost" href="./#contato">Pedir orçamento</a>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <a class="logo" href="./" style="font-size:16px"><img src="logo-simbolo.png" alt="" style="height:24px">Ateliê <span>Web</span></a>
+  <span>Sites, sistemas e atendimento com IA · Rio de Janeiro</span>
+  <span>© <span id="ano"></span> Ateliê Web</span>
+</div></footer>
+
+<a class="fab" data-wa="Olá! Vim pelo portfólio do Ateliê Web." href="#" target="_blank" rel="noopener" aria-label="Chamar no WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg></a>
+<div id="modal"></div>
+
+<script>
+(function(){
+const WHATSAPP="5521983798817";
+const wa=t=>`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(t)}`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const CATS={sistemas:"Sistemas",vendas:"Vendas e atendimento",gestao:"Gestão e treinamento",sites:"Sites"};
+
+/* mini interfaces desenhadas para cada projeto */
+const B=(w,c="")=>`<div class="b ${c}" style="width:${w}%"></div>`;
+const MOCK={
+  intel:`<div class="ui dark"><div class="dots"><i></i><i></i><i></i></div><div class="r"><div class="kpi">${B(50,"v")}${B(80)}</div><div class="kpi">${B(40,"v")}${B(70)}</div><div class="kpi">${B(60,"v")}${B(60)}</div></div><div class="r" style="flex:1"><div class="c">${B(90,"v")}${B(72,"v")}${B(60,"v")}${B(45,"v")}${B(30,"v")}</div><div class="c" style="flex:.6">${B(100)}${B(80)}${B(90)}${B(70)}${B(60)}</div></div></div>`,
+  guia:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r" style="flex:1"><div class="box" style="flex:1.4"></div><div class="c" style="flex:1"><div class="r"><div class="c box" style="padding:5px;gap:4px">${B(70,"v")}${B(90)}${B(50)}</div><div class="c box" style="padding:5px;gap:4px">${B(60,"w")}${B(80)}</div><div class="c box" style="padding:5px;gap:4px">${B(50,"ok")}${B(70)}</div></div>${B(100,"v")}${B(80)}</div></div></div>`,
+  precos:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r">${B(28,"v")}${B(20)}${B(20)}</div><div class="r"><div class="c">${B(70,"g")}${B(90)}${B(80)}${B(85)}${B(75)}</div><div class="c">${B(50,"v")}${B(60,"ok")}${B(55,"w")}${B(62,"ok")}${B(58,"w")}</div><div class="c">${B(50,"v")}${B(66)}${B(48)}${B(70)}${B(52)}</div></div></div>`,
+  grade:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r"><div class="kpi">${B(40,"g")}${B(70,"v")}</div><div class="kpi">${B(40,"g")}${B(55,"ok")}</div><div class="kpi">${B(40,"g")}${B(35,"w")}</div></div><div class="c" style="gap:6px">${B(100)}<div class="r">${B(60)}${B(20,"ok")}</div><div class="r">${B(50)}${B(20,"w")}</div><div class="r">${B(65)}${B(20,"ok")}</div></div></div>`,
+  metas:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div>${B(40,"g")}<div class="r" style="align-items:flex-end;flex:1;gap:7px;padding-top:6px"><div class="box v" style="flex:1;height:45%"></div><div class="box" style="flex:1;height:62%"></div><div class="box v" style="flex:1;height:78%"></div><div class="box" style="flex:1;height:55%"></div><div class="box v" style="flex:1;height:92%"></div><div class="box" style="flex:1;height:70%"></div></div></div>`,
+  rh:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r" style="align-items:center"><div class="dot v"></div>${B(18,"v")}<div class="dot v"></div>${B(18,"v")}<div class="dot"></div>${B(18)}<div class="dot"></div></div><div class="c" style="gap:6px;margin-top:4px">${B(100)}${B(85)}<div class="r"><div class="kpi">${B(60,"g")}${B(40,"w")}</div><div class="kpi">${B(60,"g")}${B(70,"ok")}</div></div></div></div>`,
+  script:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r">${B(22,"v")}${B(22)}${B(22)}</div><div class="c box" style="padding:8px;gap:6px;flex:1">${B(90,"g")}${B(100)}${B(80)}${B(95)}<div class="r" style="margin-top:auto">${B(30,"v")}${B(30)}</div></div></div>`,
+  imersao:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r"><div class="kpi">${B(50,"v")}${B(90)}${B(70)}</div><div class="kpi">${B(50,"v")}${B(80)}${B(60)}</div><div class="kpi">${B(50,"v")}${B(70)}${B(90)}</div><div class="kpi">${B(50,"v")}${B(60)}${B(80)}</div></div><div class="c box" style="padding:8px;gap:6px">${B(70,"g")}<div class="r">${B(45,"v")}${B(45)}</div><div class="r">${B(45)}${B(45,"ok")}</div></div></div>`,
+  glossario:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="box" style="height:18px"></div><div class="c" style="gap:7px">${["v","",""].map(x=>`<div class="r" style="align-items:center"><div class="dot ${x}"></div><div class="c">${B(40,"g")}${B(90)}</div></div>`).join("")}</div></div>`,
+  roleta:`<div class="ui" style="align-items:center;justify-content:center"><div style="width:62%;aspect-ratio:1;max-width:100%;border-radius:50%;background:conic-gradient(var(--violet) 0 45deg,var(--tint) 0 90deg,var(--violet-2) 0 135deg,var(--tint) 0 180deg,var(--violet) 0 225deg,var(--tint) 0 270deg,var(--violet-2) 0 315deg,var(--tint) 0 360deg);border:4px solid var(--graphite)"></div></div>`,
+};
+
+const P=[
+ {id:"intel",cat:"vendas",t:"Plataforma de inteligência competitiva",r:"Preços da concorrência coletados em campo e transformados em ranking, alertas e análise por marca.",
+  d:"Os preços dos concorrentes chegavam soltos, em fotos e mensagens, sem histórico. A empresa não conseguia ver onde estava mais cara nem reagir a tempo.",
+  s:"Plataforma com formulário de coleta em campo, histórico pesquisável e um painel de análise com hierarquia de produtos, ranking dos cinco concorrentes mais baratos no produto principal e alertas de ameaça.",
+  h:["Cobertura dos 27 estados","Comprovantes por foto, PDF ou link","Importação de planilhas Excel e CSV com validação","Funciona offline, com modo escuro","Nasceu de um estudo com 49 evidências de 16 concorrentes em 6 estados"],
+  tec:["Aplicação web","Dashboard","Offline","Importação de dados"]},
+ {id:"guia",cat:"vendas",t:"Guia do Vendedor para WhatsApp Web",r:"Extensão que coloca contatos, metas e pedidos ao lado da conversa com o cliente.",
+  d:"Vendedores atendiam pelo WhatsApp Web e precisavam alternar entre planilhas, tabelas de preço e sistemas para responder um cliente.",
+  s:"Extensão para o navegador com quadro Kanban de contatos e um painel do vendedor com metas individuais, ranking e a fila de pedidos abertos para conferência do administrativo.",
+  h:["Quadro Kanban de contatos integrado ao WhatsApp Web","Cards de meta por vendedor e visão da gestora","Pedidos abertos com checklist de conferência","Lançamento de ligações direto na rota da meta"],
+  tec:["Extensão Chrome","WhatsApp Web","Painel de metas"]},
+ {id:"precos",cat:"vendas",t:"Comparador de preços por região",r:"Preço próprio contra o da concorrência, estado por estado, com comprovante anexado.",
+  d:"A equipe negociava sem referência atualizada dos preços praticados em cada região.",
+  s:"Ferramenta organizada por estado que compara preços com os da concorrência, guarda a foto ou PDF de cada cotação e inclui um controle de vendas de aço por canal para medir curva ABC e giro mensal.",
+  h:["Comparativo por região","Anexo de comprovante em cada preço","Controle de vendas por canal","Base para curva ABC e giro"],
+  tec:["Aplicação web","GitHub Pages","Anexos"]},
+ {id:"grade",cat:"sistemas",t:"Grade diária de pedidos para fábrica",r:"Acompanhamento dos pedidos enviados às fábricas, do envio até o retorno de cada material.",
+  d:"Pedidos enviados às fábricas voltavam com faltas e substituições, e ninguém sabia quais materiais faltavam mais nem quanto a margem mudava.",
+  s:"Sistema de chamados diários por fábrica, com status por material (seguiu, faltou, substituído), comparação entre margem inicial e final e um painel com faltas somadas por fábrica.",
+  h:["Status por material e por chamado","Margem inicial × final","Gráfico e indicadores por fábrica","Exportação para CSV"],
+  tec:["Aplicação web","Dashboard","CSV"]},
+ {id:"metas",cat:"gestao",t:"Painéis de metas e desempenho",r:"Acompanhamento diário do faturamento da equipe e painéis individuais por vendedor.",
+  d:"A meta do mês só era conferida no fechamento, quando já não dava para corrigir a rota.",
+  s:"Painéis que mostram, dia a dia, o faturamento consolidado contra a meta, painéis individuais com metas de produtos e redutores de comissão, e uma referência de composição de carga para fechar caminhões completos.",
+  h:["Meta consolidada com ritmo diário","Painel individual por vendedor","Composição ideal de carga por categoria","Foco em faturado, não só em vendido"],
+  tec:["Dashboard","Metas","Relatórios"]},
+ {id:"rh",cat:"gestao",t:"Controle de ocorrências para RH",r:"Registro de ocorrências com etapas progressivas e indicadores por colaborador.",
+  d:"Advertências e conversas de alinhamento ficavam em papéis e mensagens, sem histórico confiável.",
+  s:"Aplicação para RH e supervisores com registro de ocorrências, etapas progressivas de tratamento e indicadores por colaborador.",
+  h:["Linha do tempo por colaborador","Etapas progressivas","Indicadores por pessoa e por tipo"],
+  tec:["Aplicação web","RH","Indicadores"]},
+ {id:"script",cat:"vendas",t:"Roteiros de ligação interativos",r:"Scripts de prospecção e reativação que guiam o vendedor durante a chamada.",
+  d:"Cada vendedor ligava de um jeito, e os novos demoravam a pegar o ritmo da prospecção.",
+  s:"Roteiros interativos em cinco etapas (abertura, sondagem, qualificação, próximos passos e encerramento), com versões por linha de produto para reativar clientes parados.",
+  h:["Cinco etapas guiadas","Perguntas de qualificação prontas","Abas por linha de produto","Usado também em treinamento"],
+  tec:["Ferramenta web","Vendas","Treinamento"]},
+ {id:"imersao",cat:"gestao",t:"Imersão para novos vendedores",r:"Programa de integração de quatro dias, com material e quiz de produtos.",
+  d:"Vendedores novos chegavam sem uma trilha clara de cultura, produtos, prospecção e processos.",
+  s:"Cronograma de quatro dias com material de treinamento de produtos, prática de ligação e processos, além de quiz para fixar o conteúdo técnico.",
+  h:["Trilha de 4 dias","Quiz de produtos","Prática de ligação por perfil de cliente"],
+  tec:["Treinamento","Quiz","Material digital"]},
+ {id:"glossario",cat:"gestao",t:"Glossário B2B com pronúncia",r:"Termos do atacado explicados de forma simples, com áudio da pronúncia.",
+  d:"Gestores e vendedores novos travavam em termos técnicos do comércio B2B.",
+  s:"Glossário interativo com busca, perguntas voltadas para gestão e pronúncia em voz pelo próprio navegador.",
+  h:["Busca instantânea","Pronúncia por voz","Perguntas para gestores"],
+  tec:["Aplicação web","Síntese de voz"]},
+ {id:"roleta",cat:"gestao",t:"Roleta de premiação para eventos",r:"Sorteio animado de prêmios e reconhecimentos para engajar a equipe.",
+  d:"Eventos de equipe precisavam de uma dinâmica leve de reconhecimento.",
+  s:"Roleta animada com prêmios e reconhecimentos especiais, pronta para projetar na reunião.",
+  h:["Animação de sorteio","Prêmios configuráveis","Feita para telão"],
+  tec:["Web","Animação"]},
+];
+const LABS=[
+ {t:"Agente de atendimento com IA",d:"Atende no WhatsApp 24 horas, responde dúvidas e apresenta produtos. Primeiro nicho: lojas de materiais de construção."},
+ {t:"Mensageiro com nostalgia dos anos 2000",d:"App de conversa instalável no celular, inspirado nos mensageiros clássicos e com visual próprio."},
+ {t:"Sistema de chamados internos",d:"Chamados entre setores com fila, responsáveis e prazos, para empresas que querem sair da planilha."},
+];
+
+/* números */
+const total=P.length+2;
+document.getElementById("stats").innerHTML=[[total,"projetos entregues"],[4,"frentes: vendas, operação, gestão e sites"],[LABS.length,"em desenvolvimento"]].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
+
+/* filtros e grade */
+let filtro="todos";
+function renderFiltros(){const cs=[["todos","Todos",P.length],...Object.entries(CATS).filter(([k])=>P.some(p=>p.cat===k)).map(([k,l])=>[k,l,P.filter(p=>p.cat===k).length])];
+  document.getElementById("filters").innerHTML=cs.map(([k,l,n])=>`<button class="chip" aria-pressed="${filtro===k}" data-f="${k}">${l}<b>${n}</b></button>`).join("")}
+function renderGrid(){document.getElementById("grid").innerHTML=P.filter(p=>filtro==="todos"||p.cat===filtro).map(p=>`<button class="card" data-p="${p.id}"><div class="shot">${MOCK[p.id]}</div><div class="body"><span class="cat">${CATS[p.cat]}</span><h3>${esc(p.t)}</h3><p>${esc(p.r)}</p><span class="more">Ver projeto →</span></div></button>`).join("")}
+document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filtro=b.dataset.f;renderFiltros();renderGrid()});
+renderFiltros();renderGrid();
+document.getElementById("labs").innerHTML=LABS.map(l=>`<article><span class="st">Em desenvolvimento</span><h3>${esc(l.t)}</h3><p>${esc(l.d)}</p></article>`).join("");
+
+/* ficha do projeto */
+const modal=document.getElementById("modal");let lastFocus=null;
+function abrir(id){const p=P.find(x=>x.id===id);if(!p)return;lastFocus=document.activeElement;
+  modal.innerHTML=`<div class="ov" data-close><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="shot">${MOCK[p.id]}</div><div class="in">
+    <div class="top"><div><span class="eyebrow">${CATS[p.cat]}</span><h2 id="mt">${esc(p.t)}</h2></div><button class="x" data-close aria-label="Fechar">×</button></div>
+    <h4>Desafio</h4><p>${esc(p.d)}</p><h4>Solução</h4><p>${esc(p.s)}</p>
+    <h4>Destaques</h4><ul>${p.h.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <h4>Tecnologia</h4><div class="tags">${p.tec.map(x=>`<span>${esc(x)}</span>`).join("")}</div>
+    <div class="foot"><a class="btn btn-wa" href="${wa(`Olá! Vi no portfólio o projeto "${p.t}" e quero algo parecido para o meu negócio.`)}" target="_blank" rel="noopener">Quero algo parecido</a><button class="btn btn-ghost" data-close>Voltar ao portfólio</button></div>
+  </div></div></div>`;document.body.style.overflow="hidden";modal.querySelector(".x").focus()}
+function fechar(){modal.innerHTML="";document.body.style.overflow="";if(lastFocus)lastFocus.focus()}
+document.getElementById("grid").addEventListener("click",e=>{const c=e.target.closest("[data-p]");if(c)abrir(c.dataset.p)});
+modal.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.closest("button[data-close]"))fechar()});
+
+/* galeria e ampliação */
+document.querySelectorAll(".thumbs").forEach(t=>t.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  t.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));const img=t.parentElement.querySelector(".main img");img.src=b.dataset.src;img.alt=b.dataset.alt}));
+function zoom(src,alt){const lb=document.createElement("div");lb.className="lb";lb.innerHTML=`<img alt="">`;lb.querySelector("img").src=src;lb.querySelector("img").alt=alt||"";lb.addEventListener("click",()=>lb.remove());document.body.appendChild(lb)}
+document.querySelectorAll(".main,.phone").forEach(el=>{const go=()=>{const i=el.querySelector("img");zoom(el.dataset.zoom||i.src,i.alt)};el.addEventListener("click",go);el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}})});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;const lb=document.querySelector(".lb");if(lb){lb.remove();return}if(modal.innerHTML)fechar()});
+
+document.querySelectorAll("[data-wa]").forEach(a=>a.href=wa(a.dataset.wa));
+document.getElementById("ano").textContent=new Date().getFullYear();
+})();
+</script>
+</body>
+</html>
