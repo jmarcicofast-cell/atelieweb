@@ -101,7 +101,7 @@ header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .chip{font:500 14px var(--f-body);background:var(--paper);border:1.5px solid var(--line);color:var(--soft);border-radius:999px;padding:8px 15px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chip b{font-weight:600;opacity:.6;margin-left:3px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
 @media (max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:600px){.grid{grid-template-columns:1fr}}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-align:left;font:inherit;color:inherit;padding:0}
@@ -281,10 +281,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <section class="wrap" style="padding-top:56px;border-top:1px solid var(--line)" id="projetos">
   <div class="sec-head">
     <div><div class="eyebrow">Mais projetos</div><h2>Do comercial à gestão de equipe</h2></div>
-    <div class="filters" id="filters" role="group" aria-label="Filtrar projetos"></div>
+    <div class="filters" id="filters" role="group" aria-label="Filtrar projetos" hidden></div>
   </div>
   <div class="grid" id="grid"></div>
-  <p style="color:var(--soft);font-size:14px;margin:18px 0 0">Projetos feitos para empresas aparecem sem nomes e sem dados internos. Nas telas reais, pessoas, empresas e valores foram trocados por dados fictícios. Os cards marcados como ilustração mostram o tipo de tela do projeto.</p>
+  <p style="color:var(--soft);font-size:14px;margin:18px 0 0">Projetos feitos para empresas aparecem sem nomes e sem dados internos. Nas telas, pessoas, empresas e valores foram trocados por dados fictícios.</p>
 </section>
 
 <div class="wrap">
@@ -340,33 +340,7 @@ const MOCK={
   roleta:`<div class="ui" style="align-items:center;justify-content:center"><div style="width:62%;aspect-ratio:1;max-width:100%;border-radius:50%;background:conic-gradient(var(--violet) 0 45deg,var(--tint) 0 90deg,var(--violet-2) 0 135deg,var(--tint) 0 180deg,var(--violet) 0 225deg,var(--tint) 0 270deg,var(--violet-2) 0 315deg,var(--tint) 0 360deg);border:4px solid var(--graphite)"></div></div>`,
 };
 
-const P=[
- {id:"intel",cat:"vendas",t:"Plataforma de inteligência competitiva",r:"Preços da concorrência coletados em campo e transformados em ranking, alertas e análise por marca.",
-  d:"Os preços dos concorrentes chegavam soltos, em fotos e mensagens, sem histórico. A empresa não conseguia ver onde estava mais cara nem reagir a tempo.",
-  s:"Plataforma com formulário de coleta em campo, histórico pesquisável e um painel de análise com hierarquia de produtos, ranking dos cinco concorrentes mais baratos no produto principal e alertas de ameaça.",
-  h:["Cobertura dos 27 estados","Comprovantes por foto, PDF ou link","Importação de planilhas Excel e CSV com validação","Funciona offline, com modo escuro","Nasceu de um estudo com 49 evidências de 16 concorrentes em 6 estados"],
-  tec:["Aplicação web","Dashboard","Offline","Importação de dados"]},
- {id:"central",cat:"sistemas",t:"Central de abastecimento",r:"Pedidos de venda cruzados com os pedidos de reposição, para saber o que falta comprar.",
-  d:"Vendas eram fechadas sem saber se o material já estava a caminho, e a reposição era pedida duas vezes ou nenhuma.",
-  s:"Central que cruza os pedidos de venda com os chamados de abastecimento por item e por centro de distribuição, mostrando a necessidade de compra e o nível de cobertura de cada pedido.",
-  h:["Necessidade por item e por fábrica","Cobertura: sem cobertura, parcial, a caminho, na DC","Catálogo com peso e paletização","Base compartilhada pela equipe"],
-  tec:["Sistema web","Banco compartilhado","Logística"]},
- {id:"grade",cat:"sistemas",t:"Grade diária de pedidos para fábrica",r:"Acompanhamento dos pedidos enviados às fábricas, do envio até o retorno de cada material.",
-  d:"Pedidos enviados às fábricas voltavam com faltas e substituições, e ninguém sabia quais materiais faltavam mais nem quanto a margem mudava.",
-  s:"Sistema de chamados diários por fábrica, com status por material (seguiu, faltou, substituído), comparação entre margem inicial e final e um painel com faltas somadas por fábrica.",
-  h:["Status por material e por chamado","Margem inicial × final","Gráfico e indicadores por fábrica","Exportação para CSV"],
-  tec:["Aplicação web","Dashboard","CSV"]},
- {id:"metas",cat:"gestao",t:"Painéis de metas e desempenho",r:"Acompanhamento diário do faturamento da equipe e painéis individuais por vendedor.",
-  d:"A meta do mês só era conferida no fechamento, quando já não dava para corrigir a rota.",
-  s:"Painéis que mostram, dia a dia, o faturamento consolidado contra a meta, painéis individuais com metas de produtos e redutores de comissão, e uma referência de composição de carga para fechar caminhões completos.",
-  h:["Meta consolidada com ritmo diário","Painel individual por vendedor","Composição ideal de carga por categoria","Foco em faturado, não só em vendido"],
-  tec:["Dashboard","Metas","Relatórios"]},
- {id:"rh",cat:"gestao",t:"Controle de ocorrências para RH",r:"Registro de ocorrências com etapas progressivas e indicadores por colaborador.",
-  d:"Advertências e conversas de alinhamento ficavam em papéis e mensagens, sem histórico confiável.",
-  s:"Aplicação para RH e supervisores com registro de ocorrências, etapas progressivas de tratamento e indicadores por colaborador.",
-  h:["Linha do tempo por colaborador","Etapas progressivas","Indicadores por pessoa e por tipo"],
-  tec:["Aplicação web","RH","Indicadores"]},
- {id:"script",img:"guia-treinamentos",cat:"vendas",t:"Roteiros de ligação interativos",r:"Scripts de prospecção e reativação que guiam o vendedor durante a chamada.",
+const P=[ {id:"script",img:"guia-treinamentos",cat:"vendas",t:"Roteiros de ligação interativos",r:"Scripts de prospecção e reativação que guiam o vendedor durante a chamada.",
   d:"Cada vendedor ligava de um jeito, e os novos demoravam a pegar o ritmo da prospecção.",
   s:"Roteiros interativos em cinco etapas (abertura, sondagem, qualificação, próximos passos e encerramento), com versões por linha de produto para reativar clientes parados.",
   h:["Cinco etapas guiadas","Perguntas de qualificação prontas","Abas por linha de produto","Usado também em treinamento"],
@@ -375,17 +349,7 @@ const P=[
   d:"Vendedores novos chegavam sem uma trilha clara de cultura, produtos, prospecção e processos.",
   s:"Cronograma de quatro dias com material de treinamento de produtos, prática de ligação e processos, além de quiz para fixar o conteúdo técnico.",
   h:["Trilha de 4 dias","Quiz de produtos","Prática de ligação por perfil de cliente"],
-  tec:["Treinamento","Quiz","Material digital"]},
- {id:"glossario",cat:"gestao",t:"Glossário B2B com pronúncia",r:"Termos do atacado explicados de forma simples, com áudio da pronúncia.",
-  d:"Gestores e vendedores novos travavam em termos técnicos do comércio B2B.",
-  s:"Glossário interativo com busca, perguntas voltadas para gestão e pronúncia em voz pelo próprio navegador.",
-  h:["Busca instantânea","Pronúncia por voz","Perguntas para gestores"],
-  tec:["Aplicação web","Síntese de voz"]},
- {id:"roleta",cat:"gestao",t:"Roleta de premiação para eventos",r:"Sorteio animado de prêmios e reconhecimentos para engajar a equipe.",
-  d:"Eventos de equipe precisavam de uma dinâmica leve de reconhecimento.",
-  s:"Roleta animada com prêmios e reconhecimentos especiais, pronta para projetar na reunião.",
-  h:["Animação de sorteio","Prêmios configuráveis","Feita para telão"],
-  tec:["Web","Animação"]},
+  tec:["Treinamento","Quiz","Material digital"]}
 ];
 const LABS=[
  {t:"Agente de atendimento com IA",d:"Atende no WhatsApp 24 horas, responde dúvidas e apresenta produtos. Primeiro nicho: lojas de materiais de construção."},
@@ -394,7 +358,7 @@ const LABS=[
 
 /* números */
 const total=P.length+document.querySelectorAll(".case").length;
-document.getElementById("stats").innerHTML=[[total,"projetos entregues"],[4,"frentes: vendas, operação, gestão e sites"],[LABS.length,"em desenvolvimento"]].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
+document.getElementById("stats").innerHTML=[[total,"projetos entregues"],[3,"frentes: vendas, gestão e sites"],[LABS.length,"em desenvolvimento"]].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
 
 const shotHTML=p=>p.img?`<div class="shot real"><img src="img/${p.img}.webp" alt=""></div>`:`<div class="shot">${MOCK[p.id]}<span class="ilus">Ilustração</span></div>`;
 /* filtros e grade */
