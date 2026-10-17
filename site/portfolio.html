@@ -107,6 +107,11 @@ header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .card{background:var(--paper);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-align:left;font:inherit;color:inherit;padding:0}
 .card:hover{transform:translateY(-4px);box-shadow:0 26px 56px -30px rgba(60,30,120,.45);border-color:color-mix(in srgb,var(--violet) 35%,var(--line))}
 .card .shot{aspect-ratio:16/10;max-width:100%;background:var(--tint);padding:16px 16px 0;overflow:hidden}
+.card .shot{position:relative}
+.card .shot.real,.sheet .shot.real{padding:0;background:var(--graphite)}
+.shot.real img{width:100%;height:100%;object-fit:cover;object-position:top left}
+.sheet .shot.real{cursor:zoom-in;aspect-ratio:1600/1012}
+.ilus{position:absolute;right:10px;bottom:10px;font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;background:rgba(29,27,36,.72);color:#fff;border-radius:6px;padding:3px 8px}
 .card .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:7px;flex:1}
 .card .cat{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
 .card h3{font-size:19px;font-weight:600;letter-spacing:-.015em}
@@ -194,10 +199,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="gal" data-gal="crm">
       <div class="main" role="button" tabindex="0" aria-label="Ampliar imagem"><img src="img/crm-painel.webp" alt="Painel do CRM com propostas enviadas, valores em aberto e fechados" width="1600" height="1012"></div>
       <div class="thumbs" role="group" aria-label="Telas do sistema">
-        <button aria-pressed="true" data-src="img/crm-painel.webp" data-alt="Painel do CRM"><img src="img/crm-painel.webp" alt="" loading="lazy"><small>Painel</small></button>
-        <button aria-pressed="false" data-src="img/crm-plataformas.webp" data-alt="Propostas por plataforma"><img src="img/crm-plataformas.webp" alt="" loading="lazy"><small>Plataformas</small></button>
-        <button aria-pressed="false" data-src="img/crm-projeto.webp" data-alt="Etapas e sub-etapas do projeto"><img src="img/crm-projeto.webp" alt="" loading="lazy"><small>Projeto</small></button>
-        <button aria-pressed="false" data-src="img/crm-orcamento.webp" data-alt="Orçamento formal numerado"><img src="img/crm-orcamento.webp" alt="" loading="lazy"><small>Orçamento</small></button>
+        <button aria-pressed="true" data-src="img/crm-painel.webp" data-alt="Painel do CRM"><img src="img/crm-painel.webp" alt=""><small>Painel</small></button>
+        <button aria-pressed="false" data-src="img/crm-plataformas.webp" data-alt="Propostas por plataforma"><img src="img/crm-plataformas.webp" alt=""><small>Plataformas</small></button>
+        <button aria-pressed="false" data-src="img/crm-projeto.webp" data-alt="Etapas e sub-etapas do projeto"><img src="img/crm-projeto.webp" alt=""><small>Projeto</small></button>
+        <button aria-pressed="false" data-src="img/crm-orcamento.webp" data-alt="Orçamento formal numerado"><img src="img/crm-orcamento.webp" alt=""><small>Orçamento</small></button>
       </div>
       <div class="note">Telas reais do sistema, preenchidas com dados de demonstração.</div>
     </div>
@@ -233,6 +238,44 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
       <div class="tags"><span>Site institucional</span><span>Chat em tempo real</span><span>Integração</span><span>Tema claro/escuro</span></div>
     </div>
   </article>
+
+  <article class="case" id="guia">
+    <div class="gal">
+      <div class="main" role="button" tabindex="0" aria-label="Ampliar imagem"><img src="img/guia-rota.webp" alt="Mapa gamificado da meta da equipe" width="1600" height="1012"></div>
+      <div class="thumbs" role="group" aria-label="Telas do sistema"><button aria-pressed="true" data-src="img/guia-rota.webp" data-alt="Mapa gamificado da meta da equipe"><img src="img/guia-rota.webp" alt=""><small>Rota da Meta</small></button><button aria-pressed="false" data-src="img/guia-reconhecimento.webp" data-alt="Pódio e ranking da equipe"><img src="img/guia-reconhecimento.webp" alt=""><small>Ranking</small></button><button aria-pressed="false" data-src="img/guia-treinamentos.webp" data-alt="Roteiro de reativação por etapas"><img src="img/guia-treinamentos.webp" alt=""><small>Roteiro de ligação</small></button><button aria-pressed="false" data-src="img/guia-tabela.webp" data-alt="Tabela de produtos com paletização"><img src="img/guia-tabela.webp" alt=""><small>Tabela técnica</small></button></div>
+      <div class="note">Telas reais. Nomes de pessoas, empresas e valores foram trocados por dados fictícios.</div>
+    </div>
+    <div>
+      <div class="eyebrow">Vendas e gestão de equipe · Estudo de caso</div>
+      <h2>Guia do Vendedor: a operação comercial inteira num só lugar</h2>
+      <p class="lead">Plataforma usada no dia a dia por uma equipe de televendas de atacado, com visão do vendedor e visão da gestora.</p>
+      <dl class="dsr">
+        <div><dt>Desafio</dt><dd>Metas, tabela de produtos, pedidos, roteiros de ligação e treinamentos espalhados em planilhas, PDFs e grupos de WhatsApp.</dd></div>
+        <div><dt>Solução</dt><dd>Um portal com login por vendedor que reúne tabela técnica, pedidos abertos, base de clientes, ranking, check-in diário e treinamentos, sincronizado em tempo real.</dd></div>
+        <div><dt>Destaques</dt><dd>Rota da Meta: um mapa em que o avatar de cada vendedor avança conforme as vendas. Ranking com pódio, roteiros de ligação interativos e painel de feedback da gestora.</dd></div>
+      </dl>
+      <div class="tags"><span>Aplicação web</span><span>Gamificação</span><span>Tempo real</span><span>Login por usuário</span></div>
+    </div>
+  </article>
+
+  <article class="case rev" id="chamados">
+    <div class="gal">
+      <div class="main" role="button" tabindex="0" aria-label="Ampliar imagem"><img src="img/chamados-detalhe.webp" alt="Chamado com histórico e tempo por situação" width="1600" height="1012"></div>
+      <div class="thumbs" role="group" aria-label="Telas do sistema"><button aria-pressed="true" data-src="img/chamados-detalhe.webp" data-alt="Chamado com histórico e tempo por situação"><img src="img/chamados-detalhe.webp" alt=""><small>Chamado</small></button><button aria-pressed="false" data-src="img/chamados-kanban.webp" data-alt="Chamados em colunas por situação"><img src="img/chamados-kanban.webp" alt=""><small>Kanban</small></button><button aria-pressed="false" data-src="img/chamados-relatorio.webp" data-alt="Onde os chamados ficam parados, por setor"><img src="img/chamados-relatorio.webp" alt=""><small>Relatório</small></button></div>
+      <div class="note">Telas reais. Nomes de pessoas, empresas e valores foram trocados por dados fictícios.</div>
+    </div>
+    <div>
+      <div class="eyebrow">Sistema sob medida · Estudo de caso</div>
+      <h2>Chamados internos entre setores</h2>
+      <p class="lead">Protótipo navegável de um sistema de chamados para vendas, crédito, logística e faturamento conversarem com prazo e histórico.</p>
+      <dl class="dsr">
+        <div><dt>Desafio</dt><dd>Pedidos travados no crédito ou na logística sem dono claro, e ninguém sabia em qual setor o chamado estava parado.</dd></div>
+        <div><dt>Solução</dt><dd>Caixas de entrada por pessoa e por setor, visão em lista ou Kanban, prazos com alerta de atraso e linha do tempo de cada interação.</dd></div>
+        <div><dt>Destaques</dt><dd>Tempo gasto em cada situação, relatório de gargalos por setor e confirmação de leitura em cada mensagem.</dd></div>
+      </dl>
+      <div class="tags"><span>Sistema web</span><span>Kanban</span><span>SLA e prazos</span><span>Relatórios</span></div>
+    </div>
+  </article>
 </div>
 
 <section class="wrap" style="padding-top:56px;border-top:1px solid var(--line)" id="projetos">
@@ -241,7 +284,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="filters" id="filters" role="group" aria-label="Filtrar projetos"></div>
   </div>
   <div class="grid" id="grid"></div>
-  <p style="color:var(--soft);font-size:14px;margin:18px 0 0">Projetos feitos para empresas são apresentados sem nomes e sem dados internos, por respeito à confidencialidade.</p>
+  <p style="color:var(--soft);font-size:14px;margin:18px 0 0">Projetos feitos para empresas aparecem sem nomes e sem dados internos. Nas telas reais, pessoas, empresas e valores foram trocados por dados fictícios. Os cards marcados como ilustração mostram o tipo de tela do projeto.</p>
 </section>
 
 <div class="wrap">
@@ -293,6 +336,7 @@ const MOCK={
   script:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r">${B(22,"v")}${B(22)}${B(22)}</div><div class="c box" style="padding:8px;gap:6px;flex:1">${B(90,"g")}${B(100)}${B(80)}${B(95)}<div class="r" style="margin-top:auto">${B(30,"v")}${B(30)}</div></div></div>`,
   imersao:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r"><div class="kpi">${B(50,"v")}${B(90)}${B(70)}</div><div class="kpi">${B(50,"v")}${B(80)}${B(60)}</div><div class="kpi">${B(50,"v")}${B(70)}${B(90)}</div><div class="kpi">${B(50,"v")}${B(60)}${B(80)}</div></div><div class="c box" style="padding:8px;gap:6px">${B(70,"g")}<div class="r">${B(45,"v")}${B(45)}</div><div class="r">${B(45)}${B(45,"ok")}</div></div></div>`,
   glossario:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="box" style="height:18px"></div><div class="c" style="gap:7px">${["v","",""].map(x=>`<div class="r" style="align-items:center"><div class="dot ${x}"></div><div class="c">${B(40,"g")}${B(90)}</div></div>`).join("")}</div></div>`,
+  central:`<div class="ui"><div class="dots"><i></i><i></i><i></i></div><div class="r">${B(18,"v")}${B(18)}${B(18)}</div><div class="r"><div class="kpi">${B(40,"g")}${B(30,"w")}</div><div class="kpi">${B(40,"g")}${B(50,"ok")}</div><div class="kpi">${B(40,"g")}${B(25,"v")}</div></div><div class="c" style="gap:6px">${B(100)}<div class="r">${B(55)}${B(22,"w")}</div><div class="r">${B(60)}${B(22,"ok")}</div><div class="r">${B(50)}${B(22,"v")}</div></div></div>`,
   roleta:`<div class="ui" style="align-items:center;justify-content:center"><div style="width:62%;aspect-ratio:1;max-width:100%;border-radius:50%;background:conic-gradient(var(--violet) 0 45deg,var(--tint) 0 90deg,var(--violet-2) 0 135deg,var(--tint) 0 180deg,var(--violet) 0 225deg,var(--tint) 0 270deg,var(--violet-2) 0 315deg,var(--tint) 0 360deg);border:4px solid var(--graphite)"></div></div>`,
 };
 
@@ -302,16 +346,16 @@ const P=[
   s:"Plataforma com formulário de coleta em campo, histórico pesquisável e um painel de análise com hierarquia de produtos, ranking dos cinco concorrentes mais baratos no produto principal e alertas de ameaça.",
   h:["Cobertura dos 27 estados","Comprovantes por foto, PDF ou link","Importação de planilhas Excel e CSV com validação","Funciona offline, com modo escuro","Nasceu de um estudo com 49 evidências de 16 concorrentes em 6 estados"],
   tec:["Aplicação web","Dashboard","Offline","Importação de dados"]},
- {id:"guia",cat:"vendas",t:"Guia do Vendedor para WhatsApp Web",r:"Extensão que coloca contatos, metas e pedidos ao lado da conversa com o cliente.",
-  d:"Vendedores atendiam pelo WhatsApp Web e precisavam alternar entre planilhas, tabelas de preço e sistemas para responder um cliente.",
-  s:"Extensão para o navegador com quadro Kanban de contatos e um painel do vendedor com metas individuais, ranking e a fila de pedidos abertos para conferência do administrativo.",
-  h:["Quadro Kanban de contatos integrado ao WhatsApp Web","Cards de meta por vendedor e visão da gestora","Pedidos abertos com checklist de conferência","Lançamento de ligações direto na rota da meta"],
-  tec:["Extensão Chrome","WhatsApp Web","Painel de metas"]},
- {id:"precos",cat:"vendas",t:"Comparador de preços por região",r:"Preço próprio contra o da concorrência, estado por estado, com comprovante anexado.",
+ {id:"precos",img:"shop-tabela",cat:"vendas",t:"Comparador de preços por região",r:"Preço próprio contra o da concorrência, estado por estado, com comprovante anexado.",
   d:"A equipe negociava sem referência atualizada dos preços praticados em cada região.",
   s:"Ferramenta organizada por estado que compara preços com os da concorrência, guarda a foto ou PDF de cada cotação e inclui um controle de vendas de aço por canal para medir curva ABC e giro mensal.",
   h:["Comparativo por região","Anexo de comprovante em cada preço","Controle de vendas por canal","Base para curva ABC e giro"],
   tec:["Aplicação web","GitHub Pages","Anexos"]},
+ {id:"central",cat:"sistemas",t:"Central de abastecimento",r:"Pedidos de venda cruzados com os pedidos de reposição, para saber o que falta comprar.",
+  d:"Vendas eram fechadas sem saber se o material já estava a caminho, e a reposição era pedida duas vezes ou nenhuma.",
+  s:"Central que cruza os pedidos de venda com os chamados de abastecimento por item e por centro de distribuição, mostrando a necessidade de compra e o nível de cobertura de cada pedido.",
+  h:["Necessidade por item e por fábrica","Cobertura: sem cobertura, parcial, a caminho, na DC","Catálogo com peso e paletização","Base compartilhada pela equipe"],
+  tec:["Sistema web","Banco compartilhado","Logística"]},
  {id:"grade",cat:"sistemas",t:"Grade diária de pedidos para fábrica",r:"Acompanhamento dos pedidos enviados às fábricas, do envio até o retorno de cada material.",
   d:"Pedidos enviados às fábricas voltavam com faltas e substituições, e ninguém sabia quais materiais faltavam mais nem quanto a margem mudava.",
   s:"Sistema de chamados diários por fábrica, com status por material (seguiu, faltou, substituído), comparação entre margem inicial e final e um painel com faltas somadas por fábrica.",
@@ -327,12 +371,12 @@ const P=[
   s:"Aplicação para RH e supervisores com registro de ocorrências, etapas progressivas de tratamento e indicadores por colaborador.",
   h:["Linha do tempo por colaborador","Etapas progressivas","Indicadores por pessoa e por tipo"],
   tec:["Aplicação web","RH","Indicadores"]},
- {id:"script",cat:"vendas",t:"Roteiros de ligação interativos",r:"Scripts de prospecção e reativação que guiam o vendedor durante a chamada.",
+ {id:"script",img:"guia-treinamentos",cat:"vendas",t:"Roteiros de ligação interativos",r:"Scripts de prospecção e reativação que guiam o vendedor durante a chamada.",
   d:"Cada vendedor ligava de um jeito, e os novos demoravam a pegar o ritmo da prospecção.",
   s:"Roteiros interativos em cinco etapas (abertura, sondagem, qualificação, próximos passos e encerramento), com versões por linha de produto para reativar clientes parados.",
   h:["Cinco etapas guiadas","Perguntas de qualificação prontas","Abas por linha de produto","Usado também em treinamento"],
   tec:["Ferramenta web","Vendas","Treinamento"]},
- {id:"imersao",cat:"gestao",t:"Imersão para novos vendedores",r:"Programa de integração de quatro dias, com material e quiz de produtos.",
+ {id:"imersao",img:"quiz",cat:"gestao",t:"Imersão e quiz para novos vendedores",r:"Programa de integração de quatro dias, com quiz interativo de produtos.",
   d:"Vendedores novos chegavam sem uma trilha clara de cultura, produtos, prospecção e processos.",
   s:"Cronograma de quatro dias com material de treinamento de produtos, prática de ligação e processos, além de quiz para fixar o conteúdo técnico.",
   h:["Trilha de 4 dias","Quiz de produtos","Prática de ligação por perfil de cliente"],
@@ -350,19 +394,19 @@ const P=[
 ];
 const LABS=[
  {t:"Agente de atendimento com IA",d:"Atende no WhatsApp 24 horas, responde dúvidas e apresenta produtos. Primeiro nicho: lojas de materiais de construção."},
- {t:"Mensageiro com nostalgia dos anos 2000",d:"App de conversa instalável no celular, inspirado nos mensageiros clássicos e com visual próprio."},
- {t:"Sistema de chamados internos",d:"Chamados entre setores com fila, responsáveis e prazos, para empresas que querem sair da planilha."},
+ {t:"Mensageiro com nostalgia dos anos 2000",d:"App de conversa instalável no celular, inspirado nos mensageiros clássicos e com visual próprio."}
 ];
 
 /* números */
-const total=P.length+2;
+const total=P.length+document.querySelectorAll(".case").length;
 document.getElementById("stats").innerHTML=[[total,"projetos entregues"],[4,"frentes: vendas, operação, gestão e sites"],[LABS.length,"em desenvolvimento"]].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("");
 
+const shotHTML=p=>p.img?`<div class="shot real"><img src="img/${p.img}.webp" alt=""></div>`:`<div class="shot">${MOCK[p.id]}<span class="ilus">Ilustração</span></div>`;
 /* filtros e grade */
 let filtro="todos";
 function renderFiltros(){const cs=[["todos","Todos",P.length],...Object.entries(CATS).filter(([k])=>P.some(p=>p.cat===k)).map(([k,l])=>[k,l,P.filter(p=>p.cat===k).length])];
   document.getElementById("filters").innerHTML=cs.map(([k,l,n])=>`<button class="chip" aria-pressed="${filtro===k}" data-f="${k}">${l}<b>${n}</b></button>`).join("")}
-function renderGrid(){document.getElementById("grid").innerHTML=P.filter(p=>filtro==="todos"||p.cat===filtro).map(p=>`<button class="card" data-p="${p.id}"><div class="shot">${MOCK[p.id]}</div><div class="body"><span class="cat">${CATS[p.cat]}</span><h3>${esc(p.t)}</h3><p>${esc(p.r)}</p><span class="more">Ver projeto →</span></div></button>`).join("")}
+function renderGrid(){document.getElementById("grid").innerHTML=P.filter(p=>filtro==="todos"||p.cat===filtro).map(p=>`<button class="card" data-p="${p.id}">${shotHTML(p)}<div class="body"><span class="cat">${CATS[p.cat]}</span><h3>${esc(p.t)}</h3><p>${esc(p.r)}</p><span class="more">Ver projeto →</span></div></button>`).join("")}
 document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;filtro=b.dataset.f;renderFiltros();renderGrid()});
 renderFiltros();renderGrid();
 document.getElementById("labs").innerHTML=LABS.map(l=>`<article><span class="st">Em desenvolvimento</span><h3>${esc(l.t)}</h3><p>${esc(l.d)}</p></article>`).join("");
@@ -370,7 +414,7 @@ document.getElementById("labs").innerHTML=LABS.map(l=>`<article><span class="st"
 /* ficha do projeto */
 const modal=document.getElementById("modal");let lastFocus=null;
 function abrir(id){const p=P.find(x=>x.id===id);if(!p)return;lastFocus=document.activeElement;
-  modal.innerHTML=`<div class="ov" data-close><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="shot">${MOCK[p.id]}</div><div class="in">
+  modal.innerHTML=`<div class="ov" data-close><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt">${p.img?`<div class="shot real" data-zoom="img/${p.img}.webp" role="button" tabindex="0" aria-label="Ampliar imagem"><img src="img/${p.img}.webp" alt="Tela do projeto"></div>`:`<div class="shot">${MOCK[p.id]}</div>`}<div class="in">
     <div class="top"><div><span class="eyebrow">${CATS[p.cat]}</span><h2 id="mt">${esc(p.t)}</h2></div><button class="x" data-close aria-label="Fechar">×</button></div>
     <h4>Desafio</h4><p>${esc(p.d)}</p><h4>Solução</h4><p>${esc(p.s)}</p>
     <h4>Destaques</h4><ul>${p.h.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
@@ -379,7 +423,7 @@ function abrir(id){const p=P.find(x=>x.id===id);if(!p)return;lastFocus=document.
   </div></div></div>`;document.body.style.overflow="hidden";modal.querySelector(".x").focus()}
 function fechar(){modal.innerHTML="";document.body.style.overflow="";if(lastFocus)lastFocus.focus()}
 document.getElementById("grid").addEventListener("click",e=>{const c=e.target.closest("[data-p]");if(c)abrir(c.dataset.p)});
-modal.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.closest("button[data-close]"))fechar()});
+modal.addEventListener("click",e=>{const z=e.target.closest("[data-zoom]");if(z){zoom(z.dataset.zoom,"");return}if(e.target.matches("[data-close]")||e.target.closest("button[data-close]"))fechar()});
 
 /* galeria e ampliação */
 document.querySelectorAll(".thumbs").forEach(t=>t.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
