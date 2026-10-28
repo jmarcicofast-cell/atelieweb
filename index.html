@@ -201,6 +201,11 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .wm.v{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
 .wm.a{background:var(--accent);color:var(--accent-ink);margin-left:auto;border-bottom-right-radius:4px}
 .wm small{display:block;font-size:10.5px;opacity:.65;margin-top:3px;text-align:right}
+.wm.lie{background:var(--accent-soft);color:var(--ink);margin-left:auto;border-bottom-right-radius:4px}
+.wm .quem{display:block;font-size:11px;font-weight:600;opacity:.8;margin-bottom:2px}
+.lieaviso{margin:10px 16px 0;padding:8px 12px;border-radius:10px;font-size:13px;background:var(--warn-soft);color:var(--warn)}
+.liedig{font-size:12px;color:var(--muted);padding:0 16px 6px}
+.citem .lietag{font-size:11px;font-weight:600;color:var(--accent);margin-left:6px}
 .wreply{border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .wreply .qr{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .wreply .qr button{flex:0 0 auto;font:500 12px var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
@@ -822,7 +827,7 @@ async function importar(file){
 
 /* ---------- integração com o site (Firebase): chat ao vivo + pedidos de orçamento ---------- */
 const FB={apiKey:"AIzaSyDlVjzYA6ecVdEVMM1G-0F73zBKqAKkqWg",authDomain:"atelieweb.firebaseapp.com",projectId:"atelieweb",storageBucket:"atelieweb.firebasestorage.app",messagingSenderId:"1043385790217",appId:"1:1043385790217:web:a29e89674c1fb7d2d1add8"};
-const W={ok:false,user:undefined,conversas:[],pedidos:[],msgs:[],conv:null,online:false,draft:"",loginErr:"",pf:"todos",carregou:{c:false,p:false}};
+const W={lieAtiva:true,ok:false,user:undefined,conversas:[],pedidos:[],msgs:[],conv:null,online:false,draft:"",loginErr:"",pf:"todos",carregou:{c:false,p:false}};
 try{if(window.firebase){firebase.initializeApp(FB);W.auth=firebase.auth();W.fs=firebase.firestore();W.ok=true}}catch(e){W.ok=false}
 const FTS=()=>firebase.firestore.FieldValue.serverTimestamp();
 const tsD=t=>t&&t.toDate?t.toDate():null;
@@ -991,6 +996,7 @@ async function definirPapel(u){
 }
 function iniciarSite(){
   wSubs.push(W.fs.doc("config/status").onSnapshot(d=>{W.online=!!(d.exists&&d.data().online);if(S.tab==="chat")render()},()=>{}));
+  wSubs.push(W.fs.doc("config/lie").onSnapshot(d=>{W.lieAtiva=!(d.exists&&d.data().ativa===false);if(S.tab==="chat")render()},()=>{}));
   wSubs.push(W.fs.collection("conversas").orderBy("atualizadoEm","desc").limit(150).onSnapshot(snap=>{
     if(W.carregou.c)snap.docChanges().forEach(ch=>{const c=ch.doc.data();if(ch.type!=="removed"&&c.pendente&&!(W.conv===ch.doc.id&&S.tab==="chat"&&document.visibilityState==="visible"))bip()});
     W.carregou.c=true;W.conversas=snap.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));
@@ -1026,14 +1032,17 @@ function vChat(){
   if(!temAcesso())return `<div class="head"><div><h1>Chat do site</h1><p>Responda aqui quem chama no chat do site do Ateliê Web.</p></div></div>`+(W.user?`<div class="panel">${vSyncPerfil()}</div>`:vLogin());
   const c=W.conv?byId(W.conversas,W.conv):null;
   return `<div class="head"><div><h1>Chat do site</h1><p>${W.conversas.length} conversa(s) · ${W.conversas.filter(x=>x.pendente).length} aguardando resposta</p></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="onoff ${W.online?"on":""}" data-wact="online"><i></i>${W.online?"Você está online":"Você está offline"}</button><button class="btn ghost sm" data-wact="sair">Sair</button></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="onoff ${W.lieAtiva?"on":""}" data-wact="lieGeral" title="Liga ou desliga a Liê em todas as conversas"><i></i>${W.lieAtiva?"Liê atendendo":"Liê desligada"}</button><button class="onoff ${W.online?"on":""}" data-wact="online"><i></i>${W.online?"Você está online":"Você está offline"}</button><button class="btn ghost sm" data-wact="sair">Sair</button></div></div>
   ${permErr()}
   <div class="chatwrap ${c?"aberto":""}">
-    <div class="clist">${W.conversas.length?W.conversas.map(x=>`<div class="citem ${x.id===W.conv?"on":""} ${x.pendente?"pend":""}" data-wact="abrir" data-id="${x.id}"><b>${esc(x.nome||"Visitante")}</b><small>${quando(x.atualizadoEm)}</small><span>${esc(x.ultimaMsg||x.interesse||"…")}</span></div>`).join("")
+    <div class="clist">${W.conversas.length?W.conversas.map(x=>`<div class="citem ${x.id===W.conv?"on":""} ${x.pendente?"pend":""}" data-wact="abrir" data-id="${x.id}"><b>${esc(x.nome||"Visitante")}${x.lieMotivo&&x.pendente?`<span class="lietag">Liê te chamou</span>`:""}</b><small>${quando(x.atualizadoEm)}</small><span>${esc(x.ultimaMsg||x.interesse||"…")}</span></div>`).join("")
       :`<div class="empty" style="padding:40px 16px"><b>Nenhuma conversa ainda</b>Quando alguém escrever no chat do site, aparece aqui.</div>`}</div>
     <div class="cpane">${c?`<div class="chead"><button class="btn ghost sm" data-wact="voltar" aria-label="Voltar">←</button><div class="who"><b>${esc(c.nome||"Visitante")}</b><small>${esc(c.interesse||"Chat do site")} · início ${quando(c.criadoEm)}</small></div>
-        <button class="btn sm" data-wact="convConv">Converter em cliente</button><button class="btn sm danger" data-wact="delConv">Excluir</button></div>
-      <div class="wmsgs" id="wMsgs">${W.msgs.map(m=>`<div class="wm ${m.de==="atelie"?"a":"v"}">${esc(m.texto)}<small>${quando(m.em)}</small></div>`).join("")||`<div class="empty">Carregando mensagens…</div>`}</div>
+        <button class="btn sm" data-wact="lieConv">${c.liePausada?"Devolver para a Liê":"Pausar a Liê"}</button><button class="btn sm" data-wact="convConv">Converter em cliente</button><button class="btn sm danger" data-wact="delConv">Excluir</button></div>
+      ${c.liePausada&&c.lieMotivo?`<div class="lieaviso">A Liê te chamou: ${esc(c.lieMotivo)}. Ela está pausada nesta conversa.</div>`:c.liePausada?`<div class="lieaviso">A Liê está pausada nesta conversa. Você está respondendo.</div>`:""}
+      ${c.lieErro&&!c.liePausada?`<div class="lieaviso">A Liê não conseguiu responder a última mensagem. Responda você ou confira a chave da API.</div>`:""}
+      <div class="wmsgs" id="wMsgs">${W.msgs.map(m=>`<div class="wm ${m.de==="atelie"?"a":m.de==="lie"?"lie":"v"}">${m.de==="lie"?`<span class="quem">Liê</span>`:""}${esc(m.texto)}<small>${quando(m.em)}</small></div>`).join("")||`<div class="empty">Carregando mensagens…</div>`}</div>
+      ${c.digitando?`<div class="liedig">Liê está digitando…</div>`:""}
       <form class="wreply" id="formReply"><div class="qr">${QR.map((q,i)=>`<button type="button" data-wact="qr" data-i="${i}">${esc(q.length>38?q.slice(0,36)+"…":q)}</button>`).join("")}</div>
         <div class="row2"><textarea id="wDraft" placeholder="Escreva sua resposta… (Enter envia, Shift+Enter quebra linha)">${esc(W.draft)}</textarea><button class="btn primary" type="submit">Enviar</button></div></form>`
       :`<div class="empty" style="margin:auto"><b>Escolha uma conversa</b>${W.online?"Você aparece como online no site.":"Ligue o botão \"online\" para os visitantes saberem que você está respondendo."}</div>`}</div>
@@ -1049,12 +1058,12 @@ function vPedidos(){
   <div class="toolbar">${[["todos","Todos"],...PS].map(([k,l])=>`<button class="btn sm ${W.pf===k?"primary":""}" data-wact="pf" data-f="${k}">${l} (${k==="todos"?W.pedidos.length:W.pedidos.filter(p=>p.status===k).length})</button>`).join("")}</div>
   <div class="panel">${list.length?`<div class="list">${list.map(p=>{const pn=(p.nome||"").split(" ")[0];const wl=waLink(p.whatsapp,`Olá, ${pn}! Aqui é a Juliana, do Ateliê Web. Recebi seu pedido de orçamento (${p.tipo||"projeto"}) pelo site. Podemos conversar?`);
     return `<div class="ped ${p.status==="novo"?"novo":""}"><div style="min-width:0"><div class="t" style="font-weight:600">${esc(p.nome)}${p.empresa?` <span style="color:var(--muted);font-weight:400">· ${esc(p.empresa)}</span>`:""}</div>
-      <div style="font-size:13px;color:var(--muted)">${esc(p.tipo||"")} · ${quando(p.criadoEm)}</div>
+      <div style="font-size:13px;color:var(--muted)">${esc(p.tipo||"")} · ${quando(p.criadoEm)}${p.origem==="lie"?" · via Liê":""}</div>
       <div style="font-size:13px;margin-top:2px">${p.whatsapp?`📱 <span style="user-select:all">${esc(p.whatsapp)}</span>`:""}${p.email?` · ✉️ <span style="user-select:all">${esc(p.email)}</span>`:""}</div></div>
       <div><select data-wact="pst" data-id="${p.id}" aria-label="Situação" style="width:auto">${PS.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></div>
       ${p.mensagem?`<div class="msgp">${esc(p.mensagem)}</div>`:""}
       <div class="acts">${wl?`<a class="btn sm primary" href="${esc(wl)}" target="_blank" rel="noopener">Chamar no WhatsApp</a>`:""}${p.email?`<button class="btn sm" data-wact="copEmail" data-v="${esc(p.email)}">Copiar e-mail</button>`:""}
-      ${p.status!=="convertido"?`<button class="btn sm" data-wact="convPed" data-id="${p.id}">Converter em cliente + proposta</button>`:`<span class="pill convertido">Convertido</span>`}<button class="btn sm ghost danger" data-wact="delPed" data-id="${p.id}">Excluir</button></div></div>`}).join("")}</div>`
+      ${p.conversaId?`<button class="btn sm" data-wact="verConv" data-id="${esc(p.conversaId)}">Ver conversa com a Liê</button>`:""}${p.status!=="convertido"?`<button class="btn sm" data-wact="convPed" data-id="${p.id}">Converter em cliente + proposta</button>`:`<span class="pill convertido">Convertido</span>`}<button class="btn sm ghost danger" data-wact="delPed" data-id="${p.id}">Excluir</button></div></div>`}).join("")}</div>`
    :`<div class="empty"><b>${W.pedidos.length?"Nada neste filtro":"Nenhum pedido ainda"}</b>${W.pedidos.length?"":"Quando alguém preencher \"Pedir orçamento\" no site, o pedido aparece aqui."}</div>`}</div>`;
 }
 async function platSite(){let p=S.plataformas.find(x=>x.id==="site-atelieweb");if(!p){await idbPut("plataformas",{id:"site-atelieweb",nome:"Site Ateliê Web",url:"",status:"ativo",criadoEm:new Date().toISOString()});await loadAll()}return "site-atelieweb"}
@@ -1068,6 +1077,9 @@ document.addEventListener("click",async e=>{
   const a=e.target.closest("[data-wact]");if(!a||a.tagName==="SELECT")return;const k=a.dataset.wact;
   if(k==="sair"){W.auth.signOut();return}
   if(k==="irPedidos"){S.tab="pedidos";render();return}
+  if(k==="lieGeral"){try{await W.fs.doc("config/lie").set({ativa:!W.lieAtiva,atualizadoEm:FTS()});toast(W.lieAtiva?"Liê desligada":"Liê atendendo")}catch(err){toast("Não consegui mudar. Confira as regras do Firebase.")}return}
+  if(k==="lieConv"){const c=byId(W.conversas,W.conv);if(!c)return;try{await W.fs.collection("conversas").doc(c.id).update(c.liePausada?{liePausada:false,lieMotivo:"",lieErro:""}:{liePausada:true});toast(c.liePausada?"A Liê voltou a responder esta conversa":"Liê pausada nesta conversa")}catch(err){toast("Não consegui mudar.")}return}
+  if(k==="verConv"){S.tab="chat";W.draft="";abrirConversa(a.dataset.id);return}
   if(k==="online"){try{await W.fs.doc("config/status").set({online:!W.online,atualizadoEm:FTS()})}catch(err){toast("Não consegui mudar o status. Confira as regras do Firebase.")}return}
   if(k==="abrir"){W.draft="";abrirConversa(a.dataset.id);setTimeout(()=>{const t=$("#wDraft");t&&t.focus()},50);return}
   if(k==="voltar"){if(msgSub)msgSub();msgSub=null;W.conv=null;render();return}
@@ -1079,7 +1091,7 @@ document.addEventListener("click",async e=>{
       else{const id=W.conv;const ref=W.fs.collection("conversas").doc(id);const b=W.fs.batch();W.msgs.forEach(m=>b.delete(ref.collection("mensagens").doc(m.id)));b.delete(ref);if(msgSub)msgSub();msgSub=null;W.conv=null;await b.commit()}
       toast("Excluído")}catch(err){toast("Não foi possível excluir.")}return}
   if(k==="convPed"){const p=byId(W.pedidos,a.dataset.id);a.disabled=true;
-    const prid=await converter({nome:p.nome,empresa:p.empresa,email:p.email,telefone:p.whatsapp,titulo:`${p.tipo||"Projeto"} — ${p.empresa||p.nome}`,descricao:p.mensagem,origem:"formulário do site"});
+    const prid=await converter({nome:p.nome,empresa:p.empresa,email:p.email,telefone:p.whatsapp,titulo:`${p.tipo||"Projeto"} — ${p.empresa||p.nome}`,descricao:p.mensagem,origem:p.origem==="lie"?"chat do site (Liê)":"formulário do site"});
     try{await W.fs.collection("pedidos").doc(p.id).update({status:"convertido"})}catch(err){}
     toast("Cliente e proposta criados");mProposta(prid);return}
   if(k==="convConv"){const c=byId(W.conversas,W.conv);a.disabled=true;
@@ -1093,7 +1105,7 @@ document.addEventListener("keydown",e=>{if(e.target.id==="wDraft"&&e.key==="Ente
 document.addEventListener("submit",async e=>{
   if(e.target.id==="formLogin"){e.preventDefault();W.loginErr="";try{await W.auth.signInWithEmailAndPassword($("#lgEmail").value.trim(),$("#lgSenha").value)}catch(err){W.loginErr=err.code==="auth/too-many-requests"?"Muitas tentativas. Aguarde alguns minutos.":"E-mail ou senha incorretos.";render()}}
   if(e.target.id==="formReply"){e.preventDefault();const t=W.draft.trim();if(!t||!W.conv)return;W.draft="";const ref=W.fs.collection("conversas").doc(W.conv);
-    try{await ref.collection("mensagens").add({de:"atelie",texto:t.slice(0,2000),em:FTS()});await ref.update({ultimaMsg:"Você: "+t.slice(0,130),atualizadoEm:FTS(),pendente:false})}catch(err){W.draft=t;toast("Mensagem não enviada.");render()}}
+    try{await ref.collection("mensagens").add({de:"atelie",texto:t.slice(0,2000),em:FTS()});await ref.update({ultimaMsg:"Você: "+t.slice(0,130),atualizadoEm:FTS(),pendente:false,liePausada:true})}catch(err){W.draft=t;toast("Mensagem não enviada.");render()}}
 });
 
 /* ---------- eventos ---------- */

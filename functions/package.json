@@ -1,0 +1,14 @@
+{
+  "name": "atelieweb-lie",
+  "description": "Liê, atendente do chat do site do Ateliê Web",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.0.0",
+    "firebase-admin": "^14.0.0",
+    "firebase-functions": "^7.0.0"
+  }
+}
