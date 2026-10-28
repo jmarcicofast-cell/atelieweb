@@ -14,3 +14,12 @@ Abra o site pelo GitHub Pages: `https://jmarcicofast-cell.github.io/atelieweb/`
 ## Arquivos
 
 - `index.html` — o site inteiro (HTML, CSS e JavaScript em um arquivo só).
+
+## Liê — atendente do chat do site
+
+A Liê responde sozinha quem escreve no chat do site, coleta o pedido de orçamento e chama a Juliana quando precisa.
+
+- `functions/index.js` — o "cérebro" da Liê (Cloud Function). As instruções de jeito de falar e de chamada para ação ficam no topo do arquivo, em `INSTRUCOES`.
+- No CRM, aba **Chat**: botão **Liê atendendo / desligada** liga ou desliga para todas as conversas; em cada conversa, **Pausar a Liê / Devolver para a Liê**. Quando você responde uma conversa, a Liê pausa nela sozinha.
+- Pedidos coletados pela Liê caem em **Pedidos do site** marcados "via Liê", com o botão **Ver conversa com a Liê**.
+- Publicar a função: `firebase functions:secrets:set ANTHROPIC_API_KEY` (uma vez) e `firebase deploy --only functions,firestore:rules`. Exige o plano Blaze do Firebase.

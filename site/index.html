@@ -426,74 +426,63 @@ document.getElementById("form").addEventListener("submit",async e=>{
   [...f.children].forEach(c=>{if(c.tagName!=="H3")c.hidden=true});f.appendChild(box);
 });
 
-/* chat: robô de triagem + conversa ao vivo com a equipe (Firebase) */
+/* chat: a Liê responde na hora; a Juliana acompanha e assume pelo CRM (Firebase) */
 const chat=document.getElementById("chat"),body=document.getElementById("chatBody"),inp=document.getElementById("chatIn"),stEl=document.getElementById("chatStatus"),newBtn=document.getElementById("chatNew");
-const ctx={nome:"",interesse:"",detalhe:""};let etapa="inicio",iniciado=false,live=false,online=false,cid=lsGet("aw_cid"),unsub=null;const vistos=new Set();
-function updStatus(){stEl.textContent=online?"Online agora":"Respondemos em breve";stEl.classList.toggle("off",!online)}
-if(db)db.doc("config/status").onSnapshot(d=>{online=!!(d.exists&&d.data().online);updStatus()},()=>{});
-function add(html,who){const d=document.createElement("div");d.className="msg "+who;d.innerHTML=html;body.appendChild(d);body.scrollTop=body.scrollHeight;return d}
+let iniciado=false,online=false,lieAtiva=true,cid=lsGet("aw_cid"),unsub=null,convUnsub=null,typingEl=null,timer=null,avisou=false;const vistos=new Set();
+const ATALHOS=["Quero um site","Sistema sob medida","Atendimento com IA no WhatsApp","Quanto custa?"];
+function updStatus(){const on=!!db&&(online||lieAtiva);stEl.textContent=on?"Online agora":"Respondemos em breve";stEl.classList.toggle("off",!on)}
+if(db){db.doc("config/status").onSnapshot(d=>{online=!!(d.exists&&d.data().online);updStatus()},()=>{});
+  db.doc("config/lie").onSnapshot(d=>{lieAtiva=!(d.exists&&d.data().ativa===false);updStatus()},()=>{})}
+updStatus();
+function add(html,who){const d=document.createElement("div");d.className="msg "+who;d.innerHTML=html;body.insertBefore(d,typingEl&&typingEl.isConnected?typingEl:null);body.scrollTop=body.scrollHeight;return d}
 function note(t){const d=document.createElement("div");d.className="sysnote";d.textContent=t;body.appendChild(d);body.scrollTop=body.scrollHeight}
-function bot(html,quick){const t=document.createElement("div");t.className="msg bot typing";t.innerHTML="<i></i><i></i><i></i>";body.appendChild(t);body.scrollTop=body.scrollHeight;
-  setTimeout(()=>{t.remove();add(html,"bot");if(quick){const q=document.createElement("div");q.className="quick";q.innerHTML=quick;body.appendChild(q);body.scrollTop=body.scrollHeight}},650)}
-const opt=(l)=>`<button type="button" data-q="${esc(l)}">${esc(l)}</button>`;
-const RESP={
-  "Quero um site":"Ótimo! Fazemos sites e landing pages rápidos, bonitos no celular e pensados para gerar contato. Você já tem domínio e logo, ou começamos do zero?",
-  "Sistema sob medida":"Legal! Criamos CRMs, controle de pedidos, painéis de metas e geradores de orçamento do jeito que a sua equipe trabalha. Qual processo você quer organizar?",
-  "Atendimento com IA":"Nosso agente atende no WhatsApp 24h: responde dúvidas, apresenta produtos e passa o cliente pronto para você. Qual é o seu tipo de negócio?",
-  "Quanto custa?":"Cada projeto é sob medida, então o valor depende do escopo. Depois de uma conversa rápida enviamos um orçamento formal, com prazo e forma de pagamento, sem compromisso. Me conta o que você precisa?",
-  "Prazo de entrega":"Uma landing page costuma ficar pronta em poucos dias. Sistemas variam conforme o tamanho e o prazo vem escrito no orçamento. O que você tem em mente?"
-};
-const FALAR="Falar com a equipe",ENVIAR="Enviar para a equipe aqui";
-function menuInicial(){return [...Object.keys(RESP),FALAR].map(opt).join("")}
-function resumo(){return [`Olá! Sou ${ctx.nome||"um visitante do site"}.`,ctx.interesse&&ctx.interesse!==FALAR?`Interesse: ${ctx.interesse}.`:"",ctx.detalhe?`${ctx.detalhe}`:""].filter(Boolean).join("\n")}
-function oferecer(){
-  bot(`Perfeito${ctx.nome?", "+esc(ctx.nome):""}! Como prefere seguir?`,(db?opt(ENVIAR):"")+`<a class="btn btn-wa" href="${wa(resumo())}" target="_blank" rel="noopener">Continuar no WhatsApp</a>`);
-  etapa="oferta";
-}
+function quick(html){const q=document.createElement("div");q.className="quick";q.innerHTML=html;body.appendChild(q);body.scrollTop=body.scrollHeight}
+function digitando(on){if(on){if(!typingEl||!typingEl.isConnected){typingEl=document.createElement("div");typingEl.className="msg bot typing";typingEl.innerHTML="<i></i><i></i><i></i>";body.appendChild(typingEl);body.scrollTop=body.scrollHeight}}else if(typingEl){typingEl.remove();typingEl=null}}
+const opt=l=>`<button type="button" data-q="${esc(l)}">${esc(l)}</button>`;
+const fmt=t=>esc(t).replace(/\*([^*\n]+)\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
 function hora(ts){try{const d=ts&&ts.toDate?ts.toDate():new Date();return d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
-function escutar(){
-  if(unsub)unsub();
-  unsub=db.collection("conversas").doc(cid).collection("mensagens").orderBy("em").onSnapshot(snap=>{
-    snap.docChanges().forEach(ch=>{if(ch.type!=="added"||vistos.has(ch.doc.id))return;vistos.add(ch.doc.id);const m=ch.doc.data({serverTimestamps:"estimate"});
-      const el=add(`${m.de==="atelie"?'<span class="who">Ateliê Web</span>':""}${esc(m.texto).replace(/\n/g,"<br>")}<span class="hr">${hora(m.em)}</span>`,m.de==="atelie"?"bot":"me");
-      if(m.de==="atelie"&&chat.hidden){document.getElementById("chatFab").style.boxShadow="0 0 0 4px #e8b45a"}});
-  },err=>{if(err.code==="permission-denied"){lsSet("aw_cid",null);cid=null;live=false;note("Essa conversa foi encerrada.");bot("Quer começar uma nova?",menuInicial());etapa="menu"}});
+function saudar(){
+  digitando(true);
+  setTimeout(()=>{digitando(false);add(`<span class="who">Liê</span>Oi! Aqui é a Liê, do Ateliê Web 😊`,"bot");
+    setTimeout(()=>{add(`Me conta, o que você precisa?`,"bot");quick(ATALHOS.map(opt).join(""))},600)},700);
 }
-async function entrarAoVivo(primeira){
-  if(!db){oferecer();return}
-  try{
-    if(!cid){cid=rid();await db.collection("conversas").doc(cid).set({nome:(ctx.nome||"Visitante").slice(0,80),interesse:(ctx.interesse||"").slice(0,80),criadoEm:TS(),atualizadoEm:TS(),ultimaMsg:"",pendente:true,origem:"site"});lsSet("aw_cid",cid)}
-    live=true;etapa="live";newBtn.hidden=false;body.querySelectorAll(".quick").forEach(q=>q.remove());
-    note(online?"Você está falando com a equipe do Ateliê Web":"Deixe sua mensagem. Respondemos aqui mesmo, assim que possível");
-    escutar();if(primeira)await enviar(primeira);
-  }catch(e){note("Não foi possível conectar agora.");oferecer()}
+function semResposta(){clearTimeout(timer);timer=setTimeout(()=>{if(avisou||typingEl)return;avisou=true;note("Já já te respondo por aqui");quick(`<a class="btn btn-wa" href="${wa("Oi! Vim pelo site do Ateliê Web")}" target="_blank" rel="noopener">Prefiro o WhatsApp</a>`)},30000)}
+function escutar(){
+  if(unsub)unsub();if(convUnsub)convUnsub();
+  const ref=db.collection("conversas").doc(cid);
+  unsub=ref.collection("mensagens").orderBy("em").onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{if(ch.type!=="added"||vistos.has(ch.doc.id))return;vistos.add(ch.doc.id);const m=ch.doc.data({serverTimestamps:"estimate"});
+      const quem=m.de==="lie"?"Liê":m.de==="atelie"?"Juliana · Ateliê Web":"";
+      if(quem){clearTimeout(timer);if(m.de==="atelie")digitando(false)}
+      add(`${quem?`<span class="who">${quem}</span>`:""}${fmt(m.texto)}<span class="hr">${hora(m.em)}</span>`,quem?"bot":"me");
+      if(quem&&chat.hidden){document.getElementById("chatFab").style.boxShadow="0 0 0 4px #e8b45a"}});
+  },err=>{if(err.code==="permission-denied")recomecar("Essa conversa foi encerrada.")});
+  convUnsub=ref.onSnapshot(d=>{if(d.exists)digitando(!!d.data().digitando)},()=>{});
 }
 async function enviar(t){
-  t=t.slice(0,2000);const ref=db.collection("conversas").doc(cid);
-  try{await ref.collection("mensagens").add({de:"visitante",texto:t,em:TS()});await ref.update({ultimaMsg:t.slice(0,140),atualizadoEm:TS(),pendente:true})}
-  catch(e){note("Mensagem não enviada. Tente de novo ou chame no WhatsApp.")}
+  t=t.slice(0,2000);
+  if(!db){add(fmt(t),"me");setTimeout(()=>{add(`<span class="who">Liê</span>Me chama no WhatsApp que te respondo rapidinho!`,"bot");quick(`<a class="btn btn-wa" href="${wa(t)}" target="_blank" rel="noopener">Continuar no WhatsApp</a>`)},600);return}
+  try{
+    if(!cid){cid=rid();await db.collection("conversas").doc(cid).set({nome:"Visitante",interesse:"",criadoEm:TS(),atualizadoEm:TS(),ultimaMsg:"",pendente:true,origem:"site"});lsSet("aw_cid",cid);newBtn.hidden=false;escutar()}
+    const ref=db.collection("conversas").doc(cid);
+    await ref.collection("mensagens").add({de:"visitante",texto:t,em:TS()});
+    await ref.update({ultimaMsg:t.slice(0,140),atualizadoEm:TS(),pendente:true});
+    semResposta();
+  }catch(e){note("Mensagem não enviada. Tente de novo ou chame no WhatsApp.");quick(`<a class="btn btn-wa" href="${wa(t)}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>`)}
 }
-function responder(txt){
-  if(live){enviar(txt);return}
-  if(txt==="Voltar ao início"){etapa="menu";bot("Claro! Sobre o que você quer saber?",menuInicial());return}
-  if(txt===FALAR){ctx.interesse=ctx.interesse||FALAR;entrarAoVivo(resumo());return}
-  if(txt===ENVIAR){entrarAoVivo(resumo());return}
-  if(etapa==="nome"){ctx.nome=txt.split(" ")[0].replace(/^./,c=>c.toUpperCase()).slice(0,40);etapa="menu";bot(`Prazer, ${esc(ctx.nome)}! Como posso ajudar?`,menuInicial());return}
-  if(RESP[txt]){ctx.interesse=txt;etapa="detalhe";bot(RESP[txt]);return}
-  ctx.detalhe=(ctx.detalhe?ctx.detalhe+"\n":"")+txt;ctx.interesse=ctx.interesse||"Conversar sobre um projeto";oferecer();
-}
+function recomecar(aviso){if(unsub)unsub();if(convUnsub)convUnsub();unsub=convUnsub=null;clearTimeout(timer);avisou=false;lsSet("aw_cid",null);cid=null;vistos.clear();body.innerHTML="";typingEl=null;newBtn.hidden=true;if(aviso)note(aviso);saudar()}
 function abrir(){chat.hidden=false;document.getElementById("chatFab").style.boxShadow="";
   if(!iniciado){iniciado=true;
-    if(cid&&db){live=true;etapa="live";newBtn.hidden=false;note("Continuando sua conversa");escutar()}
-    else{etapa="nome";bot("Olá! 👋 Bem-vindo ao <b>Ateliê Web</b>.");setTimeout(()=>bot("Para começar, qual é o seu nome?"),800)}}
+    if(cid&&db){newBtn.hidden=false;note("Continuando sua conversa");escutar()}
+    else saudar()}
   setTimeout(()=>inp.focus(),300)}
-newBtn.addEventListener("click",()=>{if(unsub)unsub();unsub=null;lsSet("aw_cid",null);cid=null;live=false;vistos.clear();body.innerHTML="";newBtn.hidden=true;Object.assign(ctx,{nome:"",interesse:"",detalhe:""});etapa="nome";bot("Nova conversa! Qual é o seu nome?")});
+newBtn.addEventListener("click",()=>recomecar());
 document.getElementById("chatFab").addEventListener("click",()=>chat.hidden?abrir():chat.hidden=true);
 document.querySelectorAll("[data-chat]").forEach(b=>b.addEventListener("click",abrir));
 document.getElementById("chatClose").addEventListener("click",()=>chat.hidden=true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!chat.hidden)chat.hidden=true});
-body.addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)return;b.parentElement.remove();add(esc(b.dataset.q),"me");responder(b.dataset.q)});
-document.getElementById("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;inp.value="";if(!live){body.querySelectorAll(".quick").forEach(q=>{if(!q.querySelector("a"))q.remove()});add(esc(v).replace(/\n/g,"<br>"),"me")}responder(v)});
+body.addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)return;b.parentElement.remove();enviar(b.dataset.q)});
+document.getElementById("chatForm").addEventListener("submit",e=>{e.preventDefault();const v=inp.value.trim();if(!v)return;inp.value="";body.querySelectorAll(".quick").forEach(q=>{if(!q.querySelector("a"))q.remove()});enviar(v)});
 })();
 </script>
 

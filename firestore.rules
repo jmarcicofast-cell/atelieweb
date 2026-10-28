@@ -39,6 +39,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Liê ligada/desligada (o site lê para mostrar "Online agora")
+    match /config/lie {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Pedidos de orçamento do formulário do site
     match /pedidos/{id} {
       allow create: if request.resource.data.keys().hasOnly(['nome','empresa','whatsapp','email','tipo','mensagem','status','criadoEm'])
