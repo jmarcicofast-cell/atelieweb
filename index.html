@@ -364,9 +364,9 @@ function deliveryParse(text,start){
  const date=deliveryISO(text);if(date)return date;
  const base=deliveryISO(start);if(!base)return "";
  const t=String(text||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
- const m=t.match(/^(?:ate\s+)?(\d{1,4})\s*(dia(?:s)?(?:\s+(?:uteis|util|corridos?))?|semana(?:s)?)(?:\s+(?:a partir do inicio|apos o inicio))?$/);
- if(!m)return "";let n=+m[1];const unit=m[2];if(unit.startsWith("semana"))n*=7;if(n>3660)return "";
- const d=new Date(base+"T12:00:00Z");if(/uteis|util/.test(unit)){while(n>0){d.setUTCDate(d.getUTCDate()+1);if(d.getUTCDay()!==0&&d.getUTCDay()!==6)n--}}else d.setUTCDate(d.getUTCDate()+n);
+ const m=t.match(/^(?:ate\s+)?(\d{1,4})(?:\s*(dia(?:s)?(?:\s+(?:uteis|util|corridos?))?|semana(?:s)?))?(?:\s+(?:a partir do inicio|apos o inicio))?$/);
+ if(!m)return "";let n=+m[1];const unit=m[2]||"dias uteis";if(unit.startsWith("semana"))n*=7;if(n>3660)return "";
+ const d=new Date(base+"T12:00:00Z");if(!/corridos?|semana/.test(unit)){while(n>0){d.setUTCDate(d.getUTCDate()+1);if(d.getUTCDay()!==0&&d.getUTCDay()!==6)n--}}else d.setUTCDate(d.getUTCDate()+n);
  return d.toISOString().slice(0,10);
 }
 function deliveryBudget(p){
@@ -376,25 +376,32 @@ function deliveryBudget(p){
 }
 function deliveryTerms(p){
  const proposal=p.propostaId?byId(S.propostas,p.propostaId):null,budget=deliveryBudget(p);
- const useful=t=>{const v=String(t||"").trim();return /^(?:a combinar|a definir|indefinido|[-—])$/i.test(v)?"":v};
+ const useful=t=>{const v=String(t??"").trim();if(/^(?:a combinar|a definir|indefinido|[-—])$/i.test(v))return "";const m=v.match(/^(\d{1,4})(?:\s+dias?)?$/i);return m?m[1]+(+m[1]===1?" dia útil":" dias úteis"):v};
  const fixed=deliveryISO(p.dataContratada)||deliveryISO(proposal?.dataEntregaCombinada);
  const manual=useful(p.prazoContratado),prop=useful(proposal?.prazo),quote=useful(budget?.prazo);
  const days=Number(budget?.validadeDias);
  if(manual)return {text:manual,fixed,source:"Prazo informado no projeto"};
  if(prop)return {text:prop,fixed,source:"Prazo da proposta"};
  if(quote)return {text:quote,fixed,source:"Prazo do orçamento "+(budget.numero||"")};
- if(Number.isInteger(days)&&days>0&&days<=3660)return {text:days+" dias corridos",fixed,source:"Validade do orçamento "+(budget.numero||""),validity:true};
+ if(Number.isInteger(days)&&days>0&&days<=3660)return {text:days+(days===1?" dia útil":" dias úteis"),fixed,source:"Validade do orçamento "+(budget.numero||""),validity:true};
  return {text:"",fixed,source:""};
 }
 function deliveryDue(p){const t=deliveryTerms(p);return deliveryISO(p.prazoEntrega)||deliveryISO(t.fixed)||deliveryParse(t.text,p.dataInicio)}
 function deliveryDays(a,b){return Math.round((Date.parse(b+"T12:00:00Z")-Date.parse(a+"T12:00:00Z"))/86400000)}
+function deliveryBusiness(p){const t=deliveryTerms(p);return !/corridos?|semanas?/i.test(t.text||"")}
+function deliveryBusinessDays(a,b){
+ const sign=a<=b?1:-1,first=sign===1?a:b,last=sign===1?b:a;
+ const d=new Date(first+"T12:00:00Z");let n=0;
+ while(d.toISOString().slice(0,10)<last){d.setUTCDate(d.getUTCDate()+1);if(![0,6].includes(d.getUTCDay()))n++}
+ return sign*n;
+}
 function deliveryInfo(p,today=workspaceToday()){
  const due=deliveryDue(p),actual=deliveryISO(p.dataEntregaReal);
  if(!due)return {label:"Sem prazo definido",tone:"",detail:"Informe o prazo combinado ou uma data de entrega.",due:""};
  if(p.status==="entregue"&&!actual)return {label:"Entrega sem data registrada",tone:"",detail:"Informe a data real para classificar.",due};
- const finished=p.status==="entregue",delta=deliveryDays(finished?actual:today,due),n=Math.abs(delta),days=n+" "+(n===1?"dia":"dias");
- if(finished)return {label:delta>0?"Entrega rápida":delta===0?"Entrega normal":"Entrega atrasada",tone:delta>0?"fast":delta===0?"normal":"late",detail:delta>0?days+" de antecedência":delta===0?"Entregue na data combinada":days+" de atraso",due};
- return {label:delta<0?"Atrasado":delta===0?"Vence hoje":"No prazo",tone:delta<0?"late":delta<=2?"soon":"normal",detail:delta<0?days+" de atraso":delta===0?"Entrega prevista para hoje":"Faltam "+days,due};
+ const finished=p.status==="entregue",ref=finished?actual:today,delta=deliveryDays(ref,due),business=deliveryBusiness(p),n=Math.abs(business?deliveryBusinessDays(ref,due):delta),days=scheduleUnit(n,business);
+ if(finished)return {label:delta>0?"Entrega rápida":delta===0?"Entrega normal":"Entrega atrasada",tone:delta>0?"fast":delta===0?"normal":"late",detail:delta>0?(n?days+" de antecedência":"Entregue antes da data combinada"):delta===0?"Entregue na data combinada":(n?days+" de atraso":"Entregue após a data combinada"),due};
+ return {label:delta<0?"Atrasado":delta===0?"Vence hoje":"No prazo",tone:delta<0?"late":n<=2?"soon":"normal",detail:delta<0?(n?days+" de atraso":"Prazo ultrapassado"):delta===0?"Entrega prevista para hoje":n===0?"Entrega em "+dtBR(due):(n===1?"Falta ":"Faltam ")+days,due};
 }
 
 function scheduleDateList(start,end,business){
@@ -405,7 +412,7 @@ function scheduleDateList(start,end,business){
 }
 function schedulePlan(p){
  const start=deliveryISO(p.dataInicio),end=deliveryDue(p),terms=deliveryTerms(p);
- const business=/\b(?:uteis|util)\b/.test(String(terms.text||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase());
+ const business=deliveryBusiness(p);
  const dates=scheduleDateList(start,end,business),stages=p.etapas||[],total=Math.max(0,dates.length-1);
  if(!dates.length)return {start,end,rows:[],total,business,warning:start&&end?"Confira se o prazo final é posterior ao início e inferior a 10 anos.":""};
  const weights=stages.map(e=>Math.max(1,(e.subs||[]).length)),sum=weights.reduce((a,b)=>a+b,0);
@@ -426,15 +433,15 @@ function schedulePlan(p){
  return {start,end,rows,total,used,business,warning};
 }
 function scheduleUnit(n,business){return n+" "+(n===1?"dia":"dias")+(business?(n===1?" útil":" úteis"):"")}
-function scheduleState(d,done){if(done)return '<span class="scheduleStatus done">Concluída</span>';if(!d)return "";const n=deliveryDays(workspaceToday(),d);return '<span class="scheduleStatus '+(n<0?"late":n<=1?"soon":"")+'">'+(n<0?Math.abs(n)+" d em atraso":n===0?"Vence hoje":n===1?"Falta 1 dia":"Faltam "+n+" dias")+'</span>'}
+function scheduleState(d,done,business=true){if(done)return '<span class="scheduleStatus done">Concluída</span>';if(!d)return "";const today=workspaceToday(),delta=deliveryDays(today,d),n=Math.abs(business?deliveryBusinessDays(today,d):delta);return '<span class="scheduleStatus '+(delta<0?"late":n<=1?"soon":"")+'">'+(delta<0?(n?scheduleUnit(n,business)+" em atraso":"Prazo ultrapassado"):delta===0?"Vence hoje":n===0?"Vence em "+dtBR(d):(n===1?"Falta ":"Faltam ")+scheduleUnit(n,business))+'</span>'}
 function scheduleCard(p){const z=schedulePlan(p);if(!z.start||!z.end||z.start>z.end||!Number.isFinite(z.used))return "";const pct=z.total?Math.round(z.used/z.total*100):(workspaceToday()>=z.end?100:0);return '<div class="scheduleCard"><div class="workprogress"><span>Tempo utilizado</span><b>'+pct+'%</b></div><div class="prog scheduleTrack"><span style="width:'+pct+'%"></span></div><small>'+scheduleUnit(z.used,z.business)+' de '+scheduleUnit(z.total,z.business)+'</small></div>'}
 function scheduleSummary(p,z){
  if(!z.start||!z.end||!z.rows.length)return '<div class="scheduleNotice">'+(z.warning?esc(z.warning):!z.start||!z.end?"Defina a data de início e o prazo combinado para distribuir o tempo.":"Adicione etapas para visualizar a divisão do prazo.")+'</div>';
  const pct=z.total?Math.round(z.used/z.total*100):0;
  return '<div class="scheduleBox"><div class="scheduleHeading"><div><strong>'+scheduleUnit(z.total,z.business)+'</strong><small>Prazo total · '+dtBR(z.start)+' a '+dtBR(z.end)+'</small></div><div><strong>'+scheduleUnit(z.used,z.business)+'</strong><small>Tempo utilizado · '+pct+'%</small></div><div><strong>'+scheduleUnit(Math.max(0,z.total-z.used),z.business)+'</strong><small>Saldo dentro do prazo</small></div></div><div class="scheduleSegments">'+z.rows.map((a,i)=>'<span style="flex:'+Math.max(.25,a.duration)+'" class="'+((p.etapas[i]||{}).feito?"done":"")+'" title="'+esc((p.etapas[i]||{}).texto||"Etapa")+' · '+scheduleUnit(a.duration,z.business)+'"></span>').join("")+'</div><div class="scheduleLegend">Distribuição automática proporcional à quantidade de tarefas de cada etapa. Datas iguais são possíveis em prazos curtos. As datas manuais têm prioridade.</div>'+(z.warning?'<div class="scheduleNotice">'+esc(z.warning)+'</div>':"")+'</div>';
 }
-function scheduleStage(z,i,e){const a=z.rows[i];if(!a)return "";return '<span class="scheduleStage"> · '+dtBR(a.start)+' → '+dtBR(a.due)+' · '+scheduleUnit(a.duration,z.business)+' '+(a.automatic?'<small>auto</small>':'<small>manual</small>')+'</span>'+scheduleState(a.due,e.feito)}
-function scheduleSub(z,i,k,x){const a=z.rows[i]?.subrows[k];if(!a)return "";return '<div class="scheduleSub">Prazo: '+dtBR(a.due)+' '+(a.automatic?'<small>auto</small>':'<small>manual</small>')+' '+scheduleState(a.due,x.feito)+'</div>'}
+function scheduleStage(z,i,e){const a=z.rows[i];if(!a)return "";return '<span class="scheduleStage"> · '+dtBR(a.start)+' → '+dtBR(a.due)+' · '+scheduleUnit(a.duration,z.business)+' '+(a.automatic?'<small>auto</small>':'<small>manual</small>')+'</span>'+scheduleState(a.due,e.feito,z.business)}
+function scheduleSub(z,i,k,x){const a=z.rows[i]?.subrows[k];if(!a)return "";return '<div class="scheduleSub">Prazo: '+dtBR(a.due)+' '+(a.automatic?'<small>auto</small>':'<small>manual</small>')+' '+scheduleState(a.due,x.feito,z.business)+'</div>'}
 function scheduleUpdate(){
  if(!pd||projTab!=="dados")return;
  const z=schedulePlan(pd);const root=$("#scheduleSummary");if(root)root.innerHTML=scheduleSummary(pd,z);
@@ -847,8 +854,8 @@ function renderProjeto(){
     <label class="f full">Nome do projeto<input id="pj_tit" data-pk="titulo" value="${v("titulo")}"></label>
     <label class="f">Cliente<select id="pj_cli" data-pk="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
     <label class="f">Situação<select id="pj_st" data-pk="status">${PST.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
-    <label class="f full">Proposta vinculada<select id="pj_proposal" data-pk="propostaId">${opts(S.propostas,p.propostaId,x=>x.titulo||"Sem título","Nenhuma proposta vinculada")}</select></label><label class="f">Prazo combinado (opcional)<input id="pj_term" data-pk="prazoContratado" value="${v("prazoContratado")}" placeholder="${esc(deliveryTerms(p).text||"Ex.: 15 dias úteis")}"><small>Vazio = utilizar o prazo da proposta ou do orçamento vinculado. Na ausência de prazo específico, utiliza a validade em dias corridos.</small></label><label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
-    <label class="f">Ajuste manual do prazo (opcional)<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"><small>Vazio = calcular a partir do prazo ou da validade do orçamento.</small></label>${p.status==="entregue"?`<label class="f full">Data real da entrega<input id="pj_real" type="date" data-pk="dataEntregaReal" value="${v("dataEntregaReal")}" max="${workspaceToday()}"></label>`:""}<div id="deliverySummary" class="full">${deliveryPanel(p)}</div><div class="full"><h3 style="margin-bottom:8px">Divisão do tempo</h3><div id="scheduleSummary">${scheduleSummary(p,z)}</div></div>
+    <label class="f full">Proposta vinculada<select id="pj_proposal" data-pk="propostaId">${opts(S.propostas,p.propostaId,x=>x.titulo||"Sem título","Nenhuma proposta vinculada")}</select></label><label class="f">Prazo combinado (opcional)<input id="pj_term" data-pk="prazoContratado" value="${v("prazoContratado")}" placeholder="${esc(deliveryTerms(p).text||"Ex.: 15 dias úteis")}"><small>Vazio = utilizar o prazo da proposta ou do orçamento vinculado. Na ausência de prazo específico, utiliza a validade em dias úteis. Digite apenas o número (ex.: 15).</small></label><label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
+    <label class="f">Ajuste manual do prazo (opcional)<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"><small>Vazio = calcular automaticamente em dias úteis (segunda a sexta, sem feriados).</small></label>${p.status==="entregue"?`<label class="f full">Data real da entrega<input id="pj_real" type="date" data-pk="dataEntregaReal" value="${v("dataEntregaReal")}" max="${workspaceToday()}"></label>`:""}<div id="deliverySummary" class="full">${deliveryPanel(p)}</div><div class="full"><h3 style="margin-bottom:8px">Divisão do tempo</h3><div id="scheduleSummary">${scheduleSummary(p,z)}</div></div>
   </div>
   <div class="sect form"><h3 class="full">Dados do projeto</h3>
     <label class="f full">O que está sendo desenvolvido<textarea id="pj_desc" data-pk="descricao" placeholder="Objetivo, funcionalidades, público">${v("descricao")}</textarea></label>
@@ -953,7 +960,7 @@ function renderOrcForm(id){
     <label class="f">Proposta vinculada<select id="o_prop" data-k="propostaId">${opts(S.propostas,o.propostaId,x=>x.titulo||"Sem título","Nenhuma")}</select></label>
     <label class="f full">Título<input id="o_tit" data-k="titulo" value="${esc(o.titulo)}" placeholder="Desenvolvimento de sistema de agendamento"></label>
     <label class="f">Data de emissão<input id="o_dt" type="date" data-k="data" value="${esc(o.data)}"></label>
-    <label class="f">Validade (dias)<input id="o_val" type="number" min="1" data-k="validadeDias" value="${esc(o.validadeDias)}"><small>Também é o prazo padrão do projeto, em dias corridos, se não houver prazo de entrega específico. Pode ser ajustado no projeto.</small></label>
+    <label class="f">Validade (dias)<input id="o_val" type="number" min="1" data-k="validadeDias" value="${esc(o.validadeDias)}"><small>Também é o prazo padrão do projeto, em dias úteis, se não houver prazo de entrega específico. Pode ser ajustado no projeto.</small></label>
     <label class="f full">Escopo do serviço<textarea id="o_esc" data-k="escopo">${esc(o.escopo)}</textarea></label>
   </div>
   <div class="sect"><h3>Itens <button class="btn sm" data-act="addItem">+ Item</button></h3>
