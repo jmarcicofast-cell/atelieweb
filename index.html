@@ -228,7 +228,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 @media (max-width:560px){.docpaper{padding:20px 16px}}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media print{body>*{display:none!important}}
-</style>
+.devtoolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.devtoolbar small{flex-basis:100%;color:var(--muted)}.devdetails{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:8px 12px;background:var(--surface)}.devdetails summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600}.devfields{display:grid;gap:10px;margin-top:12px}.devfields textarea{min-height:80px}.devsub{margin-left:18px;border-left:2px solid var(--line);padding-left:10px}.devfile{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.devfile span{flex:1;overflow-wrap:anywhere}.ebox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--sunk)}@media(max-width:600px){.devsub{margin-left:4px;padding-left:6px}.ebox{padding:8px}}</style>
 </head>
 <body>
 
@@ -562,7 +562,7 @@ async function abrirDev(propId){
 async function novoProjeto(){const id=await save("projetos",null,{titulo:"",clienteId:"",status:"iniciar",dataInicio:hoje(),etapas:[],acessos:[],links:[],criadoEm:new Date().toISOString()});mProjeto(id)}
 function salvarPD(){clearTimeout(pdTimer);pdTimer=setTimeout(async()=>{if(!pd)return;const {id,...r}=pd;try{await idbPut("projetos",{...r,id,atualizadoEm:new Date().toISOString()});const i=S.projetos.findIndex(x=>x.id===id);if(i>=0)S.projetos[i]={...pd};const el=$("#pdSaved");if(el)el.textContent="Salvo "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}catch(e){toast("Não foi possível salvar.")}},600)}
 function mProjeto(id,tab){
-  const p=byId(S.projetos,id);if(!p)return closeModal();pd=JSON.parse(JSON.stringify(p));projTab=tab||"dados";renderProjeto();
+  const p=byId(S.projetos,id);if(!p)return closeModal();pd=JSON.parse(JSON.stringify(p));projTab=tab||"dados";if(devGenerate(pd))salvarPD();renderProjeto();
 }
 function todosAnexos(p){
   const prop=p.propostaId?byId(S.propostas,p.propostaId):null;
@@ -600,6 +600,41 @@ async function uploadProj(files){
     catch(e){toast(`Falha ao guardar ${f.name}. O navegador pode estar sem espaço.`)}}
   if(n){await persistPD();toast(`${n} arquivo(s) anexado(s)`)}renderAnexosProj();
 }
+
+const devNorm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+const devGroups=[["Identidade visual",/logo|paleta|tipografia|cores|identidade visual/],["Infraestrutura",/dominio|hospedagem|implantacao|banco de dados/],["Site e interface",/site|interface|responsiv|layout/],["Acessos e segurança",/login|permiss|perfil de acesso|autentica|seguranca/],["Agenda e atendimento",/agend|encaixe|horario/],["Financeiro",/financeir|comiss|pagamento|sinal|despesa|receita|repasse/],["Relacionamento",/fidelidade|promoc|beneficio|lembrete|pos atendimento/],["Planos e assinaturas",/assinatura|planos|premium|free|plus/],["Gestão e indicadores",/profissiona|indicador|painel|gestao|servicos/],["Entrega e suporte",/treinamento|suporte|garantia/]];
+function devGenerate(p,force=false){
+ if(!force&&p.devAuto===false)return 0;
+ p.etapas=p.etapas||[];p.devSeen=p.devSeen||[];
+ let n=0;
+ for(const line of [p.descricao,p.briefing].filter(Boolean).flatMap(t=>t.split(/\n+/)).map(t=>t.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,"").trim()).filter(t=>t.length>=12)){
+ const key=devNorm(line);if(!key||p.devSeen.includes(key))continue;
+ if(p.etapas.some(e=>devNorm(e.texto)===key||(e.subs||[]).some(x=>devNorm(x.texto)===key))){p.devSeen.push(key);continue}
+ const title=devGroups.find(g=>g[1].test(key))?.[0]||"Requisitos gerais";
+ let e=p.etapas.find(x=>x.devGroup===title||devNorm(x.texto)===devNorm(title));
+ if(!e){e={texto:title,feito:false,subs:[],devGroup:title};p.etapas.push(e)}
+ e.subs=e.subs||[];e.subs.push({texto:line,feito:false});syncEtapa(e);p.devSeen.push(key);n++;
+ }return n;
+}
+function devCard(e,i,k){
+ const path=i+":"+k,files=e.devFiles||[];
+ const f=(key,label,kind)=>'<label class="f">'+label+(kind==="area"?'<textarea data-dev-field="'+key+'" data-dev-path="'+path+'">'+esc(e[key])+'</textarea>':'<input type="'+(kind||"text")+'" data-dev-field="'+key+'" data-dev-path="'+path+'" value="'+esc(e[key])+'">')+'</label>';
+ return '<details class="devdetails"><summary>Detalhes do card · '+files.length+' anexo(s)'+(e.devNote?' · anotações':'')+'</summary><div class="devfields">'+f("devNote","Anotações e alterações","area")+f("devImportant","Informações importantes / decisões","area")+f("devLink","Link ou referência")+f("devOwner","Responsável")+(k>=0?f("prazo","Prazo","date"):"")+'<label class="f">Prioridade<select data-dev-field="devPriority" data-dev-path="'+path+'">'+["Normal","Alta","Urgente","Baixa"].map(v=>'<option '+((e.devPriority||"Normal")===v?"selected":"")+'>'+v+'</option>').join("")+'</select></label>'+f("devCredentialRef","Referência no gerenciador de senhas")+'<small>Não cole senhas ou tokens aqui: os dados podem ser sincronizados.</small><label class="f">Anexos<input type="file" multiple data-dev-upload="'+path+'"></label>'+files.map((a,j)=>'<div class="devfile"><span>'+esc(a.nome)+'</span><button type="button" class="btn sm" data-act="baixarArq" data-file="'+esc(a.id)+'">Baixar</button><button type="button" class="btn sm ghost" data-dev-remove="'+path+'" data-dev-index="'+j+'">Remover</button></div>').join("")+'</div></details>';
+}
+function devTarget(path){const [i,k]=path.split(":").map(Number);const e=pd?.etapas?.[i];return k<0?e:e?.subs?.[k]}
+function devRefresh(){const sc=$(".ov")?.scrollTop||0;renderProjeto();$(".ov").scrollTop=sc}
+document.addEventListener("input",ev=>{const t=ev.target;if(!pd||!t.dataset.devField)return;const row=devTarget(t.dataset.devPath);if(row){row[t.dataset.devField]=t.value;salvarPD()}});
+document.addEventListener("change",async ev=>{const t=ev.target;if(!pd)return;
+ if(t.id==="pj_brief"||t.id==="pj_desc"){pd[t.dataset.pk]=t.value;const n=devGenerate(pd);if(n){salvarPD();toast(n+" requisito(s) convertido(s) em tarefas");const focus=ev.relatedTarget;setTimeout(()=>{if(pd&&document.activeElement?.closest(".devtoolbar")===null&&document.activeElement?.tagName!=="BUTTON")devRefresh()},0)}return}
+ if(t.dataset.devField){const row=devTarget(t.dataset.devPath);if(row){row[t.dataset.devField]=t.value;salvarPD()}return}
+ if(t.dataset.devUpload){const project=pd,row=devTarget(t.dataset.devUpload);if(!row)return;row.devFiles=row.devFiles||[];let n=0;for(const f of [...t.files]){try{const id=uid();await idbPut("arquivos",{id,nome:f.name,tipo:f.type||"",blob:f});row.devFiles.push({id,nome:f.name,tam:f.size,tipo:f.type||""});n++}catch(err){toast("Falha ao anexar "+f.name)}}if(pd===project){await persistPD();devRefresh();toast(n+" anexo(s) guardado(s)")}}
+});
+document.addEventListener("click",async ev=>{const b=ev.target.closest("button[data-dev-action],button[data-dev-remove]");if(!b||!pd)return;
+ if(b.dataset.devAction==="generate"){const n=devGenerate(pd,true);salvarPD();devRefresh();toast(n?n+" tarefa(s) adicionada(s)":"Nenhum requisito novo")}
+ if(b.dataset.devAction==="toggle"){pd.devAuto=pd.devAuto===false;salvarPD();devRefresh()}
+ if(b.dataset.devRemove){const row=devTarget(b.dataset.devRemove);if(!row||!confirm("Remover este anexo do card?"))return;const f=row.devFiles.splice(+b.dataset.devIndex,1)[0];await persistPD();if(f)try{await idbDel("arquivos",f.id)}catch(err){}devRefresh()}
+});
+
 function renderProjeto(){
   if(projTab==="anexos")return renderAnexosProj();
   const p=pd;const pr=progresso(p);
@@ -619,15 +654,15 @@ function renderProjeto(){
   <div class="sect"><h3>Informações que o cliente passou</h3>
     <textarea id="pj_brief" data-pk="briefing" style="min-height:120px" placeholder="Textos, cores, logo, referências, regras do negócio, contatos…">${v("briefing")}</textarea>
   </div>
-  <div class="sect"><h3>Etapas <span style="font:400 13px var(--f-body);color:var(--muted)">${pr}% concluído</span></h3>
-    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div>
+  <div class="sect"><h3>Etapas e tarefas <span style="font:400 13px var(--f-body);color:var(--muted)">${pr}% concluído</span></h3>
+    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div><div class="devtoolbar"><button type="button" class="btn primary sm" data-dev-action="generate">Gerar tarefas dos requisitos</button><button type="button" class="btn sm" data-dev-action="toggle">Automático: ${p.devAuto===false?"desligado":"ligado"}</button><small>Novos requisitos viram subtarefas editáveis ao sair do campo. Não apaga tarefas existentes.</small></div>
     <div class="rows" style="gap:14px">${(p.etapas||[]).map((e,i)=>`<div class="ebox"><div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
       <input type="text" id="et_t${i}" data-list="etapas" data-i="${i}" data-f="texto" value="${esc(e.texto)}" placeholder="Descreva a etapa" style="font-weight:600">
       <input type="date" id="et_p${i}" data-list="etapas" data-i="${i}" data-f="prazo" value="${esc(e.prazo)}" aria-label="Prazo">
-      <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover etapa">✕</button></div>
-      ${(e.subs||[]).map((x,k)=>`<div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
+      <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover etapa">✕</button></div>${devCard(e,i,-1)}
+      ${(e.subs||[]).map((x,k)=>`<div class="devsub"><div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
         <input type="text" id="sb_t${i}_${k}" data-sub="${i}" data-i="${k}" data-f="texto" value="${esc(x.texto)}" placeholder="Sub-etapa (ex.: página Sobre nós)">
-        <button class="btn sm ghost" data-act="rmSub" data-e="${i}" data-i="${k}" aria-label="Remover sub-etapa">✕</button></div>`).join("")}
+        <button class="btn sm ghost" data-act="rmSub" data-e="${i}" data-i="${k}" aria-label="Remover sub-etapa">✕</button></div>${devCard(x,i,k)}</div>`).join("")}
       <button class="btn ghost addsub" data-act="addSub" data-e="${i}">+ Sub-etapa</button></div>`).join("")}</div>
     <button class="btn sm" data-act="addRow" data-list="etapas" style="margin-top:8px">+ Etapa</button>
   </div>
