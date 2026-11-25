@@ -228,7 +228,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 @media (max-width:560px){.docpaper{padding:20px 16px}}
 *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media print{body>*{display:none!important}}
-.devtoolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.devtoolbar small{flex-basis:100%;color:var(--muted)}.devdetails{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:8px 12px;background:var(--surface)}.devdetails summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600}.devfields{display:grid;gap:10px;margin-top:12px}.devfields textarea{min-height:80px}.devsub{margin-left:18px;border-left:2px solid var(--line);padding-left:10px}.devfile{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.devfile span{flex:1;overflow-wrap:anywhere}.ebox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--sunk)}@media(max-width:600px){.devsub{margin-left:4px;padding-left:6px}.ebox{padding:8px}}</style>
+.devtoolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.devtoolbar small{flex-basis:100%;color:var(--muted)}.devdetails{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:8px 12px;background:var(--surface)}.devdetails summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600}.devfields{display:grid;gap:10px;margin-top:12px}.devfields textarea{min-height:80px}.devsub{margin-left:18px;border-left:2px solid var(--line);padding-left:10px}.devfile{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.devfile span{flex:1;overflow-wrap:anywhere}.ebox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--sunk)}@media(max-width:600px){.devsub{margin-left:4px;padding-left:6px}.ebox{padding:8px}}.devorder{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:3px solid transparent;border-bottom:3px solid transparent;padding:3px 0;margin:2px 0;flex-wrap:wrap}.devgrip{cursor:grab;user-select:none;touch-action:pan-y;color:var(--muted);font-size:12px;font-weight:600;padding:4px 8px;border:1px dashed var(--line);border-radius:6px}.devgrip:active{cursor:grabbing}.devorderbuttons{display:flex;gap:4px;align-items:center}.devdropbefore{border-top-color:var(--accent)}.devdropafter{border-bottom-color:var(--accent)}.devhidden .devfile{padding:8px 0;border-bottom:1px solid var(--line)}.devhidden .devfile:last-child{border-bottom:0}</style>
 </head>
 <body>
 
@@ -622,6 +622,61 @@ function devCard(e,i,k){
  return '<details class="devdetails"><summary>Detalhes do card · '+files.length+' anexo(s)'+(e.devNote?' · anotações':'')+'</summary><div class="devfields">'+f("devNote","Anotações e alterações","area")+f("devImportant","Informações importantes / decisões","area")+f("devLink","Link ou referência")+f("devOwner","Responsável")+(k>=0?f("prazo","Prazo","date"):"")+'<label class="f">Prioridade<select data-dev-field="devPriority" data-dev-path="'+path+'">'+["Normal","Alta","Urgente","Baixa"].map(v=>'<option '+((e.devPriority||"Normal")===v?"selected":"")+'>'+v+'</option>').join("")+'</select></label>'+f("devCredentialRef","Referência no gerenciador de senhas")+'<small>Não cole senhas ou tokens aqui: os dados podem ser sincronizados.</small><label class="f">Anexos<input type="file" multiple data-dev-upload="'+path+'"></label>'+files.map((a,j)=>'<div class="devfile"><span>'+esc(a.nome)+'</span><button type="button" class="btn sm" data-act="baixarArq" data-file="'+esc(a.id)+'">Baixar</button><button type="button" class="btn sm ghost" data-dev-remove="'+path+'" data-dev-index="'+j+'">Remover</button></div>').join("")+'</div></details>';
 }
 function devTarget(path){const [i,k]=path.split(":").map(Number);const e=pd?.etapas?.[i];return k<0?e:e?.subs?.[k]}
+
+function devHidden(p){
+ const list=[];(p.etapas||[]).forEach((e,i)=>{
+ if(e.devHidden)list.push({path:i+":-1",label:e.texto||"Etapa sem nome"});
+ (e.subs||[]).forEach((x,k)=>{if(x.devHidden)list.push({path:i+":"+k,label:(e.texto||"Etapa")+" / "+(x.texto||"Subtarefa sem nome")})});
+ });return list;
+}
+function devOrderBar(i,k){
+ const path=i+":"+k;
+ return '<div class="devorder" data-dev-drop="'+path+'"><span class="devgrip" draggable="true" data-dev-drag="'+path+'" title="Arraste para reorganizar" aria-label="Arraste para reorganizar">⠿ Arrastar</span><span class="devorderbuttons"><button type="button" class="btn sm ghost" data-dev-action="up" data-dev-path="'+path+'" aria-label="Mover para cima" title="Mover para cima">↑</button><button type="button" class="btn sm ghost" data-dev-action="down" data-dev-path="'+path+'" aria-label="Mover para baixo" title="Mover para baixo">↓</button><button type="button" class="btn sm ghost" data-dev-action="hideOne" data-dev-path="'+path+'">Ocultar</button></span></div>';
+}
+function devMove(from,to,after=false){
+ if(!pd||from===to)return false;
+ const [fi,fk]=from.split(":").map(Number),[ti,tk]=to.split(":").map(Number);
+ const stages=pd.etapas||[],source=stages[fi],target=stages[ti];
+ if(!source||!target)return false;
+ if(fk<0){
+ if(tk>=0)return false;
+ const item=stages.splice(fi,1)[0];const at=stages.indexOf(target);stages.splice(at+(after?1:0),0,item);
+ }else{
+ const item=source.subs?.[fk];if(!item)return false;
+ const dest=tk>=0?target.subs?.[tk]:null;if(tk>=0&&!dest)return false;
+ if(source===target&&tk<0)return false;
+ source.subs.splice(fk,1);target.subs=target.subs||[];
+ const at=tk<0?target.subs.length:target.subs.indexOf(dest)+(after?1:0);target.subs.splice(at,0,item);
+ syncEtapa(source);syncEtapa(target);
+ }return true;
+}
+function devMoveStep(path,dir){
+ const [i,k]=path.split(":").map(Number),a=k<0?pd.etapas:pd.etapas[i]?.subs,at=k<0?i:k;if(!a)return false;
+ let next=at+dir;while(next>=0&&next<a.length&&a[next].devHidden)next+=dir;
+ if(next<0||next>=a.length)return false;
+ return devMove(path,k<0?next+":-1":i+":"+next,dir>0);
+}
+let devDragging=null;
+function devClearDrop(){document.querySelectorAll(".devdropbefore,.devdropafter").forEach(n=>n.classList.remove("devdropbefore","devdropafter"))}
+function devDropTarget(ev){
+ const el=ev.target.closest("[data-dev-drop]");if(!el||!devDragging||devDragging.project!==pd?.id)return null;
+ const from=devDragging.path,to=el.dataset.devDrop;if(from===to)return null;
+ const [fi,fk]=from.split(":").map(Number),[ti,tk]=to.split(":").map(Number);
+ if(fk<0&&tk>=0||fk>=0&&tk<0&&fi===ti)return null;
+ return {el,from,to,after:ev.clientY>el.getBoundingClientRect().top+el.getBoundingClientRect().height/2};
+}
+document.addEventListener("dragstart",ev=>{
+ const h=ev.target.closest("[data-dev-drag]");if(!h||!pd)return;
+ devDragging={project:pd.id,path:h.dataset.devDrag};ev.dataTransfer.effectAllowed="move";ev.dataTransfer.setData("text/plain",h.dataset.devDrag);
+});
+document.addEventListener("dragover",ev=>{
+ const hit=devDropTarget(ev);devClearDrop();if(!hit)return;ev.preventDefault();ev.dataTransfer.dropEffect="move";hit.el.classList.add(hit.after?"devdropafter":"devdropbefore");
+});
+document.addEventListener("drop",ev=>{
+ const hit=devDropTarget(ev);if(!hit)return;ev.preventDefault();devClearDrop();devDragging=null;if(devMove(hit.from,hit.to,hit.after)){salvarPD();devRefresh();toast("Ordem atualizada")}
+});
+document.addEventListener("dragend",()=>{devDragging=null;devClearDrop()});
+
 function devRefresh(){const sc=$(".ov")?.scrollTop||0;renderProjeto();$(".ov").scrollTop=sc}
 document.addEventListener("input",ev=>{const t=ev.target;if(!pd||!t.dataset.devField)return;const row=devTarget(t.dataset.devPath);if(row){row[t.dataset.devField]=t.value;salvarPD()}});
 document.addEventListener("change",async ev=>{const t=ev.target;if(!pd)return;
@@ -630,8 +685,8 @@ document.addEventListener("change",async ev=>{const t=ev.target;if(!pd)return;
  if(t.dataset.devUpload){const project=pd,row=devTarget(t.dataset.devUpload);if(!row)return;row.devFiles=row.devFiles||[];let n=0;for(const f of [...t.files]){try{const id=uid();await idbPut("arquivos",{id,nome:f.name,tipo:f.type||"",blob:f});row.devFiles.push({id,nome:f.name,tam:f.size,tipo:f.type||""});n++}catch(err){toast("Falha ao anexar "+f.name)}}if(pd===project){await persistPD();devRefresh();toast(n+" anexo(s) guardado(s)")}}
 });
 document.addEventListener("click",async ev=>{const b=ev.target.closest("button[data-dev-action],button[data-dev-remove]");if(!b||!pd)return;
- if(b.dataset.devAction==="hideAll"){pd.devHideAll=!pd.devHideAll;salvarPD();devRefresh();return}
- if(b.dataset.devAction==="hideDone"){pd.devHideDone=!pd.devHideDone;salvarPD();devRefresh();return}
+ if(b.dataset.devAction==="hideOne"||b.dataset.devAction==="restoreOne"){const row=devTarget(b.dataset.devPath);if(row){row.devHidden=b.dataset.devAction==="hideOne";salvarPD();devRefresh()}return}
+ if(b.dataset.devAction==="up"||b.dataset.devAction==="down"){if(devMoveStep(b.dataset.devPath,b.dataset.devAction==="up"?-1:1)){salvarPD();devRefresh()}return}
  if(b.dataset.devAction==="collapse"){const row=devTarget(b.dataset.devPath);if(row){row.devCollapsed=!row.devCollapsed;salvarPD();devRefresh()}return}
  if(b.dataset.devAction==="generate"){const n=devGenerate(pd,true);salvarPD();devRefresh();toast(n?n+" tarefa(s) adicionada(s)":"Nenhum requisito novo")}
  if(b.dataset.devAction==="toggle"){pd.devAuto=pd.devAuto===false;salvarPD();devRefresh()}
@@ -658,12 +713,12 @@ function renderProjeto(){
     <textarea id="pj_brief" data-pk="briefing" style="min-height:120px" placeholder="Textos, cores, logo, referências, regras do negócio, contatos…">${v("briefing")}</textarea>
   </div>
   <div class="sect"><h3>Etapas e tarefas <span style="font:400 13px var(--f-body);color:var(--muted)">${pr}% concluído</span></h3>
-    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div><div class="devtoolbar"><button type="button" class="btn primary sm" data-dev-action="generate">Gerar tarefas dos requisitos</button><button type="button" class="btn sm" data-dev-action="toggle">Automático: ${p.devAuto===false?"desligado":"ligado"}</button><button type="button" class="btn sm" data-dev-action="hideAll" aria-expanded="${!p.devHideAll}">${p.devHideAll?"Mostrar tarefas":"Esconder tarefas"}</button><button type="button" class="btn sm" data-dev-action="hideDone" aria-pressed="${!!p.devHideDone}">${p.devHideDone?"Mostrar concluídas":"Esconder concluídas"}</button><small>Novos requisitos viram subtarefas editáveis ao sair do campo. Não apaga tarefas existentes.</small></div>
-    <div class="rows" style="gap:14px;${p.devHideAll?"display:none":""}">${(p.etapas||[]).map((e,i)=>p.devHideDone&&e.feito?"":`<div class="ebox"><div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
+    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div><div class="devtoolbar"><button type="button" class="btn primary sm" data-dev-action="generate">Gerar tarefas dos requisitos</button><button type="button" class="btn sm" data-dev-action="toggle">Automático: ${p.devAuto===false?"desligado":"ligado"}</button><small>Novos requisitos viram subtarefas editáveis ao sair do campo. Não apaga tarefas existentes.</small></div>
+    <details class="devdetails devhidden"><summary>Tarefas ocultas (${devHidden(p).length})</summary>${devHidden(p).length?devHidden(p).map(h=>`<div class="devfile"><span>${esc(h.label)}</span><button type="button" class="btn sm" data-dev-action="restoreOne" data-dev-path="${h.path}">Mostrar</button></div>`).join(""):"<p>Nenhuma tarefa oculta.</p>"}</details><small style="color:var(--muted)">Arraste pelo marcador ⠿ para reorganizar. Use ↑ e ↓ se preferir.</small><div class="rows" style="gap:14px;margin-top:10px">${(p.etapas||[]).map((e,i)=>e.devHidden?"":`<div class="ebox">${devOrderBar(i,-1)}<div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
       <input type="text" id="et_t${i}" data-list="etapas" data-i="${i}" data-f="texto" value="${esc(e.texto)}" placeholder="Descreva a etapa" style="font-weight:600">
       <input type="date" id="et_p${i}" data-list="etapas" data-i="${i}" data-f="prazo" value="${esc(e.prazo)}" aria-label="Prazo">
       <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover etapa">✕</button></div><button type="button" class="btn sm ghost" data-dev-action="collapse" data-dev-path="${i}:-1" aria-expanded="${!e.devCollapsed}">${e.devCollapsed?"Expandir etapa":"Recolher etapa"} · ${(e.subs||[]).length} subtarefa(s)</button>${e.devCollapsed?"":devCard(e,i,-1)}
-      ${e.devCollapsed?"":(e.subs||[]).map((x,k)=>p.devHideDone&&x.feito?"":`<div class="devsub"><div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
+      ${e.devCollapsed?"":(e.subs||[]).map((x,k)=>x.devHidden?"":`<div class="devsub">${devOrderBar(i,k)}<div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
         <input type="text" id="sb_t${i}_${k}" data-sub="${i}" data-i="${k}" data-f="texto" value="${esc(x.texto)}" placeholder="Sub-etapa (ex.: página Sobre nós)">
         <button class="btn sm ghost" data-act="rmSub" data-e="${i}" data-i="${k}" aria-label="Remover sub-etapa">✕</button></div>${devCard(x,i,k)}</div>`).join("")}
       ${e.devCollapsed?"":`<button class="btn ghost addsub" data-act="addSub" data-e="${i}">+ Sub-etapa</button>`}</div>`).join("")}</div>
