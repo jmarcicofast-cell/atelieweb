@@ -855,8 +855,8 @@ async function devThumbLoad(img){
 function devThumbWire(){
  const imgs=document.querySelectorAll("#modalRoot img[data-dev-thumb]");
  if("IntersectionObserver" in window){
- devThumbObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){devThumbObserver?.unobserve(entry.target);devThumbLoad(entry.target)}})},{root:$("#modalRoot .ov"),rootMargin:"100px"});
- imgs.forEach(img=>devThumbObserver.observe(img));
+ devThumbObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){devThumbObserver?.unobserve(entry.target);const img=entry.target.querySelector("img[data-dev-thumb]");if(img)devThumbLoad(img)}})},{root:$("#modalRoot .ov"),rootMargin:"100px"});
+ imgs.forEach(img=>devThumbObserver.observe(img.parentElement));
  }else imgs.forEach(img=>{if(img.closest("details")?.open)devThumbLoad(img)});
 }
 document.addEventListener("toggle",e=>{if(e.target.matches?.(".devdetails")&&e.target.open&&!devThumbObserver)e.target.querySelectorAll("img[data-dev-thumb]").forEach(devThumbLoad)},true);
