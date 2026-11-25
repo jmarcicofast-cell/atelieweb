@@ -630,6 +630,9 @@ document.addEventListener("change",async ev=>{const t=ev.target;if(!pd)return;
  if(t.dataset.devUpload){const project=pd,row=devTarget(t.dataset.devUpload);if(!row)return;row.devFiles=row.devFiles||[];let n=0;for(const f of [...t.files]){try{const id=uid();await idbPut("arquivos",{id,nome:f.name,tipo:f.type||"",blob:f});row.devFiles.push({id,nome:f.name,tam:f.size,tipo:f.type||""});n++}catch(err){toast("Falha ao anexar "+f.name)}}if(pd===project){await persistPD();devRefresh();toast(n+" anexo(s) guardado(s)")}}
 });
 document.addEventListener("click",async ev=>{const b=ev.target.closest("button[data-dev-action],button[data-dev-remove]");if(!b||!pd)return;
+ if(b.dataset.devAction==="hideAll"){pd.devHideAll=!pd.devHideAll;salvarPD();devRefresh();return}
+ if(b.dataset.devAction==="hideDone"){pd.devHideDone=!pd.devHideDone;salvarPD();devRefresh();return}
+ if(b.dataset.devAction==="collapse"){const row=devTarget(b.dataset.devPath);if(row){row.devCollapsed=!row.devCollapsed;salvarPD();devRefresh()}return}
  if(b.dataset.devAction==="generate"){const n=devGenerate(pd,true);salvarPD();devRefresh();toast(n?n+" tarefa(s) adicionada(s)":"Nenhum requisito novo")}
  if(b.dataset.devAction==="toggle"){pd.devAuto=pd.devAuto===false;salvarPD();devRefresh()}
  if(b.dataset.devRemove){const row=devTarget(b.dataset.devRemove);if(!row||!confirm("Remover este anexo do card?"))return;const f=row.devFiles.splice(+b.dataset.devIndex,1)[0];await persistPD();if(f)try{await idbDel("arquivos",f.id)}catch(err){}devRefresh()}
@@ -655,15 +658,15 @@ function renderProjeto(){
     <textarea id="pj_brief" data-pk="briefing" style="min-height:120px" placeholder="Textos, cores, logo, referências, regras do negócio, contatos…">${v("briefing")}</textarea>
   </div>
   <div class="sect"><h3>Etapas e tarefas <span style="font:400 13px var(--f-body);color:var(--muted)">${pr}% concluído</span></h3>
-    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div><div class="devtoolbar"><button type="button" class="btn primary sm" data-dev-action="generate">Gerar tarefas dos requisitos</button><button type="button" class="btn sm" data-dev-action="toggle">Automático: ${p.devAuto===false?"desligado":"ligado"}</button><small>Novos requisitos viram subtarefas editáveis ao sair do campo. Não apaga tarefas existentes.</small></div>
-    <div class="rows" style="gap:14px">${(p.etapas||[]).map((e,i)=>`<div class="ebox"><div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
+    <div class="prog" style="margin-bottom:10px"><span style="width:${pr}%"></span></div><div class="devtoolbar"><button type="button" class="btn primary sm" data-dev-action="generate">Gerar tarefas dos requisitos</button><button type="button" class="btn sm" data-dev-action="toggle">Automático: ${p.devAuto===false?"desligado":"ligado"}</button><button type="button" class="btn sm" data-dev-action="hideAll" aria-expanded="${!p.devHideAll}">${p.devHideAll?"Mostrar tarefas":"Esconder tarefas"}</button><button type="button" class="btn sm" data-dev-action="hideDone" aria-pressed="${!!p.devHideDone}">${p.devHideDone?"Mostrar concluídas":"Esconder concluídas"}</button><small>Novos requisitos viram subtarefas editáveis ao sair do campo. Não apaga tarefas existentes.</small></div>
+    <div class="rows" style="gap:14px;${p.devHideAll?"display:none":""}">${(p.etapas||[]).map((e,i)=>p.devHideDone&&e.feito?"":`<div class="ebox"><div class="erow ${e.feito?"feito":""}"><input type="checkbox" id="et_c${i}" data-list="etapas" data-i="${i}" data-f="feito" ${e.feito?"checked":""} aria-label="Concluída">
       <input type="text" id="et_t${i}" data-list="etapas" data-i="${i}" data-f="texto" value="${esc(e.texto)}" placeholder="Descreva a etapa" style="font-weight:600">
       <input type="date" id="et_p${i}" data-list="etapas" data-i="${i}" data-f="prazo" value="${esc(e.prazo)}" aria-label="Prazo">
-      <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover etapa">✕</button></div>${devCard(e,i,-1)}
-      ${(e.subs||[]).map((x,k)=>`<div class="devsub"><div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
+      <button class="btn sm ghost" data-act="rmRow" data-list="etapas" data-i="${i}" aria-label="Remover etapa">✕</button></div><button type="button" class="btn sm ghost" data-dev-action="collapse" data-dev-path="${i}:-1" aria-expanded="${!e.devCollapsed}">${e.devCollapsed?"Expandir etapa":"Recolher etapa"} · ${(e.subs||[]).length} subtarefa(s)</button>${e.devCollapsed?"":devCard(e,i,-1)}
+      ${e.devCollapsed?"":(e.subs||[]).map((x,k)=>p.devHideDone&&x.feito?"":`<div class="devsub"><div class="srow ${x.feito?"feito":""}"><input type="checkbox" id="sb_c${i}_${k}" data-sub="${i}" data-i="${k}" data-f="feito" ${x.feito?"checked":""} aria-label="Sub-etapa concluída">
         <input type="text" id="sb_t${i}_${k}" data-sub="${i}" data-i="${k}" data-f="texto" value="${esc(x.texto)}" placeholder="Sub-etapa (ex.: página Sobre nós)">
         <button class="btn sm ghost" data-act="rmSub" data-e="${i}" data-i="${k}" aria-label="Remover sub-etapa">✕</button></div>${devCard(x,i,k)}</div>`).join("")}
-      <button class="btn ghost addsub" data-act="addSub" data-e="${i}">+ Sub-etapa</button></div>`).join("")}</div>
+      ${e.devCollapsed?"":`<button class="btn ghost addsub" data-act="addSub" data-e="${i}">+ Sub-etapa</button>`}</div>`).join("")}</div>
     <button class="btn sm" data-act="addRow" data-list="etapas" style="margin-top:8px">+ Etapa</button>
   </div>
   <div class="sect"><h3>Logins e senhas</h3>
