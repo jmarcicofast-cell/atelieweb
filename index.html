@@ -369,9 +369,22 @@ function deliveryParse(text,start){
  const d=new Date(base+"T12:00:00Z");if(/uteis|util/.test(unit)){while(n>0){d.setUTCDate(d.getUTCDate()+1);if(d.getUTCDay()!==0&&d.getUTCDay()!==6)n--}}else d.setUTCDate(d.getUTCDate()+n);
  return d.toISOString().slice(0,10);
 }
+function deliveryBudget(p){
+ if(!p.propostaId)return null;
+ const list=S.orcamentos.filter(o=>o.propostaId===p.propostaId);
+ return list.slice().sort((a,b)=>(b.status==="aprovado")-(a.status==="aprovado")||String(b.data||"").localeCompare(String(a.data||""))||String(b.numero||"").localeCompare(String(a.numero||""),undefined,{numeric:true}))[0]||null;
+}
 function deliveryTerms(p){
- const proposal=p.propostaId?byId(S.propostas,p.propostaId):null;
- return {text:p.prazoContratado||proposal?.prazo||"",fixed:p.dataContratada||proposal?.dataEntregaCombinada||""};
+ const proposal=p.propostaId?byId(S.propostas,p.propostaId):null,budget=deliveryBudget(p);
+ const useful=t=>{const v=String(t||"").trim();return /^(?:a combinar|a definir|indefinido|[-—])$/i.test(v)?"":v};
+ const fixed=deliveryISO(p.dataContratada)||deliveryISO(proposal?.dataEntregaCombinada);
+ const manual=useful(p.prazoContratado),prop=useful(proposal?.prazo),quote=useful(budget?.prazo);
+ const days=Number(budget?.validadeDias);
+ if(manual)return {text:manual,fixed,source:"Prazo informado no projeto"};
+ if(prop)return {text:prop,fixed,source:"Prazo da proposta"};
+ if(quote)return {text:quote,fixed,source:"Prazo do orçamento "+(budget.numero||"")};
+ if(Number.isInteger(days)&&days>0&&days<=3660)return {text:days+" dias corridos",fixed,source:"Validade do orçamento "+(budget.numero||""),validity:true};
+ return {text:"",fixed,source:""};
 }
 function deliveryDue(p){const t=deliveryTerms(p);return deliveryISO(p.prazoEntrega)||deliveryISO(t.fixed)||deliveryParse(t.text,p.dataInicio)}
 function deliveryDays(a,b){return Math.round((Date.parse(b+"T12:00:00Z")-Date.parse(a+"T12:00:00Z"))/86400000)}
@@ -433,7 +446,7 @@ function scheduleUpdate(){
 function deliveryBadge(p){const d=deliveryInfo(p);return '<span class="deliveryBadge '+d.tone+'">'+esc(d.label)+'</span>'}
 function deliveryPanel(p){
  const d=deliveryInfo(p),t=deliveryTerms(p);
- return '<div class="deliveryPanel"><div><small>PRAZO DA ENTREGA</small><strong>'+esc(d.detail)+'</strong><span>'+ (d.due?'Data combinada: '+dtBR(d.due):"Data ainda não definida")+(t.text?' · Proposta: '+esc(t.text):"")+'</span></div>'+deliveryBadge(p)+'</div>';
+ return '<div class="deliveryPanel"><div><small>PRAZO DA ENTREGA</small><strong>'+esc(d.detail)+'</strong><span>'+ (d.due?'Data combinada: '+dtBR(d.due):"Data ainda não definida")+(t.text?' · '+esc(t.source||"Prazo")+': '+esc(t.text):"")+'</span></div>'+deliveryBadge(p)+'</div>';
 }
 function deliverySetStatus(p,next){if(p.status!==next){if(next==="entregue")p.dataEntregaReal=workspaceToday();else if(p.status==="entregue")p.dataEntregaReal="";p.status=next}}
 
@@ -834,8 +847,8 @@ function renderProjeto(){
     <label class="f full">Nome do projeto<input id="pj_tit" data-pk="titulo" value="${v("titulo")}"></label>
     <label class="f">Cliente<select id="pj_cli" data-pk="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
     <label class="f">Situação<select id="pj_st" data-pk="status">${PST.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
-    <label class="f full">Proposta vinculada<select id="pj_proposal" data-pk="propostaId">${opts(S.propostas,p.propostaId,x=>x.titulo||"Sem título","Nenhuma proposta vinculada")}</select></label><label class="f">Prazo combinado (opcional)<input id="pj_term" data-pk="prazoContratado" value="${v("prazoContratado")}" placeholder="${esc(deliveryTerms(p).text||"Ex.: 15 dias úteis")}"><small>Vazio = utilizar o prazo da proposta vinculada.</small></label><label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
-    <label class="f">Ajuste manual do prazo (opcional)<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"><small>Vazio = usar prazo da proposta.</small></label>${p.status==="entregue"?`<label class="f full">Data real da entrega<input id="pj_real" type="date" data-pk="dataEntregaReal" value="${v("dataEntregaReal")}" max="${workspaceToday()}"></label>`:""}<div id="deliverySummary" class="full">${deliveryPanel(p)}</div><div class="full"><h3 style="margin-bottom:8px">Divisão do tempo</h3><div id="scheduleSummary">${scheduleSummary(p,z)}</div></div>
+    <label class="f full">Proposta vinculada<select id="pj_proposal" data-pk="propostaId">${opts(S.propostas,p.propostaId,x=>x.titulo||"Sem título","Nenhuma proposta vinculada")}</select></label><label class="f">Prazo combinado (opcional)<input id="pj_term" data-pk="prazoContratado" value="${v("prazoContratado")}" placeholder="${esc(deliveryTerms(p).text||"Ex.: 15 dias úteis")}"><small>Vazio = utilizar o prazo da proposta ou do orçamento vinculado. Na ausência de prazo específico, utiliza a validade em dias corridos.</small></label><label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
+    <label class="f">Ajuste manual do prazo (opcional)<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"><small>Vazio = calcular a partir do prazo ou da validade do orçamento.</small></label>${p.status==="entregue"?`<label class="f full">Data real da entrega<input id="pj_real" type="date" data-pk="dataEntregaReal" value="${v("dataEntregaReal")}" max="${workspaceToday()}"></label>`:""}<div id="deliverySummary" class="full">${deliveryPanel(p)}</div><div class="full"><h3 style="margin-bottom:8px">Divisão do tempo</h3><div id="scheduleSummary">${scheduleSummary(p,z)}</div></div>
   </div>
   <div class="sect form"><h3 class="full">Dados do projeto</h3>
     <label class="f full">O que está sendo desenvolvido<textarea id="pj_desc" data-pk="descricao" placeholder="Objetivo, funcionalidades, público">${v("descricao")}</textarea></label>
@@ -940,7 +953,7 @@ function renderOrcForm(id){
     <label class="f">Proposta vinculada<select id="o_prop" data-k="propostaId">${opts(S.propostas,o.propostaId,x=>x.titulo||"Sem título","Nenhuma")}</select></label>
     <label class="f full">Título<input id="o_tit" data-k="titulo" value="${esc(o.titulo)}" placeholder="Desenvolvimento de sistema de agendamento"></label>
     <label class="f">Data de emissão<input id="o_dt" type="date" data-k="data" value="${esc(o.data)}"></label>
-    <label class="f">Validade (dias)<input id="o_val" type="number" min="1" data-k="validadeDias" value="${esc(o.validadeDias)}"></label>
+    <label class="f">Validade (dias)<input id="o_val" type="number" min="1" data-k="validadeDias" value="${esc(o.validadeDias)}"><small>Também é o prazo padrão do projeto, em dias corridos, se não houver prazo de entrega específico. Pode ser ajustado no projeto.</small></label>
     <label class="f full">Escopo do serviço<textarea id="o_esc" data-k="escopo">${esc(o.escopo)}</textarea></label>
   </div>
   <div class="sect"><h3>Itens <button class="btn sm" data-act="addItem">+ Item</button></h3>
