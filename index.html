@@ -258,7 +258,7 @@ h1{font-size:clamp(27px,3vw,36px);letter-spacing:-.045em;line-height:1.1}h2{font
 @media(max-width:1100px){:root{--sidebar:206px}.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}.workspaceTop{padding-inline:20px}}
 @media(max-width:850px){header.top{position:sticky;top:0;bottom:auto;width:100%;border-right:0;border-bottom:1px solid var(--line);height:auto}.top .wrap{padding:11px 12px 7px;gap:8px}.brand{padding:0 4px;font-size:20px}.brand img{height:28px}.brand small{display:none}nav.tabs{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:0;flex:none;gap:4px}.navgroup,.navfooter{display:none}nav.tabs button{padding:8px 10px;min-height:36px;font-size:13px;flex:none}nav.tabs button svg{width:16px;height:16px}.workspaceTop{margin:0;position:static;padding:9px 16px;min-height:40px}.mobileTheme{display:block;border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer}.workSync{margin-left:auto}main.wrap{margin:0;padding:22px 15px 40px}.workfocus{padding:17px}.workfocus h2{font-size:20px}.head{margin-bottom:18px}.cols{grid-template-columns:1fr}.chatwrap{height:calc(100dvh - 265px)}.panel{padding:14px}}
 @media(max-width:540px){.grid-kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:12px;min-height:96px}.kpi b{font-size:21px}.workprojectsList .workproject{display:block}.workprojectsList .workproject h3{margin:12px 0 2px}.workprojectsList .workproject p{margin-bottom:12px}.workprojectsList .workprogress{margin-bottom:6px}.workprojectsList .workprojectFoot{margin-top:12px}.workfilter .toolbar select{flex:1 1 135px}.workfocusActions .btn{font-size:12px}.modal{padding:15px}.ov{padding:12px 7px 28px}.list .row{padding:12px 5px}.workspaceTop{font-size:12px}.workdueRow .pill{white-space:normal;text-align:right}}
-</style>
+.deliveryPanel{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px 18px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);flex-wrap:wrap}.deliveryPanel small,.deliveryPanel strong,.deliveryPanel span{display:block}.deliveryPanel small{font-size:10px;letter-spacing:.09em;color:var(--muted);font-weight:600}.deliveryPanel strong{font-family:var(--f-display);font-size:22px;line-height:1.3;margin:4px 0}.deliveryPanel span:not(.deliveryBadge){font-size:12px;color:var(--muted)}.deliveryBadge{display:inline-flex!important;width:max-content;font-size:11px;line-height:1.5;font-weight:600;border-radius:20px;padding:4px 9px;background:var(--sunk);color:var(--muted)}.deliveryBadge.fast{color:var(--ok);background:var(--ok-soft)}.deliveryBadge.normal{color:var(--info);background:var(--info-soft)}.deliveryBadge.soon{color:var(--warn);background:var(--warn-soft)}.deliveryBadge.late{color:var(--bad);background:var(--bad-soft)}.deliveryCardLine{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}.deliveryCardLine strong{font-size:13px;color:var(--ink)}.deliveryCardLine small{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.workdueRow .pill{white-space:normal;text-align:right}</style>
 </head>
 <body>
 
@@ -354,14 +354,50 @@ function platStats(pid){
   return {total:ps.length,env:env.length,apr:apr.length,rec:ps.filter(p=>p.status==="recusada").length,neg:ps.filter(p=>p.status==="negociacao"||p.status==="enviada").length,valor:apr.reduce((s,p)=>s+(Number(p.valor)||0),0)};
 }
 function workspaceToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function workspaceDeadline(p){const d=p.prazoEntrega;if(!d||p.status==="entregue")return "";return d<workspaceToday()?"late":d===workspaceToday()?"today":"future"}
+
+function deliveryISO(v){
+ const t=String(v||"").trim();let m=t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ if(!m){const b=t.match(/^(?:até\s+)?(\d{1,2})\/(\d{1,2})\/(\d{4})$/i);if(!b)return "";m=[b[0],b[3],b[2].padStart(2,"0"),b[1].padStart(2,"0")]}
+ const d=m[1]+"-"+m[2]+"-"+m[3],x=new Date(d+"T12:00:00Z");return !isNaN(x)&&x.toISOString().slice(0,10)===d?d:"";
+}
+function deliveryParse(text,start){
+ const date=deliveryISO(text);if(date)return date;
+ const base=deliveryISO(start);if(!base)return "";
+ const t=String(text||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+ const m=t.match(/^(?:ate\s+)?(\d{1,4})\s*(dia(?:s)?(?:\s+(?:uteis|util|corridos?))?|semana(?:s)?)(?:\s+(?:a partir do inicio|apos o inicio))?$/);
+ if(!m)return "";let n=+m[1];const unit=m[2];if(unit.startsWith("semana"))n*=7;if(n>3660)return "";
+ const d=new Date(base+"T12:00:00Z");if(/uteis|util/.test(unit)){while(n>0){d.setUTCDate(d.getUTCDate()+1);if(d.getUTCDay()!==0&&d.getUTCDay()!==6)n--}}else d.setUTCDate(d.getUTCDate()+n);
+ return d.toISOString().slice(0,10);
+}
+function deliveryTerms(p){
+ const proposal=p.propostaId?byId(S.propostas,p.propostaId):null;
+ return {text:p.prazoContratado??proposal?.prazo??"",fixed:p.dataContratada??proposal?.dataEntregaCombinada??""};
+}
+function deliveryDue(p){const t=deliveryTerms(p);return deliveryISO(p.prazoEntrega)||deliveryISO(t.fixed)||deliveryParse(t.text,p.dataInicio)}
+function deliveryDays(a,b){return Math.round((Date.parse(b+"T12:00:00Z")-Date.parse(a+"T12:00:00Z"))/86400000)}
+function deliveryInfo(p,today=workspaceToday()){
+ const due=deliveryDue(p),actual=deliveryISO(p.dataEntregaReal);
+ if(!due)return {label:"Sem prazo definido",tone:"",detail:"Informe o prazo combinado ou uma data de entrega.",due:""};
+ if(p.status==="entregue"&&!actual)return {label:"Entrega sem data registrada",tone:"",detail:"Informe a data real para classificar.",due};
+ const finished=p.status==="entregue",delta=deliveryDays(finished?actual:today,due),n=Math.abs(delta),days=n+" "+(n===1?"dia":"dias");
+ if(finished)return {label:delta>0?"Entrega rápida":delta===0?"Entrega normal":"Entrega atrasada",tone:delta>0?"fast":delta===0?"normal":"late",detail:delta>0?days+" de antecedência":delta===0?"Entregue na data combinada":days+" de atraso",due};
+ return {label:delta<0?"Atrasado":delta===0?"Vence hoje":"No prazo",tone:delta<0?"late":delta<=2?"soon":"normal",detail:delta<0?days+" de atraso":delta===0?"Entrega prevista para hoje":"Faltam "+days,due};
+}
+function deliveryBadge(p){const d=deliveryInfo(p);return '<span class="deliveryBadge '+d.tone+'">'+esc(d.label)+'</span>'}
+function deliveryPanel(p){
+ const d=deliveryInfo(p),t=deliveryTerms(p);
+ return '<div class="deliveryPanel"><div><small>PRAZO DA ENTREGA</small><strong>'+esc(d.detail)+'</strong><span>'+ (d.due?'Data combinada: '+dtBR(d.due):"Data ainda não definida")+(t.text?' · Proposta: '+esc(t.text):"")+'</span></div>'+deliveryBadge(p)+'</div>';
+}
+function deliverySetStatus(p,next){if(p.status!==next){if(next==="entregue")p.dataEntregaReal=workspaceToday();else if(p.status==="entregue")p.dataEntregaReal="";p.status=next}}
+
+function workspaceDeadline(p){const d=deliveryDue(p);if(!d||p.status==="entregue")return "";return d<workspaceToday()?"late":d===workspaceToday()?"today":"future"}
 function workspacePriorities(){
  const active=S.projetos.filter(p=>p.status!=="entregue");
  const cutoff=new Date();cutoff.setDate(cutoff.getDate()+7);const max=cutoff.getFullYear()+"-"+String(cutoff.getMonth()+1).padStart(2,"0")+"-"+String(cutoff.getDate()).padStart(2,"0");
- const due=active.filter(p=>p.prazoEntrega&&p.prazoEntrega<=max).sort((a,b)=>a.prazoEntrega.localeCompare(b.prazoEntrega));
+ const due=active.filter(p=>deliveryDue(p)&&deliveryDue(p)<=max).sort((a,b)=>deliveryDue(a).localeCompare(deliveryDue(b)));
  const overdue=due.filter(p=>workspaceDeadline(p)==="late").length;
  const pending=active.reduce((n,p)=>n+folhas(p).filter(t=>!t.feito).length,0);
- return '<section class="workfocus"><div><span class="workeyebrow">FOCO DA SEMANA</span><h2>O que precisa de atenção</h2><p>'+overdue+' projeto(s) atrasado(s) · '+pending+' tarefa(s) pendente(s)</p></div><div class="workfocusActions"><button class="btn" data-act="novoProjeto">＋ Projeto</button><button class="btn" data-act="novoCliente">＋ Cliente</button></div></section><section class="panel workdue"><div class="sectionhead"><h2>Entregas e prazos</h2><button class="btn sm ghost" data-work-tab="projetos">Ver projetos ›</button></div>'+ (due.length?due.slice(0,6).map(p=>'<div class="workdueRow" data-open="projeto" data-id="'+esc(p.id)+'"><div><b>'+esc(p.titulo||"Projeto")+'</b><small>'+esc(cliNome(p.clienteId))+'</small></div><span class="pill '+(workspaceDeadline(p)==="late"?"recusada":workspaceDeadline(p)==="today"?"negociacao":"enviada")+'">'+(workspaceDeadline(p)==="late"?"Atrasado · ":workspaceDeadline(p)==="today"?"Hoje · ":"")+dtBR(p.prazoEntrega)+'</span></div>').join(""):'<div class="empty">Nenhum projeto com entrega prevista nos próximos 7 dias ou em atraso.</div>')+'</section>';
+ return '<section class="workfocus"><div><span class="workeyebrow">FOCO DA SEMANA</span><h2>O que precisa de atenção</h2><p>'+overdue+' projeto(s) atrasado(s) · '+pending+' tarefa(s) pendente(s)</p></div><div class="workfocusActions"><button class="btn" data-act="novoProjeto">＋ Projeto</button><button class="btn" data-act="novoCliente">＋ Cliente</button></div></section><section class="panel workdue"><div class="sectionhead"><h2>Entregas e prazos</h2><button class="btn sm ghost" data-work-tab="projetos">Ver projetos ›</button></div>'+ (due.length?due.slice(0,6).map(p=>'<div class="workdueRow" data-open="projeto" data-id="'+esc(p.id)+'"><div><b>'+esc(p.titulo||"Projeto")+'</b><small>'+esc(cliNome(p.clienteId))+'</small></div><span class="pill '+(workspaceDeadline(p)==="late"?"recusada":workspaceDeadline(p)==="today"?"negociacao":"enviada")+'">'+(workspaceDeadline(p)==="late"?"Atrasado · ":workspaceDeadline(p)==="today"?"Hoje · ":"")+dtBR(deliveryDue(p))+' · '+esc(deliveryInfo(p).detail)+'</span></div>').join(""):'<div class="empty">Nenhum projeto com entrega prevista nos próximos 7 dias ou em atraso.</div>')+'</section>';
 }
 function vPainel(){
   const focusParts=workspacePriorities().split('<section class="panel workdue">');
@@ -519,7 +555,7 @@ function mPropostaForm(id,preset){
     <label class="f">Status<select id="pr_st" name="status">${ST.status.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
     <label class="f">Valor proposto (R$)<input id="pr_val" name="valor" type="number" step="0.01" min="0" value="${esc(p.valor)}"></label>
     <label class="f">Data de envio<input id="pr_dt" name="dataEnvio" type="date" value="${esc(p.dataEnvio)}"></label>
-    <label class="f">Prazo de entrega<input id="pr_prazo" name="prazo" value="${esc(p.prazo)}" placeholder="15 dias úteis"></label>
+    <label class="f">Prazo de entrega<input id="pr_prazo" name="prazo" value="${esc(p.prazo)}" placeholder="15 dias úteis"></label><label class="f">Data de entrega combinada (opcional)<input type="date" name="dataEntregaCombinada" value="${esc(p.dataEntregaCombinada)}"></label><div class="full" style="font-size:12px;color:var(--muted)">O prazo em dias será contado a partir do início registrado no projeto. A data combinada, quando preenchida, prevalece. Dias úteis: segunda a sexta, sem feriados automáticos.</div>
     <label class="f full">Link da vaga / conversa<input id="pr_link" name="link" value="${esc(p.link)}" placeholder="https://"></label>
     <label class="f full">Escopo / descrição<textarea id="pr_desc" name="descricao">${esc(p.descricao)}</textarea></label>
     <label class="f full">Anotações internas<textarea id="pr_notas" name="notas" placeholder="Só você vê">${esc(p.notas)}</textarea></label>
@@ -534,7 +570,7 @@ function mProposta(id){
   openModal(`${mhead(esc(p.titulo||"Proposta"))}<div class="detail">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill ${p.status}">${STL[p.status]}</span><span class="money" style="font-weight:600">${brl(p.valor)}</span></div>
     <dl><dt>Cliente</dt><dd>${esc(cliNome(p.clienteId))}</dd><dt>Plataforma</dt><dd>${esc(platNome(p.plataformaId))}</dd>
-    <dt>Enviada em</dt><dd>${dtBR(p.dataEnvio)}</dd><dt>Prazo</dt><dd>${esc(p.prazo||"—")}</dd>
+    <dt>Enviada em</dt><dd>${dtBR(p.dataEnvio)}</dd><dt>Prazo</dt><dd>${esc(p.prazo||"—")}</dd>${p.dataEntregaCombinada?`<dt>Data combinada</dt><dd>${dtBR(p.dataEntregaCombinada)}</dd>`:""}
     ${p.link?`<dt>Link</dt><dd><a href="${esc(p.link)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(p.link)}</a></dd>`:""}
     ${p.descricao?`<dt>Escopo</dt><dd style="white-space:pre-wrap">${esc(p.descricao)}</dd>`:""}
     ${p.notas?`<dt>Anotações</dt><dd style="white-space:pre-wrap">${esc(p.notas)}</dd>`:""}</dl>
@@ -582,12 +618,12 @@ const folhas=p=>(p.etapas||[]).flatMap(e=>(e.subs&&e.subs.length)?e.subs:[e]);
 const progresso=p=>{const f=folhas(p);return f.length?Math.round(f.filter(x=>x.feito).length/f.length*100):0};
 const syncEtapa=e=>{if(e.subs&&e.subs.length)e.feito=e.subs.every(x=>x.feito)};
 function vProjetos(){
- const f=S.filtro;const all=S.projetos.slice().sort((a,b)=>(a.status==="entregue")-(b.status==="entregue")||(a.prazoEntrega||"9").localeCompare(b.prazoEntrega||"9"));
+ const f=S.filtro;const all=S.projetos.slice().sort((a,b)=>(a.status==="entregue")-(b.status==="entregue")||(deliveryDue(a)||"9").localeCompare(deliveryDue(b)||"9"));
  const q=(f.qj||"").toLowerCase();const list=all.filter(p=>(!q||[p.titulo,cliNome(p.clienteId),p.descricao].join(" ").toLowerCase().includes(q))&&(!f.jstatus||f.jstatus==="late"?(!f.jstatus||workspaceDeadline(p)==="late"):p.status===f.jstatus));
  const ap=S.propostas.filter(p=>p.status==="aprovada"&&!S.projetos.some(j=>j.propostaId===p.id));
  const cards=f.jview!=="list";
- const item=p=>{const pr=progresso(p),fs=folhas(p),done=fs.filter(t=>t.feito).length;
- return '<article class="workproject" data-open="projeto" data-id="'+esc(p.id)+'" tabindex="0" role="button"><div class="workprojectTop"><span class="workfolder">▱</span><span class="pill '+esc(p.status)+'">'+esc(PSTL[p.status]||"A iniciar")+'</span></div><h3>'+esc(p.titulo||"Projeto")+'</h3><p>'+esc(cliNome(p.clienteId))+'</p><div class="workprogress"><span>'+done+'/'+fs.length+' tarefas</span><b>'+pr+'%</b></div><div class="prog" role="progressbar" aria-label="Progresso" aria-valuenow="'+pr+'" aria-valuemin="0" aria-valuemax="100"><span style="width:'+pr+'%"></span></div><div class="workprojectFoot"><span class="'+(workspaceDeadline(p)==="late"?"worklate":"")+'">'+(p.prazoEntrega?(workspaceDeadline(p)==="late"?"Atrasado · ":"Entrega · ")+dtBR(p.prazoEntrega):"Sem prazo definido")+'</span><span>Abrir ›</span></div></article>'};
+ const item=p=>{const pr=progresso(p),fs=folhas(p),done=fs.filter(t=>t.feito).length,d=deliveryInfo(p);
+ return '<article class="workproject" data-open="projeto" data-id="'+esc(p.id)+'" tabindex="0" role="button"><div class="workprojectTop"><span class="workfolder">▱</span><span class="pill '+esc(p.status)+'">'+esc(PSTL[p.status]||"A iniciar")+'</span></div><h3>'+esc(p.titulo||"Projeto")+'</h3><p>'+esc(cliNome(p.clienteId))+'</p><div class="workprogress"><span>'+done+'/'+fs.length+' tarefas</span><b>'+pr+'%</b></div><div class="prog" role="progressbar" aria-label="Progresso" aria-valuenow="'+pr+'" aria-valuemin="0" aria-valuemax="100"><span style="width:'+pr+'%"></span></div><div class="workprojectFoot"><div class="deliveryCardLine">'+deliveryBadge(p)+'<strong>'+esc(d.detail)+'</strong><small>'+(d.due?"Combinado: "+dtBR(d.due):"") + (p.status==="entregue"&&p.dataEntregaReal?" · Real: "+dtBR(p.dataEntregaReal):"")+'</small></div><span>Abrir ›</span></div></article>'};
  return '<div class="head"><div><span class="workeyebrow">OPERAÇÃO</span><h1>Projetos</h1><p>'+all.filter(p=>p.status!=="entregue").length+' ativos · '+all.filter(p=>p.status==="entregue").length+' entregues</p></div><button class="btn primary" data-act="novoProjeto">＋ Novo projeto</button></div>'+(ap.length?'<div class="banner">'+ap.length+' proposta(s) aprovada(s) sem projeto: '+ap.map(p=>'<button class="btn sm" data-act="abrirDev" data-id="'+esc(p.id)+'">'+esc(p.titulo||"Sem título")+'</button>').join(" ")+'</div>':'')+'<div class="panel workfilter"><div class="toolbar"><input id="workProjectSearch" placeholder="Buscar projeto ou cliente" value="'+esc(f.qj||"")+'"><select id="workProjectStatus"><option value="">Todos os status</option>'+[...PST,["late","Atrasados"]].map(([k,l])=>'<option value="'+k+'" '+(f.jstatus===k?"selected":"")+'>'+l+'</option>').join("")+'</select><div class="worktoggle"><button class="btn sm '+(cards?"primary":"")+'" data-work-view="cards">Cards</button><button class="btn sm '+(!cards?"primary":"")+'" data-work-view="list">Lista</button></div></div></div>'+(list.length?'<div class="workprojects '+(cards?"":"workprojectsList")+'">'+list.map(item).join("")+'</div>':all.length?'<div class="panel empty">Nenhum projeto encontrado com esses filtros.</div>':emptyBox("Nenhum projeto ainda","Crie um projeto para organizar tarefas, prazos e entregas.","novoProjeto","＋ Projeto"));
 }
 let pd=null,pdTimer=null,projTab="dados",galFiltro="todos",thumbURLs=[];
@@ -596,7 +632,7 @@ async function abrirDev(propId){
   const pr=byId(S.propostas,propId)||{};
   const orc=S.orcamentos.filter(o=>o.propostaId===propId).sort((a,b)=>(b.numero||"").localeCompare(a.numero||""))[0];
   const etapas=(orc?.itens||[]).filter(i=>i.descricao).map(i=>({texto:i.descricao,feito:false,prazo:""}));
-  const d={propostaId:propId,clienteId:pr.clienteId||"",titulo:pr.titulo||"",status:"iniciar",dataInicio:hoje(),prazoEntrega:"",descricao:pr.descricao||"",tecnologias:"",briefing:"",
+  const d={propostaId:propId,clienteId:pr.clienteId||"",titulo:pr.titulo||"",status:"iniciar",dataInicio:workspaceToday(),prazoEntrega:"",prazoContratado:pr.prazo||"",dataContratada:pr.dataEntregaCombinada||"",descricao:pr.descricao||"",tecnologias:"",briefing:"",
     etapas:etapas.length?etapas:[{texto:"Levantamento de requisitos com o cliente",feito:false,prazo:""},{texto:"Desenvolvimento",feito:false,prazo:""},{texto:"Testes e ajustes",feito:false,prazo:""},{texto:"Publicação e entrega",feito:false,prazo:""}],
     acessos:[],links:[],instrucoes:"",garantia:"",criadoEm:new Date().toISOString()};
   const id=await save("projetos",null,d);mProjeto(id);
@@ -751,7 +787,7 @@ function renderProjeto(){
     <label class="f">Cliente<select id="pj_cli" data-pk="clienteId">${opts(S.clientes,p.clienteId,c=>c.empresa?`${c.nome} · ${c.empresa}`:c.nome,"— selecione —")}</select></label>
     <label class="f">Situação<select id="pj_st" data-pk="status">${PST.map(([k,l])=>`<option value="${k}" ${p.status===k?"selected":""}>${l}</option>`).join("")}</select></label>
     <label class="f">Início<input id="pj_ini" type="date" data-pk="dataInicio" value="${v("dataInicio")}"></label>
-    <label class="f">Entrega prevista<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"></label>
+    <label class="f">Ajuste manual do prazo (opcional)<input id="pj_ent" type="date" data-pk="prazoEntrega" value="${v("prazoEntrega")}"><small>Vazio = usar prazo da proposta.</small></label>${p.status==="entregue"?`<label class="f full">Data real da entrega<input id="pj_real" type="date" data-pk="dataEntregaReal" value="${v("dataEntregaReal")}" max="${workspaceToday()}"></label>`:""}<div id="deliverySummary" class="full">${deliveryPanel(p)}</div>
   </div>
   <div class="sect form"><h3 class="full">Dados do projeto</h3>
     <label class="f full">O que está sendo desenvolvido<textarea id="pj_desc" data-pk="descricao" placeholder="Objetivo, funcionalidades, público">${v("descricao")}</textarea></label>
@@ -1331,7 +1367,7 @@ document.addEventListener("input",e=>{
   else if(t.id==="fqc"){S.filtro.qc=t.value;render()}
   else if(pd&&t.dataset.sub!==undefined&&t.type==="text"){pd.etapas[+t.dataset.sub].subs[+t.dataset.i].texto=t.value;salvarPD()}
   else if(pd&&t.closest("#modalRoot")&&(t.dataset.pk||t.dataset.list)){
-    if(t.dataset.pk)pd[t.dataset.pk]=t.value;
+    if(t.dataset.pk){if(t.dataset.pk==="status")deliverySetStatus(pd,t.value);else pd[t.dataset.pk]=t.value;const ds=$("#deliverySummary");if(ds)ds.innerHTML=deliveryPanel(pd);}
     else{const row=pd[t.dataset.list][+t.dataset.i];row[t.dataset.f]=t.type==="checkbox"?t.checked:t.value}
     salvarPD();
   }
@@ -1343,12 +1379,13 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{
   const t=e.target;
+  if(pd&&t.id==="pj_real"&&t.value>workspaceToday()){pd.dataEntregaReal="";t.value="";toast("A data real não pode estar no futuro");salvarPD();const ds=$("#deliverySummary");if(ds)ds.innerHTML=deliveryPanel(pd);return}
   if(t.id==="impIn"&&t.files[0]){importar(t.files[0]);return}
   if(t.id==="logoIn"&&t.files[0]){enviarLogo(t.files[0]);return}
   if(pd&&t.type==="checkbox"&&t.dataset.sub!==undefined){const e=pd.etapas[+t.dataset.sub];e.subs[+t.dataset.i].feito=t.checked;syncEtapa(e);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;return}
   if(pd&&t.type==="checkbox"&&t.dataset.list==="etapas"){const e=pd.etapas[+t.dataset.i];e.feito=t.checked;(e.subs||[]).forEach(x=>x.feito=t.checked);salvarPD();const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc;return}
   if(pd&&t.type==="checkbox"&&t.dataset.list){const row=pd[t.dataset.list][+t.dataset.i];row[t.dataset.f]=t.checked;salvarPD();if(t.dataset.list==="etapas"){const sc=$(".ov").scrollTop;renderProjeto();$(".ov").scrollTop=sc}return}
-  if(pd&&t.tagName==="SELECT"&&t.dataset.pk){pd[t.dataset.pk]=t.value;salvarPD();return}
+  if(pd&&t.tagName==="SELECT"&&t.dataset.pk){if(t.dataset.pk==="status"){deliverySetStatus(pd,t.value);salvarPD();devRefresh();return}pd[t.dataset.pk]=t.value;salvarPD();return}
   if(t.id==="fs"){S.filtro.status=t.value;render()}
   else if(t.id==="fp"){S.filtro.plat=t.value;render()}
   else if(draft&&t.tagName==="SELECT"&&t.dataset.k){draft[t.dataset.k]=t.value;
